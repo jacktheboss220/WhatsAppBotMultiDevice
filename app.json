@@ -1,0 +1,45 @@
+{
+    "name": "whatsapp-bot-md",
+    "description": "nodejs whatsapp bot",
+    "logo": "https://i.ibb.co/sWmwD0k/e0bslrup.jpg",
+    "repository": "https://github.com/jacktheboss220/Whatsapp-Bot-MD",
+    "keywords": [
+        "whatsapp-bot",
+        "insta-downloader",
+        "facebook-downloader",
+        "multi-device"
+    ],
+    "env": {
+        "REMOVE_BG_KEY": {
+            "description": "Get from remove.bg"
+        },
+        "DEEPAI_KEY:": {
+            "description": "Get your api key from deepai.org"
+        },
+        "myNumber": {
+            "description": "Enter your number to get all update"
+        },
+        "INSTA_API_KEY": {
+            "description": "Enter insta session key."
+        },
+        "TRUECALLER_ID": {
+            "description": "Enter true caller id"
+        }
+    },
+    "buildpacks": [
+        {
+            "url": "https://github.com/heroku/heroku-buildpack-nodejs.git"
+        },
+        {
+            "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git"
+        }
+    ],
+    "addons": [
+        {
+            "plan": "heroku-postgresql",
+            "options": {
+                "version": "13"
+            }
+        }
+    ]
+}

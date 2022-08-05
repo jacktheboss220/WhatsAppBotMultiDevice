@@ -1,0 +1,39 @@
+{
+  "name": "social-downloader-sdk",
+  "version": "1.0.0",
+  "description": "TikTok, Instagram, Facebook, Youtube, Twitter, SnapChat, VKontakte Video | Audio | Story | Photo | Reels | IGTV downloader, Without watermark. Build your own downloader.",
+  "main": "index.js",
+  "dependencies": {
+    "follow-redirects": "^1.14.9",
+    "axios": "^0.26.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tatv93/social-downloader.git"
+  },
+  "keywords": [
+    "Facebook",
+    "Instagram",
+    "Snapchat",
+    "TikTok",
+    "Twitter",
+    "VKontakte",
+    "YouTube",
+    "Audio",
+    "Video",
+    "Story",
+    "Reels",
+    "Without watermark",
+    "Downloader"
+  ],
+  "author": "tatv93",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tatv93/social-downloader/issues"
+  },
+  "homepage": "https://github.com/tatv93/social-downloader#readme"
+}

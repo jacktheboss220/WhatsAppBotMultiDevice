@@ -10,7 +10,7 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { sendMessageWTyping } = msgInfoObj;
+    const { prefix, sendMessageWTyping } = msgInfoObj;
 
     if (args.length === 0) return sendMessageWTyping(from, { text: `❌ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
 

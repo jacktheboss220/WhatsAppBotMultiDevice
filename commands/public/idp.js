@@ -15,7 +15,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (!args[0] || args[0].includes("http")) return sendMessageWTyping(from, { text: `*Provide Username*` }, { quoted: msg })
     let prof = args[0];
     await ig.fetchUser(prof).then((res) => {
-        send.sendMessages(
+        sendMessageWTyping(
             from,
             {
                 image: { url: res.hd_profile_pic_url_info.url },

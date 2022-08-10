@@ -114,6 +114,18 @@ ${readMore}
 *${prefix}quote*
     _get a random quote from bot_
 
+*${prefix}proq*
+    _get a programming quote from bot_
+    _Alies: ${prefix}proquote_
+
+*${prefix}qpt*
+    _get a poet written by authors_
+    *Examples:*
+        _${prefix}qpt auther Shakespeare title sonnet_
+        _${prefix}qpt auther Shakespeare_
+        _${prefix}qpt authers_
+    _Alies: ${prefix}qpoetry_
+
 *${prefix}removebg*
     _remove backgroung from any image_
     _reply to any image only_

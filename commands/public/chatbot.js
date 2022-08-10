@@ -3,7 +3,7 @@ module.exports.command = () => {
     let cmd = ["eva"];
     return { cmd, handler };
 }
-const chaturi = 'https://api.safone.tech/chatbot?message=';
+const chaturi = 'https://api.safone.tech/chatbot?query=';
 const bot_name = "Eva";
 const user_id = 1000;
 const bot_master = "Mahesh";
@@ -24,7 +24,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 },
                 { quoted: msg }
             );
-        } catch { }
+        } catch (err) {
+            console.log(err);
+        }
     }).catch((err) => {
         console.log(err);
         sendMessageWTyping(from, { text: "Error" }, { quoted: msg });

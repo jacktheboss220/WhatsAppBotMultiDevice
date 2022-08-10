@@ -12,19 +12,19 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (!msg.message.extendedTextMessage) return sendMessageWTyping(from, { text: "❌ Tag / mentioned!" }, { quoted: msg });
     let taggedJid;
     taggedJid = msg.message.extendedTextMessage ? msg.message.extendedTextMessage.contextInfo.participant : msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
-
+    taggedJid = taggedJid.includes(":") ? taggedJid.split(":")[0] : taggedJid.split("@")[0];
     if (taggedJid == botNumberJid) return sendMessageWTyping(from, { text: `_How I can Block Myself_.😂` }, { quoted: msg });
     if (taggedJid == myNumber) return sendMessageWTyping(from, { text: `🙄 _Can't Block Owner or Moderator_ 😊` }, { quoted: msg });
 
     if (command == "block") {
         await setBlockWarning(taggedJid).then(() => {
-            let num_split = taggedJid.split("@s.whatsapp.net")[0];
-            let warnMsg = `@${num_split} ,❌ You can't use the bot.`;
+            let num_split = taggedJid + "@s.whatsapp.net";
+            let warnMsg = `@${taggedJid} ,❌ You can't use the bot.`;
             sendMessageWTyping(
                 from,
                 {
                     text: warnMsg,
-                    mentions: [taggedJid]
+                    mentions: [num_split]
                 },
                 { quoted: msg }
             );

@@ -9,7 +9,7 @@ module.exports.command = () => {
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
 
-    if (!args[0] || !args[0].startswith("http")) return sendMessageWTyping(`Enter Url after fb`);
+    if (!args[0] || !args[0].includes("http")) return sendMessageWTyping(`Enter Url after fb`);
 
     let FBurl;
     await axios(args[0]).then((response) => {

@@ -34,10 +34,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         if (getCountDM(senderJid) >= 100) {
             return sendMessageWTyping(from, { text: 'You have used your monthly limit.\nWait for next month.' }, { quoted: msg })
         }
-        else {
-            const getDmCount = await getCountDM(senderJid);
-            sendMessageWTyping(from, { text: `*Limit Left* : ${getDmCount}/100` }, { quoted: msg });
-        }
+        const getDmCount = await getCountDM(senderJid);
+        sendMessageWTyping(from, { text: `*Limit Left* : ${getDmCount}/100` }, { quoted: msg });
     }
 
     var packName = ""
@@ -301,6 +299,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             console.log('Error not replyed');
         }
     } catch (err) {
-        sendMessageWTyping(from, { text: err }, { quoted: msg })
+        console.log(err);
+        sendMessageWTyping(from, { text: "Error" }, { quoted: msg })
     }
 }

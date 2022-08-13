@@ -4,7 +4,7 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { prefix, evv, groupAdmins, sendMessageWTyping } = msgInfoObj;
+    let { prefix, evv, groupAdmins, sendMessageWTyping } = msgInfoObj;
 
     if (!groupAdmins.includes(sock.user.id)) return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
 
@@ -14,8 +14,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
     else {
         if (!args[0]) return sendMessageWTyping(from, { text: `❌ Give number or tag on message` }, { quoted: msg });
-        if (evv.startsWith("+")) evv = evv.split("+")[1];
-        taggedJid = evv + '@s.whatsapp.net';
+        evv = evv.replace(" ", "");
+        if (evv.startsWith("+") && !(evv.startsWith("@"))) {
+            evv = evv.split("+")[1];
+            taggedJid = evv + '@s.whatsapp.net';
+        } else {
+            return sendMessageWTyping(from, { text: "Provide the number." }, { quoted: msg })
+        }
     }
     try {
         const response = await sock.groupParticipantsUpdate(
@@ -23,7 +28,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             [taggedJid],
             "add"
         )
-        sendMessageWTyping(from, { text: `*If number is not added then it might have privacy on adding. *` }, { quoted: msg })
         console.log(response);
     } catch (err) {
         console.log("Error", err);

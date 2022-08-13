@@ -12,12 +12,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (!msg.message.extendedTextMessage) return sendMessageWTyping(from, { text: `Mention or tag member.` }, { quoted: msg });
 
     let taggedJid;
-    if (msg.message.extendedTextMessage) {
+    if (msg.message.extendedTextMessage.contextInfo.participant) {
         taggedJid = msg.message.extendedTextMessage.contextInfo.participant;
     } else {
         taggedJid = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
     }
-
+    console.log(taggedJid);
     if (taggedJid == groupMetadata.owner) return sendMessageWTyping(from, { text: `❌ *Group Owner Tagged*` }, { quoted: msg });
     try {
         await sock.groupParticipantsUpdate(
@@ -25,7 +25,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             [taggedJid],
             "demote"
         ).then(() => {
-            sendMessageWTyping(from, { test: `✔️ *Demoted*` }, { quoted: msg });
+            sendMessageWTyping(from, { text: `✔️ *Demoted*` }, { quoted: msg });
         }).catch((err) => {
             console.log(err);
         });

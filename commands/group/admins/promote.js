@@ -10,7 +10,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (!msg.message.extendedTextMessage) return sendMessageWTyping(from, { text: `*Mention or tag member.*` }, { quoted: msg });
     let taggedJid;
-    if (msg.message.extendedTextMessage) {
+    if (msg.message.extendedTextMessage.contextInfo.participant) {
         taggedJid = msg.message.extendedTextMessage.contextInfo.participant;
     } else {
         taggedJid = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];

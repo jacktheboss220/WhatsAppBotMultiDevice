@@ -10,8 +10,8 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { prefix,sendMessageWTyping } = msgInfoObj;
-
+    const { prefix, sendMessageWTyping } = msgInfoObj;
+    //return sendMessageWTyping(from, { text: `Insta down for the moment, wait for update` }, { quoted: msg })
     if (args.length === 0) return sendMessageWTyping(from, { text: `❌ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
 
     let urlInsta = args[0];
@@ -70,6 +70,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         }
     }).catch((error) => {
         console.log(error);
-        sendMessageWTyping(from, { text: `Error private / not found` })
+        sendMessageWTyping(from, { text: `Error private / not found` }, { quoted: msg })
     });
 }

@@ -81,7 +81,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
               try {
                 fs.unlinkSync(media)
                 fs.unlinkSync('./bg.png')
-              } catch {}
+              } catch { }
             })
         } catch (err) {
           sendMessageWTyping(from, { text: `Error` }, { quoted: msg })

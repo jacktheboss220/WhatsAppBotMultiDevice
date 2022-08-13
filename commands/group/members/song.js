@@ -21,48 +21,54 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     console.log("Song: ", evv);
 
     let URL = await findSong(evv);
-
     (async () => {
-        let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
-        // console.log("title :", title);
-        let sany = getRandom('.mp3')
-        const stream = ytdl(URL, { filter: info => info.audioBitrate == 160 || info.audioBitrate == 128 })
-            .pipe(fs.createWriteStream(sany));
-        console.log("Audio downloaded")
-        await new Promise((resolve, reject) => {
-            stream.on('error', reject)
-            stream.on('finish', resolve)
-        }).then(async (res) => {
-            if (command == 'song') {
-                await sock.sendMessage(
-                    from,
-                    {
-                        document: fs.readFileSync(sany),
-                        mimetype: 'audio/mp4',
-                        fileName: title,
-                        ppt: true,
-                    },
-                    { quoted: msg }
-                ).then(() => {
-                    console.log("Sent");
-                    try {
-                        fs.unlinkSync(sany)
-                    } catch { }
-                })
-            } else {
-                await sock.sendMessage(
-                    from,
-                    {
-                        audio: fs.readFileSync(sany),
-                    },
-                    { quoted: msg }
-                ).then(() => {
-                    console.log("Sent");
-                    try {
-                        fs.unlinkSync(sany)
-                    } catch { }
-                })
-            }
-        })
+        try {
+            let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
+            // console.log("title :", title);
+            let sany = getRandom('.mp3')
+            const stream = ytdl(URL, { filter: info => info.audioBitrate == 160 || info.audioBitrate == 128 })
+                .pipe(fs.createWriteStream(sany));
+            console.log("Audio downloaded")
+            await new Promise((resolve, reject) => {
+                stream.on('error', reject)
+                stream.on('finish', resolve)
+            }).then(async (res) => {
+                if (command == 'song') {
+                    await sock.sendMessage(
+                        from,
+                        {
+                            document: fs.readFileSync(sany),
+                            mimetype: 'audio/mp4',
+                            fileName: title,
+                            ppt: true,
+                        },
+                        { quoted: msg }
+                    ).then(() => {
+                        console.log("Sent");
+                        try {
+                            fs.unlinkSync(sany)
+                        } catch { }
+                    })
+                } else {
+                    await sock.sendMessage(
+                        from,
+                        {
+                            audio: fs.readFileSync(sany),
+                        },
+                        { quoted: msg }
+                    ).then(() => {
+                        console.log("Sent");
+                        try {
+                            fs.unlinkSync(sany)
+                        } catch { }
+                    })
+                }
+            }).catch((err) => {
+                console.log(err);
+            })
+        } catch (err) {
+            console.log(err);
+            sendMessageWTyping(from, { text: "Error" }, { quoted: msg })
+        }
     })();
 }

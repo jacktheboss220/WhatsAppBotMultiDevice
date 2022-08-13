@@ -9,7 +9,7 @@ module.exports.command = () => {
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
 
-    if (!args[0] || !args[0].includes("http")) return sendMessageWTyping(`Enter Url after fb`);
+    if (!args[0] || !args[0].includes("http")) return sendMessageWTyping(from, { text: `Enter Url after fb` }, { quoted: msg });
 
     let FBurl;
     await axios(args[0]).then((response) => {
@@ -37,9 +37,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 )
             }
         } else if (res.data.hasError == true) {
-            sendMessageWTyping(res.data.errorMessage)
+            sendMessageWTyping(from, { text: res.data.errorMessage }, { quoted: msg })
         }
     }).catch((err) => {
+        sendMessageWTyping(from, { text: "Error" }, { quoted: msg })
         console.log(err);
     });
 }

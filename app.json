@@ -12,7 +12,7 @@
         "REMOVE_BG_KEY": {
             "description": "Get from remove.bg"
         },
-        "DEEPAI_KEY:": {
+        "DEEPAI_KEY": {
             "description": "Get your api key from deepai.org"
         },
         "myNumber": {

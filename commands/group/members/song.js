@@ -50,16 +50,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                         } catch { }
                     })
                 } else {
-                    await sock.sendMessage(
+                    await sendMessageWTyping(
                         from,
                         {
-                            audio: fs.readFileSync(sany),
+                            audio: { url: sany },
+                            mimetype: 'audio/mp4'
                         },
                         { quoted: msg }
                     ).then(() => {
                         console.log("Sent");
                         try {
-                            fs.unlinkSync(sany)
+                            // fs.unlinkSync(sany)
                         } catch { }
                     })
                 }

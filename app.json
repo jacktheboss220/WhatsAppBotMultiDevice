@@ -5,8 +5,7 @@
     "repository": "https://github.com/jacktheboss220/Whatsapp-Bot-MD",
     "keywords": [
         "whatsapp-bot",
-        "insta-downloader",
-        "facebook-downloader",
+        "insta",
         "multi-device"
     ],
     "env": {

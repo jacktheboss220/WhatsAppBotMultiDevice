@@ -5,9 +5,9 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 
-    const { groupAdmins, groupMetadata, sendMessageWTyping } = msgInfoObj;
+    const { groupAdmins, groupMetadata, sendMessageWTyping, botNumberJid } = msgInfoObj;
 
-    if (!groupAdmins.includes(sock.user.id)) return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
+    if (!groupAdmins.includes(botNumberJid)) return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
 
     if (!msg.message.extendedTextMessage) return sendMessageWTyping(from, { text: `Mention or tag member.` }, { quoted: msg });
 

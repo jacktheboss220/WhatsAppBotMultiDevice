@@ -20,4 +20,3 @@ module.exports = {
 // COMMIT;`)
 // };
 // clear();
-//"@adiwajshing/baileys": "github:adiwajshing/Baileys#a75d9118bdc7829a12dcb5f758dc5f92528a272d",

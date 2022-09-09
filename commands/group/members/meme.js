@@ -1,8 +1,10 @@
 const fs = require('fs');
 const axios = require('axios');
-const ffmpeg = require('fluent-ffmpeg')();
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+const ffmpeg = require("fluent-ffmpeg");
+ffmpeg.setFfmpegPath(ffmpegPath);
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
-
+const { delay } = require("@adiwajshing/baileys");
 module.exports.command = () => {
     let cmd = ["meme"];
     return { cmd, handler };
@@ -20,9 +22,10 @@ const downloadmeme = async (url) => {
     });
     response.data.pipe(writer);
     return new Promise((resolve, reject) => {
-        writer.on('finish', resolve)
-        writer.on('error', reject)
-    });
+        writer.on('finish', resolve("done"))
+        writer.on("error", reject)
+    })
+    // writer.on('error', reject)
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -38,19 +41,27 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 }
             );
         } else {
-            downloadmeme(res.data.url).then(() => {
-                ffmpeg.input(downgif).noAudio().output(downMeme).on("end", () => {
-                    console.log("Finished");
-                    sock.sendMessage(
-                        from,
-                        {
-                            video: fs.readFileSync(downgif),
-                            caption: `${res.data.title}`,
-                            gifPlayback: true
-                        }
-                    )
-                }).on("error", (e) => console.log(e)).run();
-            });
+            outputOptions = [
+                `-movflags faststart`,
+                `-pix_fmt yuv420p`,
+                `-vf`,
+                `scale=trunc(iw/2)*2:trunc(ih/2)*2`,
+            ];
+            downloadmeme(res.data.url).then(async (res1) => {
+                if (res1 == 'done') {
+                    ffmpeg(downgif).input(downgif).addOutputOptions(outputOptions).save(downMeme).on("end", async () => {
+                        await delay(4000);
+                        sock.sendMessage(
+                            from,
+                            {
+                                video: fs.readFileSync(downMeme),
+                                caption: `${res.data.title}`,
+                                gifPlayback: true
+                            }
+                        )
+                    });
+                }
+            })
         }
     });
 }

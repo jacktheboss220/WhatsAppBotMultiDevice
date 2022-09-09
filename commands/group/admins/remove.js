@@ -7,9 +7,9 @@ const myNumber = process.env.myNumber + '@s.whatsapp.net';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 
-    const { groupAdmins, sendMessageWTyping, groupMetadata } = msgInfoObj;
+    const { groupAdmins, sendMessageWTyping, groupMetadata, botNumberJid } = msgInfoObj;
 
-    if (!groupAdmins.includes(sock.user.id)) return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
+    if (!groupAdmins.includes(botNumberJid)) return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
     if (!msg.message.extendedTextMessage) return sendMessageWTyping(from, { text: `*Mention or tag member.*` }, { quoted: msg });
 
     let taggedJid;

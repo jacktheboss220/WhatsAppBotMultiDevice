@@ -4,9 +4,9 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const {  groupAdmins, sendMessageWTyping } = msgInfoObj;
+    const { groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
 
-    if (!groupAdmins.includes(sock.user.id)) return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
+    if (!groupAdmins.includes(botNumberJid)) return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
     try {
         const gc_invite_code = await sock.groupInviteCode(from);
         gc_link = `https://chat.whatsapp.com/${gc_invite_code}`;

@@ -13,7 +13,7 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { command, groupAdmins, sendMessageWTyping } = msgInfoObj;
+    let { command, groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
 
     if (!msg.message.extendedTextMessage) {
         sendMessageWTyping(from, { text: "❌ Tag someone! or reply on message" }, { quoted: msg });
@@ -28,7 +28,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
     let isGroupAdmin = groupAdmins.includes(taggedJid);
     if (command != "unwarn") {
-        if (taggedJid == sock.user.id) return sendMessageWTyping(from, { text: `_How I can warn Myself_` }, { quoted: msg });
+        if (taggedJid == botNumberJid) return sendMessageWTyping(from, { text: `_How I can warn Myself_` }, { quoted: msg });
         if (taggedJid == myNumber) return sendMessageWTyping(from, { text: `_Can't warn Owner or Moderator_` }, { quoted: msg });
     }
 

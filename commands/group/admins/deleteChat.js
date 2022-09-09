@@ -4,8 +4,8 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { senderJid, groupAdmins, sendMessageWTyping } = msgInfoObj;
-    if (!groupAdmins.includes(sock.user.id)) return sendMessageWTyping(from, { text: `❌ Bot Need to be admin in order to delete members message` }, { quoted: msg });
+    let { senderJid, groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
+    if (!groupAdmins.includes(botNumberJid)) return sendMessageWTyping(from, { text: `❌ Bot Need to be admin in order to delete members message` }, { quoted: msg });
 
     if (!msg.message.extendedTextMessage) {
         return sendMessageWTyping(from, { text: `❌ Tag message to delete.` }, { quoted: msg });

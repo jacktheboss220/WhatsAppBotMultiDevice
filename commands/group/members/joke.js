@@ -39,6 +39,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
         });
     } catch (err) {
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
         console.log(err);
     }
 }

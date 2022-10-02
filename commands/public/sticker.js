@@ -296,10 +296,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             }
         } else {
             sendMessageWTyping(from, { text: `❌ *Error reply to image or video only* ` }, { quoted: msg });
-            console.log('Error not replyed');
+            console.log('Error not replied');
         }
     } catch (err) {
         console.log(err);
-        sendMessageWTyping(from, { text: "Error" }, { quoted: msg })
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }

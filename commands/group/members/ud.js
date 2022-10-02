@@ -22,7 +22,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             },
             { quoted: msg });
     }
-    catch {
-        sendMessageWTyping(from, { text: "🙇‍♂️ Sorry to say but this word/creature does not exist" }, { quoted: msg })
+    catch (err) {
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }

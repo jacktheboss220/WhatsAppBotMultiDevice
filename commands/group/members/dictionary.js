@@ -27,6 +27,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         )
     }).catch((err) => {
         console.log(err);
-        return sendMessageWTyping(from, { text: `*Sorry no word found*` }, { quoted: msg });
+        return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 }

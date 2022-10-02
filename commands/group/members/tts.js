@@ -22,7 +22,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         );
     }).catch((error) => {
         console.log(error);
-        sendMessageWTyping(from, { text: `_Daily Api Limit Exceeds_\n_Wait For SomeTime_` }, { quoted: msg });
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 
 }

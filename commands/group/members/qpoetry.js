@@ -62,9 +62,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 sendMessageWTyping(from, { text: res.data.reason }, { quoted: msg });
             }
         }).catch((err) => {
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
             console.log(err);
         })
     } else {
-        sendMessageWTyping(from, { text: `Must include auther in command` }, { quoted: msg })
+        sendMessageWTyping(from, { text: `Must include author in command` }, { quoted: msg })
     }
 }

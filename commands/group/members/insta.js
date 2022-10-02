@@ -1,8 +1,4 @@
-require('dotenv').config();
-const INSTA_API_KEY = process.env.INSTA_API_KEY;
-const { igApi, getSessionId } = require('insta-fetcher');
-let ig = new igApi(INSTA_API_KEY);
-ig.setCookie(INSTA_API_KEY);
+
 
 module.exports.command = () => {
     let cmd = ["insta", "ig", "igd", "i"];
@@ -10,7 +6,7 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { prefix, sendMessageWTyping } = msgInfoObj;
+    const { prefix, sendMessageWTyping, ig } = msgInfoObj;
     //return sendMessageWTyping(from, { text: `Insta down for the moment, wait for update` }, { quoted: msg })
     if (args.length === 0) return sendMessageWTyping(from, { text: `❌ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
 
@@ -68,8 +64,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 }
             }
         }
-    }).catch((error) => {
-        console.log(error);
-        sendMessageWTyping(from, { text: `Error private / not found` }, { quoted: msg })
+    }).catch((err) => {
+        console.log(err);
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 }

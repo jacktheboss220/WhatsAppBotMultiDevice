@@ -32,20 +32,23 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (evv.includes('name')) {
         getAnimeRandom('quotes/character?name=' + evv.toLowerCase().substring(4).trim().split(" ").join("+")).then((message) => {
             sendMessageWTyping(from, { text: message }, { quoted: msg });
-        }).catch((error) => {
-            console.log(error);
+        }).catch((err) => {
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+            console.log(err);
         });
     } else if (evv.includes('title')) {
         mess = getAnimeRandom('quotes/anime?title=' + evv.toLowerCase().substring(6).trim().split(" ").join("%20")).then((message) => {
             sendMessageWTyping(from, { text: message }, { quoted: msg });
-        }).catch((error) => {
-            console.log(error);
+        }).catch((err) => {
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+            console.log(err);
         });
     } else {
         getAnimeRandom('random').then((message) => {
             sendMessageWTyping(from, { text: message }, { quoted: msg });
-        }).catch((error) => {
-            console.log(error);
+        }).catch((err) => {
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+            console.log(err);
         })
     }
 }

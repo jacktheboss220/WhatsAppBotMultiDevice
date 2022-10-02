@@ -1,9 +1,3 @@
-require('dotenv').config();
-const INSTA_API_KEY = process.env.INSTA_API_KEY;
-const { igApi, getSessionId } = require('insta-fetcher');
-let ig = new igApi(INSTA_API_KEY);
-ig.setCookie(INSTA_API_KEY);
-
 
 module.exports.command = () => {
     let cmd = ["idp", "dp"];
@@ -11,7 +5,7 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { sendMessageWTyping, OwnerSend } = msgInfoObj;
+    const { sendMessageWTyping, OwnerSend, ig } = msgInfoObj;
     if (!args[0] || args[0].includes("http")) return sendMessageWTyping(from, { text: `*Provide Username*` }, { quoted: msg })
     let prof = args[0];
     await ig.fetchUser(prof).then((res) => {
@@ -26,6 +20,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         OwnerSend(JSON.stringify(res));
     }).catch((err) => {
         console.log("Error", err);
-        sendMessageWTyping(from, { text: "*Username not found or try again after sometime*" }, { quoted: msg });
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 }

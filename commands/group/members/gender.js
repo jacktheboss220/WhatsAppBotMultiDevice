@@ -25,7 +25,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     getGender(args[0]).then((message) => {
         sendMessageWTyping(from, { text: message }, { quoted: msg });
     }).catch((error) => {
-        sendMessageWTyping(from, { text: `Name not found` }, { quoted: msg });
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
         console.log(error);
     });
 }

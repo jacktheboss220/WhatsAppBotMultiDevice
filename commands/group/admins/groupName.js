@@ -9,6 +9,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     try {
         await sock.groupUpdateSubject(from, evv);
     } catch (err) {
-        sendMessageWTyping(from, { text: 'Failed' }, { quoted: msg });
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }

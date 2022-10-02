@@ -12,17 +12,29 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         if (!args[0] || !args[0].includes("twitter.com")) return sendMessageWTyping(from, { text: `Enter the twitter link only` }, { quoted: msg });
         await twitterGetUrl(args[0]).then((res) => {
             if (res.type == 'video/gif') {
-                sendMessageWTyping(
-                    from,
-                    {
-                        // video: { url: res.download[res.download.length - 1].url.split("?tag")[0] },
-                        video: { url: res.download[0].url.endsWith('mp4') ? res.download[0].url : res.download[1].url },
-                        // gifPlayback: true
-                    },
-                    {
-                        quoted: msg
-                    }
-                )
+                try {
+                    sendMessageWTyping(
+                        from,
+                        {
+                            video: { url: res.download[res.download.length - 1].url.split("?tag")[0] },
+                            // gifPlayback: true
+                        },
+                        {
+                            quoted: msg
+                        }
+                    )
+                } catch {
+                    sendMessageWTyping(
+                        from,
+                        {
+                            video: { url: res.download[0].url.endsWith('mp4') ? res.download[0].url : res.download[1].url },
+                            // gifPlayback: true
+                        },
+                        {
+                            quoted: msg
+                        }
+                    )
+                }
             }
             if (res.type == "image") {
                 sendMessageWTyping(
@@ -41,6 +53,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         })
     } catch (err) {
         console.log(err);
-        sendMessageWTyping(from, { text: "Error try after some time" }, { quoted: msg })
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }

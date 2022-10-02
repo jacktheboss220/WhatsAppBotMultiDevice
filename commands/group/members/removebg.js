@@ -84,18 +84,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
               } catch { }
             })
         } catch (err) {
-          sendMessageWTyping(from, { text: `Error` }, { quoted: msg })
+          sendMessageWTyping(from, { text: err.toString() }, { quoted: msg })
         }
       })
       .catch(err => {
         console.log('Status : ', err.status)
-        sendMessageWTyping(
-          from,
-          {
-            text: `Website Error, Tag Owner or Mod : \n Need to change api key.`
-          },
-          { quoted: msg }
-        )
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
       })
   } else {
     sendMessageWTyping(from, { text: `*Reply to image only*` }, { quoted: msg })

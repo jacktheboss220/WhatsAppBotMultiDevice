@@ -51,6 +51,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         } catch { }
     }).catch((res) => {
         console.log("error ", res);
-        sendMessageWTyping(from, { text: `*Website error*` }, { quoted: msg });
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 }

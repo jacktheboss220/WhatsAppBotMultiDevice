@@ -87,6 +87,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             sendMessageWTyping(from, { text: `*Reply to Image Only*` }, { quoted: msg });
         }
     } else {
-        sendMessageWTyping(from, { text: `*Must Include ; to saprate Header and Footer*` }, { quoted: msg });
+        sendMessageWTyping(from, { text: `*Must Include ; to separate Header and Footer*` }, { quoted: msg });
     }
 }

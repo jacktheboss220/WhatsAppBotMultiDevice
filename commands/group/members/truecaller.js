@@ -37,7 +37,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             OwnerSend(JSON.stringify(response.data[0]))
         });
     } catch (err) {
-        sendMessageWTyping(from, { text: "Try after sometime" }, { quoted: msg })
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
         console.log(err);
     }
 }

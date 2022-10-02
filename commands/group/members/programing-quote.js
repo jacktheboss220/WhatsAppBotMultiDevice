@@ -12,7 +12,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         let mess = `: *Programmin Quote* :\n\n${res.data.en}\n~By ${res.data.author}`
         sendMessageWTyping(from, { text: mess }, { quoted: msg })
     }).catch((err) => {
-        sendMessageWTyping(from, { text: "Error." }, { quoted: msg });
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
         console.log(err);
     })
 }

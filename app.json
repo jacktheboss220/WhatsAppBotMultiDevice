@@ -26,6 +26,9 @@
         },
         "MONGODB_KEY": {
             "description": "Enter the mongodb username:password"
+        },
+        "LYRICS_KEY": {
+            "description": "Enter genius api key"
         }
     },
     "buildpacks": [

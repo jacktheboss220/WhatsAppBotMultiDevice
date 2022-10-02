@@ -11,6 +11,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: `_*-Advice-*_ \n\n` + res.data.slip.advice }, { quoted: msg });
     }).catch((error) => {
         console.log('error', error);
-        sendMessageWTyping(from, { text: `Error` }, { quoted: msg });
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 }

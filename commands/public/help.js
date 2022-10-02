@@ -29,6 +29,10 @@ ${readMore}
     _For Document use song for audio use play_
         Eg:${prefix}song love me like you do
 
+*${prefix}l*
+    _Get the lyrics for the song_
+    _Eg: ${prefix}l Main woh chaand by darshan raval_
+
 *${prefix}delete*
     _delete message send by bot_
     _Alias ${prefix} d, ${prefix} delete_
@@ -103,6 +107,10 @@ ${readMore}
 *${prefix}yt*
     _download youTube video in best quality_
     eg:${prefix}yt linkadress
+
+*${prefix}vs*
+    _search video and download_
+    _Eg: ${prefix}vs khena galat galat_
 
 *${prefix}horo*
     _show horoscope_

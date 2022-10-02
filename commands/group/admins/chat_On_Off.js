@@ -21,6 +21,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             return sendMessageWTyping(from, { text: `❌ *Provide right args*` }, { quoted: msg });
         }
     } catch (err) {
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
         console.log(err);
     }
 }

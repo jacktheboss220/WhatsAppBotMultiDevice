@@ -3,7 +3,7 @@ require('dotenv').config();
 //-------------------------------------------------------------------------------------------------------------//
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
-const uri = `mongodb+srv://${process.env.MONGODB_KEY}@myauthdb.edxmu.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `${process.env.MONGODB_KEY}`;
 
 const mdClient = new MongoClient(uri,
     {

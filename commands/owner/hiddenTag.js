@@ -7,18 +7,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { isGroup, sendMessageWTyping } = msgInfoObj;
     let target = '';
     if (!isGroup) target = args[0];
-    const groupMetadata = sock.groupMetadata(isGroup ? from : target);
+    const groupMetadata = await sock.groupMetadata(isGroup ? from : target);
     let jid = [];
-    let message = '';
+    let message = "```Hidden Tag By Owner```";
     try {
         if (
             msg.message.extendedTextMessage &&
             msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation
         ) {
             message +=
-                msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation;
+                msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation + "\n\n";
         } else {
-            message += args.length ? args.join(" ") : "```Hidden Tag By Owner```";
+            message += "\n\n" + args.length ? args.join(" ") : "\n\n";
         }
         for (let i of groupMetadata.participants) {
             jid.push(i.id);

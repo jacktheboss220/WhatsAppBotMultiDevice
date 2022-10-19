@@ -49,8 +49,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         try {
             fs.unlinkSync(media);
         } catch { }
-    }).catch((res) => {
-        console.log("error ", res);
+    }).catch((err) => {
+        console.log("error ", err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 }

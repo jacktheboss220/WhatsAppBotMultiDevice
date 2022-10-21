@@ -15,12 +15,21 @@ const createMembersData = (jid, name) => {
                 dmLimit: 100,
                 warning: {}
             })
+        } else {
+            member.updateOne({ _id: jid }, {
+                $set: { username: name }
+            })
         }
         // else console.log("ALready Created Member Data : ", jid);
     })
 }
 
 const getMemberData = (jid) => {
-    return member.findOne({ _id: jid });
+    return member.findOne({ _id: jid }).then(res => {
+        return res;
+    }).catch(err => {
+        console.log(err);
+        return -1;
+    });
 }
 module.exports = { createMembersData, getMemberData, member };

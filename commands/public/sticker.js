@@ -11,7 +11,7 @@ const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath);
 //-------------------------------------------------------------------------//
 const fs = require('fs');
-const { setCountDM, getCountDM } = require("../../DB/countDMDB");
+const { getMemberData, member } = require("../../mongo-DB/membersDataDb")
 const { writeFile } = require('fs/promises');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
@@ -22,6 +22,7 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, senderJid, type, content, isGroup, sendMessageWTyping, LogSendToOwner } = msgInfoObj;
+    const limit = await getMemberData(senderJid);
     const isMedia
         = type === "imageMessage" || type === "videoMessage";
     const isTaggedImage
@@ -30,12 +31,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         = type === "extendedTextMessage" && content.includes("videoMessage");
 
     if (!isGroup) {
-        await setCountDM(senderJid);
-        if (getCountDM(senderJid) >= 100) {
+        if (limit.dmLimit <= 0) {
             return sendMessageWTyping(from, { text: 'You have used your monthly limit.\nWait for next month.' }, { quoted: msg })
         }
-        const getDmCount = await getCountDM(senderJid);
-        sendMessageWTyping(from, { text: `*Limit Left* : ${getDmCount}/100` }, { quoted: msg });
+        member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
 
     var packName = ""

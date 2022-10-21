@@ -1,4 +1,4 @@
-const { getCmdToBlock, setCmdToBlock } = require('../../DB/cmdBlockDB');
+const { getGroupData, group } = require('../../mongo-DB/groupDataDb');
 
 module.exports.command = () => {
     let cmd = ["blockc", "emptyc", "getblockc", "removec"];
@@ -7,48 +7,41 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { command, isGroup, sendMessageWTyping } = msgInfoObj;
-    if (!isGroup) return;
+    if (!isGroup) return sendMessageWTyping(from, { text: 'Use In Group Only!' }, { quoted: msg });
 
-    var resBlock = await getCmdToBlock(from);
+    var resBlock = await getGroupData(from);
+    if (resBlock == -1) return sendMessageWTyping("NO data found in DB");
+    let blockCommandsInDB = resBlock.cmdBlocked;
 
     switch (command) {
         case "blockc":
             if (!args[0]) return sendMessageWTyping(from, { text: `Enter a cmd to block` }, { quoted: msg });
-            resBlock = (resBlock == -1 || resBlock == '') ? args[0] : resBlock + ',' + args[0];
-            setCmdToBlock(from, resBlock).then(() => {
-                console.log("blocked");
-                sendMessageWTyping(from, { text: '*Blocked* _' + args[0] + '_ *in this group*.' }, { quoted: msg });
-            });
+            if (blockCommandsInDB.includes(args[0])) {
+                sendMessageWTyping(from, { text: 'Command Already Blocked' }, { quoted: msg });
+            } else {
+                group.findOne({ _id: from }).then(res => {
+                    group.updateOne({ _id: from }, { $push: { cmdBlocked: { $each: args[0].split(",") } } }).then(() => {
+                        sendMessageWTyping(from, { text: '*Blocked* _' + args[0] + '_ *in this group*.' }, { quoted: msg });
+                    })
+                })
+            }
             break;
 
         case 'emptyc':
-            setCmdToBlock(from, '').then(() => {
+            group.updateOne({ _id: from }, { $set: { cmdBlocked: [] } }).then(() => {
                 console.log('Done');
-                sendMessageWTyping(from, { text: `*Unblocked All Cmds in this group.*` }, { quoted: msg });
+                sendMessageWTyping(from, { text: `*No CMD Blocked in this group*` }, { quoted: msg });
             });
             break;
 
         case 'getblockc':
-            if (resBlock == -1 || resBlock == '') {
-                console.log("empty");
-                sendMessageWTyping(from, { text: 'No Command Blocked' }, { quoted: msg });
-            } else {
-                console.log(resBlock);
-                sendMessageWTyping(from, { text: `*Commands Block in this Group are* : ${resBlock}` }, { quoted: msg });
-            }
+            sendMessageWTyping(from, { text: `*Commands Block in this Group are* : ${resBlock.cmdBlocked.toString()}` }, { quoted: msg });
             break;
 
         case 'removec':
-            if (!args[0]) return reply(`Enter a cmd to block`);
-            let resBlockC = [];
-            resBlock = resBlock.split(",");
-            for (let i = 0; i < resBlock.length; i++) {
-                if (resBlock[i] == args[0]);
-                else
-                    resBlockC.push(resBlock[i]);
-            }
-            setCmdToBlock(from, resBlockC.toString()).then(() => {
-                sendMessageWTyping(from, { text: '*Allowed* _' + args[0] + '_ *in this Group*.' }, { quoted: msg })
+            if (!args[0]) return sendMessageWTyping(from, { text: `Enter a cmd to block` }, { quoted: msg });
+            group.updateOne({ _id: from }, { $pullAll: { cmdBlocked: args[0].split(",") } }).then(() => {
+                sendMessageWTyping(from, { text: '*UnBlocked* _' + args[0] + '_ *in this Group*.' }, { quoted: msg })
             })
             break;
         default:

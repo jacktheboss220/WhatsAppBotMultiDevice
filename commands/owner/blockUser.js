@@ -1,6 +1,6 @@
 require('dotenv').config();
 const myNumber = process.env.myNumber + '@s.whatsapp.net';
-const { setBlockWarning, removeBlockWarning } = require('../../DB/blockDB');
+const { member } = require('../../mongo-DB/membersDataDb')
 
 module.exports.command = () => {
     let cmd = ["block", "unblock"];
@@ -8,32 +8,36 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
+
     const { command, botNumberJid, sendMessageWTyping } = msgInfoObj;
-    if (!msg.message.extendedTextMessage) return sendMessageWTyping(from, { text: "❌ Tag / mentioned!" }, { quoted: msg });
+
+    if (!msg.message.extendedTextMessage)
+        return sendMessageWTyping(from, { text: "❌ Tag / mentioned!" }, { quoted: msg });
+
     let taggedJid;
-    taggedJid = msg.message.extendedTextMessage ? msg.message.extendedTextMessage.contextInfo.participant : msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
-    taggedJid = taggedJid.includes(":") ? taggedJid.split(":")[0] : taggedJid.split("@")[0];
-    if (taggedJid == botNumberJid) return sendMessageWTyping(from, { text: `_How I can Block Myself_.😂` }, { quoted: msg });
-    if (taggedJid == myNumber) return sendMessageWTyping(from, { text: `🙄 _Can't Block Owner or Moderator_ 😊` }, { quoted: msg });
+
+    taggedJid = msg.message.extendedTextMessage ?
+        msg.message.extendedTextMessage.contextInfo.participant :
+        msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+
+    taggedJid = taggedJid.includes(":") ?
+        taggedJid.split(":")[0] :
+        taggedJid.split("@")[0];
+
+    console.log(taggedJid, botNumberJid);
+
+    if ((taggedJid == botNumberJid.split("@")[0]) || (taggedJid == myNumber.split("@")[0]))
+        return sendMessageWTyping(from, { text: `_Command Can't be used on Bot / Mod / Owner_.💀` }, { quoted: msg });
 
     if (command == "block") {
-        await setBlockWarning(taggedJid).then(() => {
-            let num_split = taggedJid + "@s.whatsapp.net";
-            let warnMsg = `@${taggedJid} ,❌ You can't use the bot.`;
-            sendMessageWTyping(
-                from,
-                {
-                    text: warnMsg,
-                    mentions: [num_split]
-                },
-                { quoted: msg }
-            );
+        member.updateOne({ _id: taggedJid + "@s.whatsapp.net" }, { $set: { isBlock: true } }).then(() => {
+            sendMessageWTyping(from, { text: `❌ Blocked`, }, { quoted: msg });
         });
     }
+
     if (command == "unblock") {
-        await removeBlockWarning(taggedJid).then(() => {
+        member.updateOne({ _id: taggedJid + "@s.whatsapp.net" }, { $set: { isBlock: false } }).then(() => {
             sendMessageWTyping(from, { text: `✔️ *Unblocked*` }, { quoted: msg })
         });
     }
 }
-

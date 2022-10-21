@@ -1,6 +1,7 @@
 const axiox = require('axios');
 const jsdom = require("jsdom");
-const { setCountDM, getCountDM } = require("../../DB/countDMDB");
+const { getMemberData, member } = require("../../mongo-DB/membersDataDb")
+
 const { JSDOM } = jsdom;
 module.exports.command = () => {
     let cmd = ["redd", "reddit"];
@@ -9,17 +10,15 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { isGroup, senderJid, sendMessageWTyping } = msgInfoObj;
-
+    const limit = await getMemberData(senderJid);
 
     if (!args[0] || !(args[0].includes("reddit.com/r"))) return sendMessageWTyping(from, { text: "Provide the post link after command." }, { quoted: msg });
     console.log(args[0]);
     if (!isGroup) {
-        await setCountDM(senderJid);
-        if (getCountDM(senderJid) >= 100) {
+        if (limit.dmLimit <= 0) {
             return sendMessageWTyping(from, { text: 'You have used your monthly limit.\nWait for next month.' }, { quoted: msg })
         }
-        const getDmCount = await getCountDM(senderJid);
-        sendMessageWTyping(from, { text: `*Limit Left* : ${getDmCount}/100` }, { quoted: msg });
+        member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
     await axiox('https://redditsave.com/info?url=' + args[0]).then((res) => {
         const dom = new JSDOM(res.data);

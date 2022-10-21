@@ -6,20 +6,22 @@
 
 # Variable names is .env
 
-   DEEPAI_KEY : https://deepai.org/api-docs/
+PREFIX : Enter your bot prefix
 
-   INSTA_API_KEY : https://github.com/Gimenz/insta-fetcher
+DEEPAI_KEY : https://deepai.org/api-docs/
 
-   myNumber: Enter your Number to get all owner cmds.
+INSTA_API_KEY : https://github.com/Gimenz/insta-fetcher
 
-   REMOVE_BG_KEY : https://www.remove.bg/
+myNumber: Enter your Number to get all owner cmds.
 
-   TRUECALLER_ID : https://www.npmjs.com/package/truecallerjs#:~:text=Then%20login%20to%20your%20truecaller%20account%20.
+REMOVE_BG_KEY : https://www.remove.bg/
 
-   GOOGLE_API_KEY : https://console.cloud.google.com/
+TRUECALLER_ID : https://www.npmjs.com/package/truecallerjs#:~:text=Then%20login%20to%20your%20truecaller%20account%20.
 
-   SEARCH_ENGINE_KEY : https://programmablesearchengine.google.com/controlpanel/all
+GOOGLE_API_KEY : https://console.cloud.google.com/
 
-   MONGODB_KEY : https://www.mongodb.com/
+SEARCH_ENGINE_KEY : https://programmablesearchengine.google.com/controlpanel/all
 
-   LYRICS_KEY : https://docs.genius.com/#/getting-started-h1
+MONGODB_KEY : https://www.mongodb.com/
+
+LYRICS_KEY : https://docs.genius.com/#/getting-started-h1

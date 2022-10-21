@@ -9,6 +9,9 @@
         "multi-device"
     ],
     "env": {
+        "PREFIX": {
+            "description": "Prefix for the bot"
+        },
         "REMOVE_BG_KEY": {
             "description": "Get from remove.bg"
         },

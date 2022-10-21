@@ -14,13 +14,15 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
     else {
         if (!args[0]) return sendMessageWTyping(from, { text: `❌ Give number or tag on message` }, { quoted: msg });
+        
         evv = evv.replace(" ", "");
-        if (evv.startsWith("+") && !(evv.startsWith("@"))) {
-            evv = evv.split("+")[1];
-            taggedJid = evv + '@s.whatsapp.net';
+        if ((evv.startsWith("@"))) {
+            return sendMessageWTyping(from, { text: "Don't Tag, Provide the number." }, { quoted: msg })
         } else {
-            return sendMessageWTyping(from, { text: "Provide the number." }, { quoted: msg })
+            taggedJid = evv + '@s.whatsapp.net';
         }
+        if (evv.startsWith("+"))
+            evv = evv.split("+")[1];
     }
     try {
         const response = await sock.groupParticipantsUpdate(

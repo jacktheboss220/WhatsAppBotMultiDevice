@@ -20,8 +20,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 sticker: Buffer.from(ttinullimage.data)
             }
         );
-    }).catch((error) => {
-        console.log(error);
+    }).catch((err) => {
+        console.log(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
 

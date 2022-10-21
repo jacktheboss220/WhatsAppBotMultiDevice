@@ -12,7 +12,24 @@ const mdClient = new MongoClient(uri,
         serverApi: ServerApiVersion.v1
     });
 //-------------------------------------------------------------------------------------------------------------//
+
 //-------------------------------------------------------------------------------------------------------------/
-mdClient.connect();
+mdClient.connect(async (err) => {
+    if (err) throw err;
+    let flag = false;
+    let collection = mdClient.db("MyBotDataDB");
+    collection.collections((err, names) => {
+        names.forEach(ele => {
+            if (ele.namespace == "MyBotDataDB.AuthTable") {
+                flag = true;
+            }
+        })
+        if (flag == false) {
+            collection.createCollection("AuthTable")
+        }
+    })
+});
+
+//-------------------------------------------------------------------------------------------------------------//
 
 module.exports = mdClient;

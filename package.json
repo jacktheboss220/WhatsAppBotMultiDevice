@@ -46,8 +46,7 @@
         "urban-dictionary": "^3.0.2",
         "videofy": "^0.0.2",
         "wa-sticker-formatter": "^3.6.0",
-        "youtube-dl-exec": "^2.0.12",
         "yt-search": "^2.10.3",
-        "ytdl-core": "github:jacktheboss220/node-ytdl-core"
+        "ytdl-core": "^4.11.2"
     }
 }

@@ -9,6 +9,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     let jid = [];
     let message = '';
     try {
+        if (!msg.message.extendedTextMessage && args.length == 0) return sendMessageWTyping(from, { text: "```Reply On Any Message```" }, { quoted: msg })
         if (
             msg.message.extendedTextMessage &&
             msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation

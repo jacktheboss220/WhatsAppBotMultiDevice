@@ -26,7 +26,7 @@ const createGroupData = (groupJid, groupMetadata) => {
                 { _id: groupJid }, {
                 $set: {
                     grpName: groupMetadata.subject,
-                    desc: groupMetadata.desc.toString()
+                    desc: groupMetadata.desc ? groupMetadata.desc.toString() : ""
                 }
             })
             console.log("Updated Data");

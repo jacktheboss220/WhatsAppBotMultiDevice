@@ -14,7 +14,7 @@ const createGroupData = (groupJid, groupMetadata) => {
                 isChatBotOn: false,
                 is91Only: false,
                 grpName: groupMetadata.subject,
-                desc: groupMetadata.desc.toString(),
+                desc: groupMetadata.desc ? groupMetadata.desc.toString() : "",
                 cmdBlocked: [],
                 totalMsgCount: 0,
                 members: []

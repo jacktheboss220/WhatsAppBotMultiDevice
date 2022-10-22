@@ -27,10 +27,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sn.then(function (response) {
             let data = response.data[0];
             const trueSend = `*Name:* ${data.name}
-*Country:* ${data.addresses[0].address ? data.addresses[0].address : ""}
-*City:* ${data.addresses[0].city ? data.addresses[0].city : ""}
-*Provider:* ${data.phones[0].carrier ? data.phones[0].carrier : ""}
-*Number Type:* ${data.phones[0].numberType ? data.phones[0].numberType : ""}
+*Country:* ${data.addresses[0] ? data.addresses[0].city : ""}
+*City:* ${data.addresses[0] ? data.addresses[0].city : ""}
+*Provider:* ${data.phones[0] ? data.phones[0].carrier : ""}
+*Number Type:* ${data.phones[0] ? data.phones[0].numberType : ""}
 *Email:* ${data.internetAddresses[0] ? data.internetAddresses[0].id : ""}
 `
             sendMessageWTyping(from, { text: trueSend }, { quoted: msg })

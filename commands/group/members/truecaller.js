@@ -24,16 +24,16 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         }
 
         var sn = truecallerjs.searchNumber(searchData);
-        sn.then(function (response) {
+        sn.then(async function (response) {
             let data = response.data[0];
+            // console.log(JSON.stringify(data));
             const trueSend = `*Name:* ${data.name}
-*Country:* ${data.addresses[0] ? data.addresses[0].city : ""}
-*City:* ${data.addresses[0] ? data.addresses[0].city : ""}
+*Country:* ${data.addresses[0] ? data.addresses[0].countryCode : ""}
+*City:* ${Object.keys(data.addresses[0]).includes("address") ? data.addresses[0].city : ""}
 *Provider:* ${data.phones[0] ? data.phones[0].carrier : ""}
 *Number Type:* ${data.phones[0] ? data.phones[0].numberType : ""}
-*Email:* ${data.internetAddresses[0] ? data.internetAddresses[0].id : ""}
-`
-            sendMessageWTyping(from, { text: trueSend }, { quoted: msg })
+*Email:* ${data.internetAddresses[0] ? data.internetAddresses[0].id : ""}`
+            sendMessageWTyping(from, { image: { url: Object.keys(data).includes("image") ? data.image : "https://i.ibb.co/yh6yn4x/download.jpg" }, caption: trueSend }, { quoted: msg })
             OwnerSend(JSON.stringify(response.data[0]))
         });
     } catch (err) {

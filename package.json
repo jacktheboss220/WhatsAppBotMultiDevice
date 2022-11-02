@@ -12,6 +12,9 @@
     "keywords": [],
     "author": "mahesh",
     "license": "MIT",
+     "engines": {
+        "node": "18.x"
+      },
     "dependencies": {
         "@adiwajshing/baileys": "github:adiwajshing/baileys",
         "@erickwendel/meme-maker": "^2.3.1",

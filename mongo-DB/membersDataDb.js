@@ -13,7 +13,7 @@ const createMembersData = (jid, name) => {
                 isBlock: false,
                 totalmsg: 0,
                 dmLimit: 100,
-                warning: {}
+                warning: []
             })
         } else {
             member.updateOne({ _id: jid }, {

@@ -14,7 +14,7 @@ INSTA_API_KEY : https://github.com/Gimenz/insta-fetcher
 
 myNumber: Enter your Number to get all owner cmds.
 
-botMuber: Enter Your Bot number to get all cmd access.
+botNumber: Enter Your Bot number to get all cmd access.
 
 REMOVE_BG_KEY : https://www.remove.bg/
 

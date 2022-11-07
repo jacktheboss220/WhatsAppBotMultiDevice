@@ -8,7 +8,7 @@ const { writeFile } = require('fs/promises');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
 module.exports.command = () => {
-    let cmd = ["img", "image", "toimg"];
+    let cmd = ["image", "toimg"];
     return { cmd, handler };
 }
 

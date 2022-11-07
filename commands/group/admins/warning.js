@@ -1,8 +1,6 @@
-const {
-    getCountWarning,
-    setCountWarning,
-    removeWarnCount
-} = require('../../../DB/warningDB');
+const { getGroupData, createGroupData, group } = require('../../../mongo-DB/groupDataDb');
+const { createMembersData, getMemberData, member } = require('../../../mongo-DB/membersDataDb');
+
 
 require('dotenv').config();
 const myNumber = process.env.myNumber + '@s.whatsapp.net';
@@ -31,26 +29,23 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         if (taggedJid == botNumberJid) return sendMessageWTyping(from, { text: `_How I can warn Myself_` }, { quoted: msg });
         if (taggedJid == myNumber) return sendMessageWTyping(from, { text: `_Can't warn Owner or Moderator_` }, { quoted: msg });
     }
+    const memberData = await getMemberData(taggedJid);
 
-    const warnCount = await getCountWarning(taggedJid, from);
+    let warnCount;
+    memberData.warning.forEach((element, index) => {
+        if (element.group == from) {
+            warnCount = element.count;
+            return;
+        }
+    });
+    warnCount = (warnCount == undefined) ? 0 : warnCount;
     let num_split = taggedJid.split("@s.whatsapp.net")[0];
     let warnMsg;
     switch (command) {
-        case 'getwarn':
-            warnMsg = `@${num_split}, Your warning status is (${warnCount}/3) in this group.`;
-            sock.sendMessage(
-                from,
-                {
-                    text: warnMsg,
-                    mentions: [taggedJid]
-                }
-            );
-            break;
-
         case 'warn':
         case 'warning':
             warnMsg = `@${num_split} 😒,You have been warned. Warning status (${warnCount + 1
-                }/3). Don't repeat this type of behaviour again or soon kimck!`;
+                }/3). Don't repeat this type of behavior again or soon kick!`;
             sock.sendMessage(
                 from,
                 {
@@ -58,27 +53,38 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     mentions: [taggedJid]
                 }
             )
-            await setCountWarning(taggedJid, from);
-            if (warnCount >= 2) {
-                if (!sock.user.id) {
-                    sendMessageWTyping(from, { text: "❌ I'm not Admin here!" }, { quoted: msg });
-                    return;
+            group.updateOne({ _id: from, "memberWarnCount.member": taggedJid }, { $inc: { "memberWarnCount.$.count": 1 } }).then(r => {
+                if (r.matchedCount == 0)
+                    group.updateOne({ _id: from }, { $push: { "memberWarnCount": { member: taggedJid, count: 1 } } });
+            })
+            member.updateOne({ _id: taggedJid, "warning.group": from }, { $inc: { "warning.$.count": 1 } }).then((r) => {
+                if (r.matchedCount == 0)
+                    member.updateOne({ _id: taggedJid }, { $push: { "warning": { group: from, count: 1 } } });
+                if (warnCount >= 2) {
+                    if (!sock.user.id) {
+                        sendMessageWTyping(from, { text: "❌ I'm not Admin here!" }, { quoted: msg });
+                        return;
+                    }
+                    if (isGroupAdmin) {
+                        sendMessageWTyping(from, { text: "❌ Cannot remove admin!" }, { quoted: msg });
+                        return;
+                    }
+                    sock.groupParticipantsUpdate(
+                        from,
+                        [taggedJid],
+                        "remove"
+                    )
+                    sendMessageWTyping(from, { text: "✔ Number removed from group!" }, { quoted: msg });
                 }
-                if (isGroupAdmin) {
-                    sendMessageWTyping(from, { text: "❌ Cannot remove admin!" }, { quoted: msg });
-                    return;
-                }
-                sock.groupParticipantsUpdate(
-                    from,
-                    [taggedJid],
-                    "remove"
-                )
-                sendMessageWTyping(from, { text: "✔ Number removed from group!" }, { quoted: msg });
-            }
+            }).catch(err => {
+                console.log(err);
+            })
             break;
         case 'unwarn':
-            await removeWarnCount(taggedJid, from);
-            sendMessageWTyping(from, { text: `Set Warn Count to 0 for this user.` }, { quoted: msg });
+            member.updateOne({ _id: taggedJid, "warning.group": from }, { $pull: { "warning": { group: from } } }).then(() => {
+                sendMessageWTyping(from, { text: `Set Warn Count to 0 for this user.` }, { quoted: msg });
+            })
+            group.updateOne({ _id: from, "memberWarnCount.member": taggedJid }, { $pull: { "memberWarnCount": { member: taggedJid } } })
             break;
     }
 }

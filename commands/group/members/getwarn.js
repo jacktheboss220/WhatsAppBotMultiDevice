@@ -1,4 +1,5 @@
 const { createMembersData, getMemberData, member } = require('../../../mongo-DB/membersDataDb');
+const { getGroupData, createGroupData, group } = require('../../../mongo-DB/groupDataDb');
 
 require('dotenv').config();
 
@@ -23,14 +24,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             taggedJid = senderJid;
         }
     }
-    const memberData = await getMemberData(taggedJid);
+    const groupData = await getGroupData(from);
     let warnCount;
-    memberData.warning.forEach((element, index) => {
-        if (element.group == from) {
-            warnCount = element.count;
-            return;
-        }
-    });
+    if (groupData) {
+        groupData.memberWarnCount.forEach((element, index) => {
+            if (element.member == taggedJid) {
+                warnCount = element.count;
+                return;
+            }
+        });
+    } else {
+        warnCount = 0;
+    }
     warnCount = (warnCount == undefined) ? 0 : warnCount;
     let num_split = taggedJid.split("@s.whatsapp.net")[0];
     let warnMsg;

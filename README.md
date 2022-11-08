@@ -14,6 +14,8 @@ INSTA_API_KEY : https://github.com/Gimenz/insta-fetcher
 
 myNumber: Enter your Number to get all owner cmds.
 
+botNumber: Enter Your Bot number to get all cmd access.
+
 REMOVE_BG_KEY : https://www.remove.bg/
 
 TRUECALLER_ID : https://www.npmjs.com/package/truecallerjs#:~:text=Then%20login%20to%20your%20truecaller%20account%20.

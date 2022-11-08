@@ -8,26 +8,27 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (!groupAdmins.includes(botNumberJid)) return sendMessageWTyping(from, { text: `❌ Bot Needs To Be Admin In Order To Add Members.` }, { quoted: msg });
 
-    let taggedJid;
+    // let taggedJid;
     if (msg.message.extendedTextMessage) {
-        taggedJid = msg.message.extendedTextMessage.contextInfo.participant;
+        evv = msg.message.extendedTextMessage.contextInfo.participant;
     }
     else {
         if (!args[0]) return sendMessageWTyping(from, { text: `❌ Provide Number Or Reply On Member's Message` }, { quoted: msg });
 
-        evv = evv.split(" ").join();
+        evv = evv.split(" ").join("");
         if ((evv.startsWith("@"))) {
             return sendMessageWTyping(from, { text: "Don't Tag, Provide the number." }, { quoted: msg });
         } else {
-            taggedJid = evv + '@s.whatsapp.net';
+            evv = evv.includes("@s.whatsapp.net") ? evv : evv + '@s.whatsapp.net';
         }
-        if (evv.startsWith("+"))
+        if (evv.startsWith("+") == true)
             evv = evv.split("+")[1];
+        console.log(evv);
     }
     try {
         await sock.groupParticipantsUpdate(
             from,
-            [taggedJid],
+            [evv],
             "add"
         ).then(res => {
             let get_status = res[0].status;

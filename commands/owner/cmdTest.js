@@ -4,12 +4,12 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { sendMessageWTyping } = msgInfoObj;
+    const { sendMessageWTyping, evv } = msgInfoObj;
     if (args.length === 0) {
         return sendMessageWTyping(from, { text: `❌ empty query!` }, { quoted: msg });
     }
     try {
-        let resultTest = eval(args[0]);
+        let resultTest = eval(evv);
         if (typeof resultTest === "object")
             sendMessageWTyping(from, { text: JSON.stringify(resultTest) }, { quoted: msg });
         else sendMessageWTyping(from, { text: resultTest.toString() }, { quoted: msg });

@@ -1,22 +1,8 @@
-const axios = require('axios');
+const request = require('request');
+
 module.exports.command = () => {
     let cmd = ["horo"];
     return { cmd, handler };
-}
-
-
-async function gethoro(sunsign) {
-    var mainconfig = {
-        method: 'POST',
-        url: `https://aztro.sameerkumar.website/?sign=${sunsign}&day=today`
-    }
-    let horo;
-    await axios.request(mainconfig).then((res) => {
-        horo = res.data
-    }).catch((error) => {
-        return false;
-    })
-    return horo;
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -55,20 +41,27 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (!l.includes(h_Low)) {
         sendMessageWTyping(from, { text: "Kindly enter the right spelling." }, { quoted: msg });
     } else {
-        const callhoro = await gethoro(h_Low);
-        console.log("horo", args[0]);
-        sendMessageWTyping(
-            from,
-            {
-                text: `*Date Range*:-${callhoro.date_range}
+        const options = {
+            method: 'POST',
+            url: 'https://aztro.sameerkumar.website/',
+            qs: { sign: h_Low, day: 'today' }
+        };
+
+        request(options, function (error, response, body) {
+            if (error) throw new Error(error);
+            let callhoro = JSON.parse(body)
+            sendMessageWTyping(
+                from,
+                {
+                    text: `*Date*:-${callhoro.current_date}
 *Nature Hold's For you*:-${callhoro.description}
 *Compatibility*:-${callhoro.compatibility}
 *Mood*:-${callhoro.mood}
 *color*:-${callhoro.color}
 *Lucky Number*:-${callhoro.lucky_number}
 *Lucky time*:-${callhoro.lucky_time}`
-            },
-            { quoted: msg }
-        );
+                },
+                { quoted: msg })
+        });
     }
 }

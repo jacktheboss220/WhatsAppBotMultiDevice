@@ -25,45 +25,48 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         search = args[0];
     }
     try {
-        const resV = await YouTube.getVideo(search);
-        let YTtitle = resV.data.body.meta.title;
-        let found = false, k;
-        for (let i = 0; i < resV.data.body.url.length; i++) {
-            if (
-                resV.data.body.url[i].quality == 720
-                && resV.data.body.url[i].no_audio == false
-            ) {
-                found = true;
-                return sock.sendMessage(
+        await YouTube.getVideo(search).then(resV => {
+            let YTtitle = resV.data.body.meta.title;
+            let found = false, k;
+            for (let i = 0; i < resV.data.body.url.length; i++) {
+                if (
+                    resV.data.body.url[i].quality == 720
+                    && resV.data.body.url[i].no_audio == false
+                ) {
+                    found = true;
+                    return sock.sendMessage(
+                        from,
+                        {
+                            video: { url: resV.data.body.url[i].url },
+                            caption: `*Title*: ${YTtitle}
+*Quality*: 720p`
+                        },
+                        { quoted: msg }
+                    )
+                } else if
+                    (
+                    resV.data.body.url[i].quality == 360
+                    && resV.data.body.url[i].no_audio == false
+                ) {
+                    if (found == false) {
+                        k = i;
+                    }
+                }
+            }
+            if (found == false) {
+                sock.sendMessage(
                     from,
                     {
-                        video: { url: resV.data.body.url[i].url },
+                        video: { url: resV.data.body.url[k].url },
                         caption: `*Title*: ${YTtitle}
-*Quality*: 720p`
+*Quality*: 360p`
                     },
                     { quoted: msg }
                 )
-            } else if
-                (
-                resV.data.body.url[i].quality == 360
-                && resV.data.body.url[i].no_audio == false
-            ) {
-                if (found == false) {
-                    k = i;
-                }
             }
-        }
-        if (found == false) {
-            sock.sendMessage(
-                from,
-                {
-                    video: { url: resV.data.body.url[k].url },
-                    caption: `*Title*: ${YTtitle}
-*Quality*: 360p`
-                },
-                { quoted: msg }
-            )
-        }
+        }).catch(err => {
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+        });
     } catch (err) {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }

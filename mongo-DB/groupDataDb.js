@@ -29,7 +29,7 @@ const createGroupData = (groupJid, groupMetadata) => {
                     desc: groupMetadata.desc ? groupMetadata.desc.toString() : ""
                 }
             })
-            console.log("Updated Data");
+            // console.log("Updated Data");
         }
     }).catch(err => {
         console.log(err);

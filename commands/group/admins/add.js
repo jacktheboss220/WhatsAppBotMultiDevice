@@ -8,7 +8,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (!groupAdmins.includes(botNumberJid)) return sendMessageWTyping(from, { text: `❌ Bot Needs To Be Admin In Order To Add Members.` }, { quoted: msg });
 
-    // let taggedJid;
     if (msg.message.extendedTextMessage) {
         evv = msg.message.extendedTextMessage.contextInfo.participant;
     }

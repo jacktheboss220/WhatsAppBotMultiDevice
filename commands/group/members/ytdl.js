@@ -1,7 +1,8 @@
 
 require('dotenv').config();
-const { YouTube } = require('../../../social-downloader-sdk');
+const youtubedl = require('youtube-dl-exec')
 const yts = require('yt-search');
+const fs = require('fs')
 
 
 module.exports.command = () => {
@@ -25,48 +26,23 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         search = args[0];
     }
     try {
-        await YouTube.getVideo(search).then(resV => {
-            let YTtitle = resV.data.body.meta.title;
-            let found = false, k;
-            for (let i = 0; i < resV.data.body.url.length; i++) {
-                if (
-                    resV.data.body.url[i].quality == 720
-                    && resV.data.body.url[i].no_audio == false
-                ) {
-                    found = true;
-                    return sock.sendMessage(
-                        from,
-                        {
-                            video: { url: resV.data.body.url[i].url },
-                            caption: `*Title*: ${YTtitle}
-*Quality*: 720p`
-                        },
-                        { quoted: msg }
-                    )
-                } else if
-                    (
-                    resV.data.body.url[i].quality == 360
-                    && resV.data.body.url[i].no_audio == false
-                ) {
-                    if (found == false) {
-                        k = i;
-                    }
-                }
-            }
-            if (found == false) {
+        youtubedl(search, { format: 'mp4' }).then(() => {
+            const steam = youtubedl.exec(search, { format: "mp4", getFilename: true });
+            steam.then((r) => {
                 sock.sendMessage(
                     from,
                     {
-                        video: { url: resV.data.body.url[k].url },
-                        caption: `*Title*: ${YTtitle}
-*Quality*: 360p`
+                        video: fs.readFileSync(r.stdout),
+                        caption: `*Title*: ${r.stdout}`
                     },
                     { quoted: msg }
                 )
-            }
+            }).catch(err => {
+                sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+            })
         }).catch(err => {
             sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        });
+        })
     } catch (err) {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }

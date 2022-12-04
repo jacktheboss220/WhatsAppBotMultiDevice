@@ -7,6 +7,7 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, command, senderJid } = msgInfoObj;
+    let { evv } = msgInfoObj;
     switch (command) {
         case "group":
             if (!args[0]) {
@@ -16,7 +17,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 let data = args[0].split(":")[0];
                 let value = args[0].split(":")[1];
                 if (value == "true") value = true;
-                if (value == "false") value = false;
+                else if (value == "false") value = false;
+                else value = evv.split(":")[1];
                 group.updateOne({ _id: from }, { $set: { [data]: value } }).then(res => {
                     sendMessageWTyping(from, { text: "Command Executed" }, { quoted: msg })
                 })
@@ -33,7 +35,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     let data = args[0].split(":")[0];
                     let value = args[0].split(":")[1];
                     if (value == "true") value = true;
-                    if (value == "false") value = false;
+                    else if (value == "false") value = false;
+                    else value = evv.split(":")[1];
                     member.updateOne({ _id: senderJid }, { $set: { [data]: value } }).then(res => {
                         sendMessageWTyping(from, { text: "Command Executed" }, { quoted: msg })
                     })

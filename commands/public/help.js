@@ -76,6 +76,10 @@ ${readMore}
     _For converting sticker to image_
     _Alias ${prefix}image_
 
+*${prefix}img*
+    _For search image by google_
+    eg: ${prefix}img cute cat_
+
 *${prefix}mp3*
     _convert video to audio_
     _Alias ${prefix}mp4audio , ${prefix}tomp3_
@@ -153,11 +157,11 @@ ${readMore}
 
 *${prefix}ud*
     _Show Meaning of your name_
-    eg:${prefix}ud ram
+    eg:${prefix}ud Mahesh
 
 *${prefix}dic*
     _A classic Dictionary_
-    eg:${prefix}ud ram
+    eg:${prefix}ud Love
 
 *${prefix}source*
     _Get the source code!_
@@ -176,13 +180,13 @@ ${readMore}
         _pack_ - Add metadata in sticker!
         _nometadata_ - Remove all metadata from sticker!
     *Examples:*
-        _${prefix}sticker pack Blender author bot_
+        _${prefix}sticker pack mybitbot author jacktheboss220_
         _${prefix}sticker crop_
         _${prefix}sticker nometadata_
         
 *${prefix}idp*
         _download Instagram private profile picture_
-        eg:${prefix}idp username`
+        eg:${prefix}idp mybitbot`
 
 
     sendMessageWTyping(

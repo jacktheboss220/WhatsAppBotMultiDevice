@@ -2,7 +2,9 @@ node_modules
 package-lock.json
 baileys_auth_info
 test.js
+test.json
 .env
+index.html
 # mongo-DB
 # indexMongodb.js
 # mongodb.js

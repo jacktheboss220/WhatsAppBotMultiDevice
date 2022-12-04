@@ -1,3 +1,7 @@
+const { getGroupData, createGroupData, group } = require('../../mongo-DB/groupDataDb');
+const { getMemberData, createMembersData, member } = require('../../mongo-DB/membersDataDb');
+const axios = require('axios');
+
 module.exports.command = () => {
     let cmd = ["test"];
     return { cmd, handler };

@@ -29,3 +29,7 @@ MONGODB_KEY : https://www.mongodb.com/
 LYRICS_KEY : https://docs.genius.com/#/getting-started-h1
 
 PIN_KEY: https://api.xteam.xyz/
+
+## evn 
+
+<img src="https://i.ibb.co/gMgnptR/env.jpg" alt="jacktheboss220" />

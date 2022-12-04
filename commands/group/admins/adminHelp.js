@@ -32,6 +32,9 @@ ${readMore}
 *${prefix}rename <new-subject>*
     _Change group subject!_
 
+*${prefix}welcome*
+    _Set group welcome message!_
+
 *${prefix}chat <on/off>*
     _Enable/disable group chat_
     _${prefix}chat on - for everyone!_

@@ -139,13 +139,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             await writeFile(media, buffer);
             async function buildSticker() {
                 if (args.includes("nometadata") == true) {
+                    await WSF.setMetadata(
+                        "",
+                        "",
+                        ran
+                    );
                     await sock.sendMessage(
                         from,
-                        { sticker: fs.readFileSync(media) },
+                        { sticker: fs.readFileSync(ran) },
                         { quoted: msg }
                     ).then(() => {
                         try {
-                            fs.unlinkSync(media);
+                            fs.unlinkSync(ran);
                         } catch { }
                     });
                 } else {
@@ -191,13 +196,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
             async function buildSticker() {
                 if (args.includes("nometadata") == true) {
+                    await WSF.setMetadata(
+                        "",
+                        "",
+                        ran
+                    );
                     await sock.sendMessage(
                         from,
-                        { sticker: fs.readFileSync(media) },
+                        { sticker: fs.readFileSync(ran) },
                         { quoted: msg }
                     ).then(() => {
                         try {
-                            fs.unlinkSync(media);
                             fs.unlinkSync(ran);
                         } catch { }
                     });
@@ -262,6 +271,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
             async function buildSticker() {
                 if (args.includes("nometadata") == true) {
+                    await WSF.setMetadata(
+                        "",
+                        "",
+                        ran
+                    );
                     await sock.sendMessage(
                         from,
                         { sticker: fs.readFileSync(ran) },

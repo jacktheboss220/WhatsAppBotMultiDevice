@@ -9,6 +9,14 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
+
+    let taggedJid;
+    if (msg.message.extendedTextMessage) {
+        taggedJid = msg.message.extendedTextMessage ?
+            msg.message.extendedTextMessage.contextInfo.participant :
+            msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+    }
+
     if (args.length === 0) {
         return sendMessageWTyping(from, { text: `❌ empty query!` }, { quoted: msg });
     }

@@ -3,6 +3,7 @@ require('dotenv').config();
 const youtubedl = require('youtube-dl-exec')
 const yts = require('yt-search');
 const fs = require('fs')
+const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
 
 module.exports.command = () => {
@@ -26,13 +27,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         search = args[0];
     }
     try {
-        youtubedl(search, { format: 'mp4' }).then(() => {
+        let fileDown = getRandom(".mp4");
+        youtubedl(search, { format: 'mp4', output: fileDown }).then(() => {
             const steam = youtubedl.exec(search, { format: "mp4", getFilename: true });
             steam.then((r) => {
                 sock.sendMessage(
                     from,
                     {
-                        video: fs.readFileSync(r.stdout),
+                        video: fs.readFileSync(fileDown),
                         caption: `*Title*: ${r.stdout}`
                     },
                     { quoted: msg }

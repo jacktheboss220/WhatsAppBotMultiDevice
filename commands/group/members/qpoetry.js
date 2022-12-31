@@ -6,10 +6,11 @@ module.exports.command = () => {
     let cmd = ["qpoetry", "qpt"];
     return { cmd, handler };
 }
+const poetURL = 'https://poetrydb.org/';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
-    const poetURL = 'https://poetrydb.org/';
+    if (!args) return sendMessageWTyping(from, { text: "Provide author argument." }, { quoted: msg });
     if (args.length == 1 && args[0].toLowerCase() == "authors") {
         await axios(poetURL + '/author').then((res) => {
             try {
@@ -28,7 +29,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         })
         return;
     }
-    if (args.length == 0) return sendMessageWTyping(from, { text: `Enter auther.\n add authers to know all auther.` }, { quoted: msg });
+    if (args.length == 0) return sendMessageWTyping(from, { text: `Enter author.\n add authors to know all auther.` }, { quoted: msg });
     if (args.includes("author") && args.includes("title")) {
         let author = evv.substring(evv.indexOf("author") + 7, evv.lastIndexOf("title")).trim().split(" ").join("%20");
         let title = evv.substring(evv.indexOf("title") + 6).trim().split(" ").join("%20");

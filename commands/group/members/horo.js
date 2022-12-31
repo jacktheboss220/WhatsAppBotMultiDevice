@@ -1,5 +1,5 @@
 const request = require('request');
-
+const fs = require('fs')
 module.exports.command = () => {
     let cmd = ["horo"];
     return { cmd, handler };
@@ -7,6 +7,13 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping } = msgInfoObj;
+    if (from == "919557666582-1580308963@g.us") {
+        return sendMessageWTyping(
+            from,
+            { sticker: fs.readFileSync('./media/sticker/horo-bully.webp') },
+            { quoted: msg }
+        )
+    }
     const sections = [
         {
             title: "Categories",
@@ -31,6 +38,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         text: "Horoscope",
         footer: "Send by mybitbot",
         buttonText: "Click here",
+        viewOnce: true,
         sections
     }
     if (!args[0]) return sock.sendMessage(from, listMessage);

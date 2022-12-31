@@ -1,8 +1,8 @@
 # WhatsAppBotMultiDevice
 
-# Deploy on Heroku
+# Deploy on Koyeb.com
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/jacktheboss220/WhatsAppBotMultiDevice)
+#[Deploy](https://www.koyeb.com/)
 
 # Variable names is .env
 
@@ -27,3 +27,9 @@ SEARCH_ENGINE_KEY : https://programmablesearchengine.google.com/controlpanel/all
 MONGODB_KEY : https://www.mongodb.com/
 
 LYRICS_KEY : https://docs.genius.com/#/getting-started-h1
+
+PIN_KEY: https://api.xteam.xyz/
+
+## evn 
+
+<img src="https://i.ibb.co/gMgnptR/env.jpg" alt="jacktheboss220" />

@@ -1,33 +1,39 @@
-const axios = require('axios');
+require('dotenv').config()
+const { group } = require('../../mongo-DB/groupDataDb')
+const { Configuration, OpenAIApi } = require("openai");
+const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 module.exports.command = () => {
     let cmd = ["eva"];
     return { cmd, handler };
 }
-const chaturi = 'https://api.safone.tech/chatbot?query=';
-const bot_name = "Eva";
-const user_id = 1000;
-const bot_master = "Mahesh";
+
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { evv, sendMessageWTyping } = msgInfoObj;
-    if (!args[0]) return sendMessageWTyping(from, { text: `Enter some text` });
-    let message = encodeURI(evv);
-    axios(chaturi + message + '&user_id=' + user_id + ' &bot_name=' + bot_name + '&bot_master=' + bot_master).then((res) => {
-        mas = res.data.answer;
-        if (mas.includes("[Safone](t.me/asmsafone)")) mas = mas.replace("[Safone](t.me/asmsafone)", "Mahesh");
-        try {
-            sendMessageWTyping(
-                from,
-                {
-                    text: '```' + mas + '```',
-                    mentions: msg.message.extendedTextMessage ? msg.message.extendedTextMessage.contextInfo.mentionedJid : ""
-                },
-                { quoted: msg }
-            );
-        } catch (err) {
-            console.log(err);
+    group.findOne({ _id: from }).then(res => {
+        if (res.isChatBotOn == false) {
+            return sendMessageWTyping(from, { text: `Chat Bot is Off ask the owner to activate it. Use dev` }, { quoted: msg });
         }
-    }).catch((err) => {
+    });
+    if (!args[0]) return sendMessageWTyping(from, { text: `Enter some text` });
+
+    let message = encodeURI(evv);
+
+    const prompt = message;
+
+    await openai.createCompletion({
+        model: "text-davinci-003",
+        prompt: prompt,
+        max_tokens: 2048,
+        temperature: 0.5,
+    }).then(response => {
+        const text = response.data.choices[0].text;
+        sendMessageWTyping(from, { text: text.trim() }, { quoted: msg });
+    }).catch(err => {
         console.log(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });

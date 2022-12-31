@@ -28,6 +28,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const listMessage = {
         text: "News By Categories",
         footer: "Send by mybitbot",
+        viewOnce: true,
         // title: "News By InShorts-Api",
         buttonText: "Click here",
         sections

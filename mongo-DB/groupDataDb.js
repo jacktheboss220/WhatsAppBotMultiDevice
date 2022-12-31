@@ -16,7 +16,9 @@ const createGroupData = (groupJid, groupMetadata) => {
                 grpName: groupMetadata.subject,
                 desc: groupMetadata.desc ? groupMetadata.desc.toString() : "",
                 cmdBlocked: [],
+                welcome: "",
                 totalMsgCount: 0,
+                memberWarnCount: [],
                 members: []
             })
         }

@@ -21,12 +21,23 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const isTaggedImage
         = type === "extendedTextMessage" && content.includes("imageMessage");
 
-    if (!args[0]) return sendMessageWTyping(from, { text: `*Use* -textmeme _FontSize;toptext;bottomtext_` }, { quoted: msg });
+    if (!args[0]) return sendMessageWTyping(from, { text: `*Use* -textmeme _FontColor;FontStrokeColor;FontSize;FontTop;FontBottom_` }, { quoted: msg });
 
     console.log('content ', evv);
-    var TopText, BottomText, FontSize = 0;
+    var TopText, BottomText, FontColor = 'Black', FontStroke = 'Black', FontSize = 0;
     if (evv.includes(";")) {
-        if (evv.split(";").length == 3) {
+        if (evv.split(";").length == 5) {
+            FontColor = evv.split(";")[0]
+            FontStroke = evv.split(";")[1]
+            FontSize = evv.split(";")[2];
+            TopText = evv.split(";")[3];
+            BottomText = evv.split(";")[4];
+        } else if (evv.split(";").length == 4) {
+            FontColor = evv.split(";")[0]
+            FontSize = evv.split(";")[1];
+            TopText = evv.split(";")[2];
+            BottomText = evv.split(";")[3];
+        } else if (evv.split(";").length == 3) {
             FontSize = evv.split(";")[0];
             TopText = evv.split(";")[1];
             BottomText = evv.split(";")[2];
@@ -61,11 +72,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 outfile: MemePath,
                 topText: TopText,
                 bottomText: BottomText,
-                // font: './../impact.ttf',
+                // font: 'monospace',
                 fontSize: (FontSize == 0) ? 50 : FontSize,
-                // fontFill: '#000000',
+                fontFill: FontColor,
                 // textPos: 'center',
-                // strokeColor: '#000',
+                strokeColor: FontStroke,
                 strokeWeight: 1
             }
             memeMaker(options).then(() => {

@@ -29,8 +29,8 @@ const downloadmeme = async (url) => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const memeURL = 'https://meme-api.herokuapp.com/gimme';
-    axios.get(`${memeURL}`).then((res) => {
+    const memeURL = 'https://meme-api.com/gimme';
+    await axios.get(`${memeURL}`).then((res) => {
         let url = res.data.url;
         if (url.includes("jpg") || url.includes("jpeg") || url.includes("png")) {
             sock.sendMessage(

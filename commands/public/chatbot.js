@@ -10,21 +10,7 @@ module.exports.command = () => {
     let cmd = ["eva"];
     return { cmd, handler };
 }
-
-
-const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { evv, sendMessageWTyping } = msgInfoObj;
-    group.findOne({ _id: from }).then(res => {
-        if (res.isChatBotOn == false) {
-            return sendMessageWTyping(from, { text: `Chat Bot is Off ask the owner to activate it. Use dev` }, { quoted: msg });
-        }
-    });
-    if (!args[0]) return sendMessageWTyping(from, { text: `Enter some text` });
-
-    let message = encodeURI(evv);
-
-    const prompt = message;
-
+async function chat(prompt, from, msg, sendMessageWTyping) {
     await openai.createCompletion({
         model: "text-davinci-003",
         prompt: prompt,
@@ -37,4 +23,21 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         console.log(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     });
+}
+const handler = async (sock, msg, from, args, msgInfoObj) => {
+    let { evv, sendMessageWTyping, isGroup } = msgInfoObj;
+    if (!args[0]) return sendMessageWTyping(from, { text: `Enter some text` });
+    let message = encodeURI(evv);
+    const prompt = message;
+    if (isGroup) {
+        group.findOne({ _id: from }).then(res => {
+            if (res.isChatBotOn == false) {
+                return sendMessageWTyping(from, { text: `Chat Bot is Off ask the owner to activate it. Use dev` }, { quoted: msg });
+            } else {
+                chat(prompt, from, msg, sendMessageWTyping);
+            }
+        });
+    } else {
+        chat(prompt, from, msg, sendMessageWTyping)
+    }
 }

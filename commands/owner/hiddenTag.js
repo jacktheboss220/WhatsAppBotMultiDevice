@@ -9,7 +9,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (!isGroup) target = args[0];
     const groupMetadata = await sock.groupMetadata(isGroup ? from : target);
     let jid = [];
-    let message = "```Hidden Tag By Owner```";
+    let message = "";
     try {
         if (
             msg.message.extendedTextMessage &&

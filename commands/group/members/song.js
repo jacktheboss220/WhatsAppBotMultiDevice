@@ -53,9 +53,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     await sendMessageWTyping(
                         from,
                         {
-                            audio: { url: sany },
+                            audio: fs.readFileSync(sany),
                             mimetype: 'audio/mp4'
                         },
+                        { url: sany },
                         { quoted: msg }
                     ).then(() => {
                         console.log("Sent");

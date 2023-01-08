@@ -133,9 +133,9 @@ ${readMore}
 *${prefix}qpt*
     _get a poet written by authors_
     *Examples:*
-        _${prefix}qpt auther Shakespeare title sonnet_
-        _${prefix}qpt auther Shakespeare_
-        _${prefix}qpt authers_
+        _${prefix}qpt author Shakespeare title sonnet_
+        _${prefix}qpt author Shakespeare_
+        _${prefix}qpt authors_
     _Alies: ${prefix}qpoetry_
 
 *${prefix}removebg*

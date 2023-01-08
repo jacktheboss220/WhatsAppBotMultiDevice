@@ -74,9 +74,16 @@ Our WhatsApp bot project allows users to easily perform various actions such as 
 | -tagall | Send an attendance alert to all members | `-tagall message` |
 
 
-# Deploy Locally or Koyeb.com
+# Deploy on Koyeb.com
 
-[Deploy](https://www.koyeb.com/)
+To set up Koyeb for this project, follow these steps:
+
+- Create an account on Koyeb at https://app.koyeb.com/auth/signup.
+- Log in to the Koyeb dashboard and create a new app at https://app.koyeb.com/apps/new.
+- In the 'Deploy' section, choose your preferred deployment method (GitHub or Docker).
+- Set any necessary environment variables. All Required Env Are [Here](#evn)
+- Add the build and run commands: `npm i` and `bash start.sh`
+
 
 # Run locally
 

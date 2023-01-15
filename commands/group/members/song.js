@@ -54,10 +54,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                         from,
                         {
                             audio: fs.readFileSync(sany),
-                            mimetype: 'audio/mp4'
+                            // mimetype: 'audio/mp4'
                         },
+                        { quoted: msg },
                         { url: sany },
-                        { quoted: msg }
                     ).then(() => {
                         console.log("Sent");
                         try {

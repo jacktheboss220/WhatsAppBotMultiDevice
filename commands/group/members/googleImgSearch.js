@@ -17,7 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         if (args[0] == 1) {
             sendMessageWTyping(from, { image: { url: res[0].url } }, { quoted: msg })
         } else {
-            let count = Math.ceil(Math.random() * res.length);
+            let count = Math.floor(Math.random() * res.length);
             sendMessageWTyping(from, { image: { url: res[count].url } }, { quoted: msg })
         }
     })

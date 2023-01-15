@@ -7,29 +7,35 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping } = msgInfoObj;
-    if (from == "919557666582-1580308963@g.us") {
-        return sendMessageWTyping(
-            from,
-            { sticker: fs.readFileSync('./media/sticker/horo-bully.webp') },
-            { quoted: msg }
-        )
+    const stickerGroup1 = "919557666582-1580308963@g.us";
+    if (from == stickerGroup1 ||
+        from == "918460411452-1556811704@g.us" ||
+        from == "918866770266-1608397802@g.us") {
+        const random = Math.floor(Math.random() * 10);
+        if ([1, 3, 5, 7, 9].includes(random)) {
+            return sendMessageWTyping(
+                from,
+                { sticker: fs.readFileSync('./media/sticker/horo-bully.webp') },
+                { quoted: msg }
+            )
+        }
     }
     const sections = [
         {
             title: "Categories",
             rows: [
-                { title: `${prefix}horo aries`, rowId: "option1", description: "" },
-                { title: `${prefix}horo taurus`, rowId: "option2", description: "" },
-                { title: `${prefix}horo gemini`, rowId: "option3", description: "" },
-                { title: `${prefix}horo cancer`, rowId: "option4", description: "" },
-                { title: `${prefix}horo leo`, rowId: "option5", description: "" },
-                { title: `${prefix}horo virgo`, rowId: "option6", description: "" },
-                { title: `${prefix}horo libra`, rowId: "option7", description: "" },
-                { title: `${prefix}horo scorpio`, rowId: "option8", description: "" },
-                { title: `${prefix}horo sagittarius`, rowId: "option9", description: "" },
-                { title: `${prefix}horo capricorn`, rowId: "option10", description: "" },
-                { title: `${prefix}horo aquarius`, rowId: "option11", description: "" },
-                { title: `${prefix}horo pisces`, rowId: "option12", description: "" },
+                { title: `${prefix}horo aries`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo taurus`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo gemini`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo cancer`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo leo`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo virgo`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo libra`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo scorpio`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo sagittarius`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo capricorn`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo aquarius`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo pisces`, rowId: "mybitbot", description: "" },
             ]
         },
     ]

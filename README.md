@@ -82,7 +82,7 @@ To set up Koyeb for this project, follow these steps:
 - Log in to the Koyeb dashboard and create a new app at https://app.koyeb.com/apps/new.
 - In the 'Deploy' section, choose your preferred deployment method (GitHub or Docker).
 - Set any necessary environment variables. All Required Env Are [Here](#evn)
-- Add the build and run commands: `npm i` and `bash start.sh`
+- Add the build and run commands: `npm i` and `node index.js`
 
 
 # Run locally

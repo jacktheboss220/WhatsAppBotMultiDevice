@@ -29,7 +29,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         })
         return;
     }
-    if (args.length == 0) return sendMessageWTyping(from, { text: `Enter author.\n add authors to know all author.` }, { quoted: msg });
+    if (args.length == 0) return sendMessageWTyping(from, { text: `Enter author.\n add authors to know all auther.` }, { quoted: msg });
     if (args.includes("author") && args.includes("title")) {
         let author = evv.substring(evv.indexOf("author") + 7, evv.lastIndexOf("title")).trim().split(" ").join("%20");
         let title = evv.substring(evv.indexOf("title") + 6).trim().split(" ").join("%20");

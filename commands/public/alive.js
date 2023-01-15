@@ -1,3 +1,4 @@
+const fs = require('fs');
 module.exports.command = () => {
     let cmd = ["alive", "a"];
     return { cmd, handler };
@@ -5,9 +6,40 @@ module.exports.command = () => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
-    sendMessageWTyping(
+    // const buttons = [
+    //     { buttonId: 'mybitbot', buttonText: { displayText: 'Help' }, type: 1 },
+    // ]
+
+    // const buttonMessage = {
+    //     image: fs.readFileSync(__dirname + "/../../media/alive-img.jpg"),
+    //     // text: "```Yes Bot is Running...```❣️",
+    //     caption: "```Yes Bot is Running...```❣️",
+    //     footer: 'mybitbot',
+    //     buttons: buttons,
+    //     viewOnce: true,
+    //     headerType: 4
+    // }
+
+    // await sock.sendMessage(
+    //     from,
+    //     buttonMessage,
+    // )
+
+    await sendMessageWTyping(
         from,
-        { text: "```🫠🅈🄴🅂 🄸'🄼 🄰🄻🄸🅅🄴🫠```" },
-        { quoted: msg }
+        { text: "```Yes Bot is Running...```❣️" },
+        {
+            quoted: {
+                key: {
+                    remoteJid: from,
+                    fromMe: false,
+                    id: "810B5GH29EE7481fakeid",
+                    participant: "0@s.whatsapp.net",
+                },
+                messageTimestamp: 1122334455,
+                pushName: "WhatsApp",
+                message: { conversation: "jacktheboss220" },
+            },
+        }
     );
 };

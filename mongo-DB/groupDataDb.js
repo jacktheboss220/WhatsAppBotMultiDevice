@@ -24,13 +24,24 @@ const createGroupData = (groupJid, groupMetadata) => {
         }
         // else console.log("Already Created : ", groupJid);
         else {
-            group.updateOne(
-                { _id: groupJid }, {
-                $set: {
-                    grpName: groupMetadata.subject,
-                    desc: groupMetadata.desc ? groupMetadata.desc.toString() : ""
-                }
-            })
+            if (res.memberWarnCount == undefined || res.memberWarnCount.length == undefined) {
+                group.updateOne(
+                    { _id: groupJid }, {
+                    $set: {
+                        memberWarnCount: [],
+                        grpName: groupMetadata.subject,
+                        desc: groupMetadata.desc ? groupMetadata.desc.toString() : ""
+                    }
+                })
+            } else {
+                group.updateOne(
+                    { _id: groupJid }, {
+                    $set: {
+                        grpName: groupMetadata.subject,
+                        desc: groupMetadata.desc ? groupMetadata.desc.toString() : ""
+                    }
+                })
+            }
             // console.log("Updated Data");
         }
     }).catch(err => {

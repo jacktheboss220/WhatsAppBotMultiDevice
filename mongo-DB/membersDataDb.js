@@ -16,9 +16,19 @@ const createMembersData = (jid, name) => {
                 warning: []
             })
         } else {
-            member.updateOne({ _id: jid }, {
-                $set: { username: name }
-            })
+            if (res.warning.length == undefined) {
+                member.updateOne({ _id: jid }, {
+                    $set: {
+                        username: name,
+                        warning: []
+                    }
+                })
+            }
+            else {
+                member.updateOne({ _id: jid }, {
+                    $set: { username: name }
+                })
+            }
         }
         // else console.log("ALready Created Member Data : ", jid);
     })

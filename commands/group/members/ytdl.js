@@ -28,20 +28,31 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
     try {
         let fileDown = getRandom(".mp4");
-        youtubedl(search, { format: 'mp4', output: fileDown }).then(() => {
-            const steam = youtubedl.exec(search, { format: "mp4", getFilename: true });
-            steam.then((r) => {
-                sock.sendMessage(
+        youtubedl(search, { format: 'mp4', output: fileDown, maxFilesize: "104857600", }).then((r) => {
+            if (r.includes("max-filesize")) {
+                return sendMessageWTyping(
                     from,
                     {
-                        video: fs.readFileSync(fileDown),
-                        caption: `*Title*: ${r.stdout}`
+                        text: "File size exceeds more then 100MB."
                     },
                     { quoted: msg }
                 )
-            }).catch(err => {
-                sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-            })
+            }
+            else {
+                const steam = youtubedl.exec(search, { format: "mp4", getFilename: true });
+                steam.then((r) => {
+                    sock.sendMessage(
+                        from,
+                        {
+                            video: fs.readFileSync(fileDown),
+                            caption: `*Title*: ${r.stdout}`
+                        },
+                        { quoted: msg }
+                    )
+                }).catch(err => {
+                    sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+                })
+            }
         }).catch(err => {
             sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
         })

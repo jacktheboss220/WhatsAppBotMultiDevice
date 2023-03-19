@@ -1,7 +1,3 @@
-module.exports.command = () => {
-    let cmd = ["admin"];
-    return { cmd, handler };
-}
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
@@ -61,3 +57,5 @@ ${readMore}
         { text: admin }
     );
 }
+
+module.exports.command = () => ({ cmd: ["admin"], handler });

@@ -1,6 +1,6 @@
 {
   "name": "whatsappbot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "well...Unique and intresting project",
   "main": "index.js",
   "directories": {
@@ -13,10 +13,12 @@
   "author": "mahesh",
   "license": "MIT",
   "engines": {
-    "node": "18.x"
+    "node": "18.x",
+    "heroku/nodejs-engine": "0.10.0"
   },
   "dependencies": {
     "@adiwajshing/baileys": "github:jacktheboss220/baileys",
+    "@bochilteam/scraper": "^4.0.22-alpha.0",
     "@erickwendel/meme-maker": "^2.3.1",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@hapi/hoek": "^10.0.1",
@@ -24,7 +26,6 @@
     "deepai": "^1.0.21",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "g-i-s": "^2.1.6",
     "genius-lyrics": "^4.4.2",
     "genius-lyrics-api": "^3.2.0",
     "inshorts-api": "^1.0.3",
@@ -35,11 +36,15 @@
     "openai": "^3.1.0",
     "qrcode-terminal": "^0.12.0",
     "truecallerjs": "^1.1.2",
-    "twitter-url-direct": "^1.0.8",
+    "twitter-url-direct": "^1.0.9",
+    "ultimate-text-to-image": "^1.0.1",
     "urban-dictionary": "^3.0.2",
     "wa-sticker-formatter": "^3.6.0",
-    "youtube-dl-exec": "^2.1.10",
+    "youtube-dl-exec": "^2.4.0",
     "yt-search": "^2.10.3",
     "ytdl-core": "^4.11.2"
+  },
+  "devDependencies": {
+    "googleapis": "^112.0.0"
   }
 }

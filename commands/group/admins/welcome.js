@@ -1,24 +1,17 @@
 const { getGroupData, group } = require('../../../mongo-DB/groupDataDb');
-module.exports.command = () => {
-    let cmd = ["welcome"];
-    return { cmd, handler };
-}
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
-    let { evv } = msgInfoObj;
+    const evv = msgInfoObj.evv;
     const grpdata = await getGroupData(from);
     let welMess = grpdata.welcome;
+
     if (!args[0]) {
-        sendMessageWTyping(
-            from,
-            {
-                text: (welMess == "") ? "*No Welcome Message is Set type message after welcome cmd to set welcome message*" : "*Welcome Message is :* \n" + welMess
-            },
-            { quoted: msg }
-        )
+        sendMessageWTyping(from, { text: welMess ? `Welcome Message: ${welMess}` : "No Welcome Message Set. Use the welcome command followed by a message to set a welcome message." }, { quoted: msg });
     } else {
-        group.updateOne({ _id: from }, { $set: { welcome: evv } }).then(() => {
-            sendMessageWTyping(from, { text: "*Welcome Message Is Set* \n" + evv }, { quoted: msg });
-        })
+        await group.updateOne({ _id: from }, { $set: { welcome: evv } });
+        sendMessageWTyping(from, { text: `Welcome Message Set: ${evv}` }, { quoted: msg });
     }
 }
+
+module.exports.command = () => ({ cmd: ["welcome"], handler });

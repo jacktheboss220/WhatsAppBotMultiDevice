@@ -1,9 +1,9 @@
-
-
-module.exports.command = () => {
-    let cmd = ["insta", "ig", "igd", "i"];
-    return { cmd, handler };
-}
+const {
+    instagramdl,
+    instagramdlv4,
+    instagramdlv2,
+    instagramdlv3,
+} = require('@bochilteam/scraper')
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping, ig } = msgInfoObj;
@@ -64,8 +64,30 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 }
             }
         }
-    }).catch((err) => {
-        console.log(err);
-        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+    }).catch(async (err) => {
+        const results = await instagramdl(urlInsta)
+            .catch(async (_) => await instagramdlv2(urlInsta))
+            .catch(async (_) => await instagramdlv3(urlInsta))
+            .catch(async (_) => await instagramdlv4(urlInsta));
+
+        if (!results) return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+
+        for (const { url } of results) {
+            if (url.includes("jpg") || url.includes("png") || url.includes("jpeg")) {
+                await sendMessageWTyping(
+                    from,
+                    { image: { url: url } },
+                    { quoted: msg }
+                );
+            } else {
+                await sendMessageWTyping(
+                    from,
+                    { video: { url: url } },
+                    { quoted: msg }
+                );
+            }
+        }
     });
 }
+
+module.exports.command = () => ({ cmd: ["insta", "ig", "igd", "i"], handler });

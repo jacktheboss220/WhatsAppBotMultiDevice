@@ -1,24 +1,73 @@
-const gis = require("g-i-s");
-const { getGroupData } = require('../../../mongo-DB/groupDataDb');
-module.exports.command = () => {
-    let cmd = ["img"];
-    return { cmd, handler };
-}
+const fs = require("fs");
+const axios = require("axios");
+const { googleImage } = require('@bochilteam/scraper')
+const { getGroupData } = require("../../../mongo-DB/groupDataDb");
+
+const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
+
+const baseURL = "https://www.googleapis.com/customsearch/v1";
+const googleapis = `?key=${process.env.GOOGLE_API_KEY}`;
+const searchEngineKey = `&cx=${process.env.SEARCH_ENGINE_KEY}`;
+const searchType = "&searchType=image";
+const defQuery = "&q=";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { sendMessageWTyping, evv } = msgInfoObj;
-    let data = await getGroupData(from);
-    if (data.isImgOn == false) return sendMessageWTyping(from, { text: "```By Default Search Image is Disable in this group.```" }, { quoted: msg })
-    if (args[0].startsWith("@") && msg.message.extendedTextMessage) return sendMessageWTyping(from, { text: "```Enter Word to Search```" }, { quoted: msg });
-    if (args[0] == 1) evv = evv.split("1")[1];
-    console.log(evv);
-    gis(evv, (err, res) => {
-        if (err) return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        if (args[0] == 1) {
-            sendMessageWTyping(from, { image: { url: res[0].url } }, { quoted: msg })
-        } else {
-            let count = Math.floor(Math.random() * res.length);
-            sendMessageWTyping(from, { image: { url: res[count].url } }, { quoted: msg })
-        }
-    })
+    const { sendMessageWTyping, evv } = msgInfoObj;
+    const data = await getGroupData(from);
+
+    if (!data.isImgOn) {
+        return sendMessageWTyping(from, { text: "```By Default Search Image is Disable in this group.```" }, { quoted: msg });
+    }
+
+    if (args[0]?.startsWith("@") && msg.message.extendedTextMessage) {
+        return sendMessageWTyping(from, { text: "```Enter Word to Search```" }, { quoted: msg });
+    }
+
+    const urlToSearch = `${baseURL}${googleapis}${searchEngineKey}${searchType}${defQuery}${evv}`;
+    await axios(urlToSearch).then(async (res) => {
+        const links = res?.data?.items?.map((ele) => ele.link);
+        sendImage(links, from, msg, { args, sendMessageWTyping });
+    }).catch(() => {
+        googleImage(evv).then(async (res) => {
+            sendImage(res, from, msg, { args, sendMessageWTyping });
+        }).catch((err) => {
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+        });
+    });
+};
+
+const sendImage = async (links, from, msg, { args, sendMessageWTyping }) => {
+    const imageUrl = getRandom(".png");
+    if (!links?.length) {
+        return sendMessageWTyping(from, { text: "No image found" }, { quoted: msg });
+    }
+    let random = 0;
+    if (links.length > 5) {
+        random = Math.floor(Math.random() * 5);
+    }
+    if (args[0] == '1') {
+        random = 0;
+    }
+    const url = links[random];
+    try {
+        await downloadImage(url, imageUrl);
+        await sendMessageWTyping(from, { image: fs.readFileSync(imageUrl) }, { quoted: msg });
+        fs.unlinkSync(imageUrl);
+    } catch (err) {
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+    }
 }
+
+const downloadImage = async (url, imageUrl) => {
+    const response = await axios({
+        method: "get",
+        url,
+        responseType: "stream",
+    });
+    const out = response.data.pipe(fs.createWriteStream(imageUrl));
+    return new Promise((resolve, reject) => {
+        out.on("finish", resolve).on("error", reject);
+    });
+};
+
+module.exports.command = () => ({ cmd: ["img"], handler });

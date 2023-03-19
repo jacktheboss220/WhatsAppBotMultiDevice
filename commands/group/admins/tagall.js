@@ -6,32 +6,23 @@ module.exports.command = () => {
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
     const groupMetadata = await sock.groupMetadata(from);
-    let jid = [];
     let message = '';
+
+    if (!msg.message.extendedTextMessage && args.length === 0) {
+        return sendMessageWTyping(from, { text: "```Reply On Any Message```" }, { quoted: msg });
+    }
+
+    message += msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation
+        ? msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation + "\n\n"
+        : args.length ? args.join(" ") + "\n\n" : "```Total Members : " + groupMetadata.participants.length + "```\n\n";
+
+    const mentions = groupMetadata.participants.map(i => i.id);
+    message += mentions.map(i => "👉🏻 @" + i.split("@")[0]).join("\n");
+
     try {
-        if (!msg.message.extendedTextMessage && args.length == 0) return sendMessageWTyping(from, { text: "```Reply On Any Message```" }, { quoted: msg })
-        if (
-            msg.message.extendedTextMessage &&
-            msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation
-        ) {
-            message +=
-                msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation + "\n\n";
-        } else {
-            message += args.length ? args.join(" ") + "\n\n" : "```Total Members : " + groupMetadata.participants.length + "```\n\n";
-        }
-        for (let i of groupMetadata.participants) {
-            message += "👉🏻 @" + i.id.split("@")[0] + "\n";
-            jid.push(i.id);
-        }
-        sock.sendMessage(
-            from,
-            {
-                text: message,
-                mentions: jid
-            },
-        )
+        sock.sendMessage(from, { text: message, mentions });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
-}
+};

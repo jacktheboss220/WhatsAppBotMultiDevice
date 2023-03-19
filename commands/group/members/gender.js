@@ -1,11 +1,5 @@
 const axios = require('axios');
 
-
-module.exports.command = () => {
-    let cmd = ["gender"];
-    return { cmd, handler };
-}
-
 const getGender = async (name) => {
     let url = "https://api.genderize.io/?name=" + name;
     let { data } = await axios.get(url);
@@ -29,3 +23,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         console.log(error);
     });
 }
+
+
+module.exports.command = () => ({ cmd: ['gender'], handler }); 

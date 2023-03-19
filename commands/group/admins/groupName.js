@@ -1,8 +1,3 @@
-module.exports.command = () => {
-    let cmd = ["rename", "subject"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
     if (!args[0]) return sendMessageWTyping(from, { text: 'Provide name.' }, { quoted: msg });
@@ -12,3 +7,5 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }
+
+module.exports.command = () => ({ cmd: ['setname'], handler });

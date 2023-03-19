@@ -1,11 +1,5 @@
 const axios = require("axios");
 
-module.exports.command = () => {
-    let cmd = ["fact"];
-    return { cmd, handler };
-}
-
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const factURL = "https://nekos.life/api/v2/fact";
     try {
@@ -21,3 +15,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         console.log(err);
     }
 }
+
+
+module.exports.command = () => ({ cmd: ["fact"], handler });
+

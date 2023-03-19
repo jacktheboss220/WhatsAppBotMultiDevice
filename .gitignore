@@ -5,6 +5,8 @@ test.js
 test.json
 .env
 index.html
+test-index.js
+assets
 # mongo-DB
 # indexMongodb.js
 # mongodb.js

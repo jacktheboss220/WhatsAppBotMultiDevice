@@ -1,12 +1,7 @@
-const { getGroupData, createGroupData, group } = require('../../../mongo-DB/groupDataDb');
+const { group } = require('../../../mongo-DB/groupDataDb');
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
-
-module.exports.command = () => {
-    let cmd = ["count"];
-    return { cmd, handler };
-}
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
@@ -26,3 +21,5 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         });
     })
 }
+
+module.exports.command = () => ({ cmd: ['count'], handler });

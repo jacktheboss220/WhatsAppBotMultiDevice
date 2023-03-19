@@ -1,52 +1,51 @@
-module.exports.command = () => {
-    let cmd = ["add"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { prefix, evv, groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
-
-    if (!groupAdmins.includes(botNumberJid)) return sendMessageWTyping(from, { text: `❌ Bot Needs To Be Admin In Order To Add Members.` }, { quoted: msg });
-
-    if (msg.message.extendedTextMessage) {
-        evv = msg.message.extendedTextMessage.contextInfo.participant;
+    const { evv, groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
+    if (!groupAdmins.includes(botNumberJid)) {
+        return sendMessageWTyping(from, { text: "❌ Bot needs to be admin to add members." }, { quoted: msg });
     }
-    else {
-        if (!args[0]) return sendMessageWTyping(from, { text: `❌ Provide Number Or Reply On Member's Message` }, { quoted: msg });
-
-        evv = evv.split(" ").join("");
-        if ((evv.startsWith("@"))) {
-            return sendMessageWTyping(from, { text: "Don't Tag, Provide the number." }, { quoted: msg });
-        } else {
-            evv = evv.includes("@s.whatsapp.net") ? evv : evv + '@s.whatsapp.net';
-        }
-        if (evv.startsWith("+") == true)
-            evv = evv.split("+")[1];
-        console.log(evv);
+    if (!evv && (!msg.message.extendedTextMessage && !args[0])) {
+        return sendMessageWTyping(from, { text: "❌ Provide a number or reply to a member's message." }, { quoted: msg });
+    }
+    let participant = msg.message.extendedTextMessage ? msg.message.extendedTextMessage.contextInfo.participant : evv.split(" ").join("");
+    if (participant.startsWith("@")) {
+        return sendMessageWTyping(from, { text: "Don't tag, provide the number." }, { quoted: msg });
+    }
+    participant = participant.includes("@s.whatsapp.net") ? participant : `${participant}@s.whatsapp.net`;
+    if (participant.startsWith("+")) {
+        participant = participant.split("+")[1];
     }
     try {
-        await sock.groupParticipantsUpdate(
-            from,
-            [evv],
-            "add"
-        ).then(res => {
-            let get_status = res[0].status;
-            if (get_status == '400') {
-                sendMessageWTyping(from, { text: "_❌ Invalid number, include country code also!_" }, { quoted: msg });
-            } else if (get_status == '403') {
-                sendMessageWTyping(from, { text: "_❌ Number has privacy on adding group!_" }, { quoted: msg });
-            } else if (get_status == '408') {
-                sendMessageWTyping(from, { text: "_❌ Number has left the group recently!_" }, { quoted: msg });
-            } else if (get_status == '409') {
-                sendMessageWTyping(from, { text: "_❌ Number is already in group!_" }, { quoted: msg });
-            } else if (get_status == '500') {
-                sendMessageWTyping(from, { text: "_❌ Group is currently full!_" }, { quoted: msg });
-            } else if (get_status == '200') {
-                sendMessageWTyping(from, { text: "_✔️ Number added to group!_" }, { quoted: msg });
-            }
-        })
-    } catch (err) {
-        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        console.log("Error", err);
+        const res = await sock.groupParticipantsUpdate(from, [participant], "add");
+        const status = res[0].status;
+        let text;
+        switch (status) {
+            case '400':
+                text = "❌ Invalid number, include country code.";
+                break;
+            case '403':
+                text = "❌ Number has privacy setting on adding to group.";
+                break;
+            case '408':
+                text = "❌ Number has left the group recently.";
+                break;
+            case '409':
+                text = "❌ Number is already in group.";
+                break;
+            case '500':
+                text = "❌ Group is full.";
+                break;
+            case '200':
+                text = "✔️ Number added to group.";
+                break;
+            default:
+                text = "❌ An error has occurred.";
+                break;
+        }
+        sendMessageWTyping(from, { text: text }, { quoted: msg });
+    } catch (error) {
+        sendMessageWTyping(from, { text: error.toString() }, { quoted: msg });
+        console.error(error);
     }
-}
+};
+
+module.exports.command = () => ({ cmd: ["add"], handler });

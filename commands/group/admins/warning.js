@@ -5,24 +5,15 @@ const { createMembersData, getMemberData, member } = require('../../../mongo-DB/
 require('dotenv').config();
 const myNumber = process.env.myNumber + '@s.whatsapp.net';
 
-module.exports.command = () => {
-    let cmd = ["warn", "warning", "unwarn"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { command, groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
     try {
         if (!msg.message.extendedTextMessage) {
-            sendMessageWTyping(from, { text: "❌ Tag someone! or reply to a message" }, { quoted: msg });
-            return;
+            return sendMessageWTyping(from, { text: "❌ Tag someone! or reply to a message" }, { quoted: msg });
         }
-        let taggedJid;
-        if (msg.message.extendedTextMessage.contextInfo.participant) {
-            taggedJid = msg.message.extendedTextMessage.contextInfo.participant;
-        } else {
-            taggedJid = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
-        }
+
+        const taggedJid = msg.message.extendedTextMessage.contextInfo.participant || msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+
         let isGroupAdmin = groupAdmins.includes(taggedJid);
         if (command != "unwarn") {
             if (taggedJid == botNumberJid) return sendMessageWTyping(from, { text: `_How can I warn Myself_` }, { quoted: msg });
@@ -68,7 +59,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         switch (command) {
             case 'warn':
             case 'warning':
-                warnMsg = `@${num_split} 😒,You've been warned. Status of warning ${(warnCount + 1) / 3}. Do not repeat this sort of action or you will be kicked!`;
+                warnMsg = `@${num_split} 😒,You've been warned. Status of warning ${(warnCount + 1)} / 3. Do not repeat this sort of action or you will be kicked!`;
                 sock.sendMessage(
                     from,
                     {
@@ -118,3 +109,5 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg })
     }
 }
+
+module.exports.command = () => ({ cmd: ["warn", "warning", "unwarn"], handler });

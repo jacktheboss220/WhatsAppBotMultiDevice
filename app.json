@@ -3,7 +3,11 @@
   "description": "nodejs whatsapp bot",
   "logo": "https://i.ibb.co/sWmwD0k/e0bslrup.jpg",
   "repository": "https://github.com/jacktheboss220/WhatsAppBotMultiDevice",
-  "keywords": ["whatsapp-bot", "insta", "multi-device"],
+  "keywords": [
+    "whatsapp-bot",
+    "insta",
+    "multi-device"
+  ],
   "env": {
     "PREFIX": {
       "description": "Prefix for the bot"
@@ -35,12 +39,11 @@
   },
   "buildpacks": [
     {
-      "url": "https://github.com/heroku/heroku-buildpack-nodejs.git"
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs#latest"
     },
     {
       "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git"
     }
   ],
-  "addons": [
-  ]
+  "addons": []
 }

@@ -43,12 +43,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                             ppt: true,
                         },
                         { quoted: msg }
-                    ).then(() => {
-                        console.log("Sent");
-                        try {
-                            fs.unlinkSync(sany)
-                        } catch { }
-                    })
+                    )
+                    try {
+                        fs.unlinkSync(sany)
+                    } catch { }
+
                 } else {
                     await sendMessageWTyping(
                         from,
@@ -58,12 +57,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                         },
                         { quoted: msg },
                         { url: sany },
-                    ).then(() => {
-                        console.log("Sent");
-                        try {
-                            // fs.unlinkSync(sany)
-                        } catch { }
-                    })
+                    )
+                    console.log("Sent");
                 }
             }).catch((err) => {
                 sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });

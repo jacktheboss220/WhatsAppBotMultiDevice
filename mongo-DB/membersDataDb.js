@@ -16,7 +16,7 @@ const createMembersData = (jid, name) => {
                 warning: []
             })
         } else {
-            if (res.warning == undefined) {
+            if (res.warning.length == undefined) {
                 member.updateOne({ _id: jid }, {
                     $set: {
                         username: name,

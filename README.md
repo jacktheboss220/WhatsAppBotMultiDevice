@@ -89,33 +89,33 @@ To set up Koyeb for this project, follow these steps:
 
 To run this WhatsApp bot locally, you will need to create a .env file in the local directory with the following values:
 
-PREFIX : Enter your bot prefix
+PREFIX = Enter your bot prefix
 
-DEEPAI_KEY : https://deepai.org/api-docs/
+DEEPAI_KEY = Get from [deepai.com](https://deepai.org/api-docs/)
 
-INSTA_API_KEY : https://github.com/Gimenz/insta-fetcher
+INSTA_API_KEY = Get from [Insta-fetcher](https://github.com/Gimenz/insta-fetcher#recommended-to-set-the-cookie-before-make-call-to-all-function)
 
-myNumber: Enter your Number to get all owner cmds.
+myNumber = Enter your Number to get all owner commands.
 
-botNumber: Enter Your Bot number to get all cmd access.
+botNumber = Enter number on which bot is being deployed.
 
-REMOVE_BG_KEY : https://www.remove.bg/
+REMOVE_BG_KEY = Get form [remove.bg](https://www.remove.bg/api)
 
-TRUECALLER_ID : https://www.npmjs.com/package/truecallerjs#:~:text=Then%20login%20to%20your%20truecaller%20account%20.
+TRUECALLER_ID = Get from [truecaller.js](https://www.npmjs.com/package/truecallerjs#:~:text=Then%20login%20to%20your%20truecaller%20account%20)
 
-GOOGLE_API_KEY : https://console.cloud.google.com/
+GOOGLE_API_KEY = Get form  [google developer console](https://console.cloud.google.com/)
 
-SEARCH_ENGINE_KEY : https://programmablesearchengine.google.com/controlpanel/all
+SEARCH_ENGINE_KEY = Get from [google developer console](https://programmablesearchengine.google.com/controlpanel/all)
 
-MONGODB_KEY : https://www.mongodb.com/
+MONGODB_KEY = Get from [mongodb.com](https://www.mongodb.com/)
 
-LYRICS_KEY : https://docs.genius.com/#/getting-started-h1
+LYRICS_KEY = Get form [Genius.com](https://docs.genius.com/#/getting-started-h1)
 
-PIN_KEY: https://api.xteam.xyz/
+PIN_KEY = Get from [Pin](https://api.xteam.xyz/)
 
 To run the bot, enter the following command:
 
-`node index.js`
+    node index.js
 
 ## evn 
 

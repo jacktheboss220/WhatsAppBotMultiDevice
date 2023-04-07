@@ -1,13 +1,9 @@
-const ytdl = require('ytdl-core');
+// const ytdl = require('ytdl-core');
+const youtubedl = require('youtube-dl-exec')
+
 const yts = require('yt-search');
 const fs = require('fs');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
-
-module.exports.command = () => {
-    let cmd = ["song", "play"];
-    return { cmd, handler };
-}
-
 
 const findSong = async (sname) => {
     const r = await yts(`${sname}`)
@@ -21,52 +17,93 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     console.log("Song: ", evv);
 
     let URL = await findSong(evv);
-    (async () => {
-        try {
-            let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
-            // console.log("title :", title);
-            let sany = getRandom('.mp3')
-            const stream = ytdl(URL, { filter: info => info.audioBitrate == 160 || info.audioBitrate == 128 })
-                .pipe(fs.createWriteStream(sany));
-            console.log("Audio downloaded")
-            await new Promise((resolve, reject) => {
-                stream.on('error', reject)
-                stream.on('finish', resolve)
-            }).then(async (res) => {
+    let fileDown = getRandom(".m4a");
+    try {
+        youtubedl(URL, { format: 'm4a', output: fileDown }).then(() => {
+            const steam = youtubedl.exec(URL, { format: "m4a", getFilename: true });
+            steam.then(async (r) => {
                 if (command == 'song') {
                     await sock.sendMessage(
                         from,
                         {
-                            document: fs.readFileSync(sany),
-                            mimetype: 'audio/mp4',
-                            fileName: title,
+                            document: fs.readFileSync(fileDown),
+                            mimetype: "audio/mpeg",
+                            fileName: r.stdout,
                             ppt: true,
                         },
                         { quoted: msg }
                     )
-                    try {
-                        fs.unlinkSync(sany)
-                    } catch { }
-
+                    fs.unlinkSync(fileDown);
                 } else {
-                    await sendMessageWTyping(
+                    await sock.sendMessage(
                         from,
                         {
-                            audio: fs.readFileSync(sany),
-                            // mimetype: 'audio/mp4'
+                            audio: fs.readFileSync(fileDown),
+                            mimetype: "audio/mpeg",
                         },
                         { quoted: msg },
-                        { url: sany },
                     )
+                    fs.unlinkSync(fileDown);
                     console.log("Sent");
                 }
-            }).catch((err) => {
-                sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-                console.log(err);
             })
-        } catch (err) {
-            console.log(err);
-            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        }
-    })();
+        })
+    } catch (err) {
+        console.log(err);
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+    }
+    // try {
+    //     let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
+    //     // console.log("title :", title);
+    //     let sany = getRandom('.mp3')
+    //     const stream = ytdl(URL, { filter: info => info.audioBitrate == 160 || info.audioBitrate == 128 })
+    //         .pipe(fs.createWriteStream(sany));
+    //     await new Promise((resolve, reject) => {
+    //         stream.on('error', () => {
+    //             console.log("Error");
+    //             reject
+    //         })
+    //         stream.on('finish', () => {
+    //             console.log("Audio downloaded");
+    //             resolve
+    //         })
+    //     }).then(async (res) => {
+    //         if (command == 'song') {
+    //             await sock.sendMessage(
+    //                 from,
+    //                 {
+    //                     document: fs.readFileSync(sany),
+    //                     mimetype: "audio/mpeg",
+    //                     // mimetype: 'audio/mp4',
+    //                     fileName: title,
+    //                     ppt: true,
+    //                 },
+    //                 { quoted: msg }
+    //             )
+    //             fs.unlinkSync(sany)
+
+    //         } else {
+    //             await sock.sendMessage(
+    //                 from,
+    //                 {
+    //                     audio: fs.readFileSync(sany),
+    //                     // mimetype: 'audio/mp4'
+    //                     mimetype: "audio/mpeg",
+    //                 },
+    //                 { quoted: msg },
+    //                 { url: title },
+    //             )
+    //             fs.unlinkSync(sany);
+    //             console.log("Sent");
+    //         }
+    //     }).catch((err) => {
+    //         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+    //         console.log(err);
+    //     })
+    // } catch (err) {
+    //     console.log(err);
+    //     sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+    // }
 }
+
+module.exports.command = () => ({ cmd: ['song', 'play'], handler });

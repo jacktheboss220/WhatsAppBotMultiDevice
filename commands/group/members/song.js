@@ -14,39 +14,55 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { evv, command, sendMessageWTyping } = msgInfoObj;
 
     if (!args[0]) return sendMessageWTyping(from, { text: `❌ *Enter song name*` }, { quoted: msg });
-    console.log("Song: ", evv);
+    console.log("Song:", evv);
 
     let URL = await findSong(evv);
     let fileDown = getRandom(".m4a");
     try {
-        youtubedl(URL, { format: 'm4a', output: fileDown }).then(() => {
-            const steam = youtubedl.exec(URL, { format: "m4a", getFilename: true });
-            steam.then(async (r) => {
-                if (command == 'song') {
-                    await sock.sendMessage(
-                        from,
-                        {
-                            document: fs.readFileSync(fileDown),
-                            mimetype: "audio/mpeg",
-                            fileName: r.stdout,
-                            ppt: true,
-                        },
-                        { quoted: msg }
-                    )
-                    fs.unlinkSync(fileDown);
-                } else {
-                    await sock.sendMessage(
-                        from,
-                        {
-                            audio: fs.readFileSync(fileDown),
-                            mimetype: "audio/mpeg",
-                        },
-                        { quoted: msg },
-                    )
-                    fs.unlinkSync(fileDown);
-                    console.log("Sent");
-                }
-            })
+        await youtubedl(URL, { format: 'm4a', output: fileDown, maxFilesize: "104857600", }).then((r) => {
+            console.log(typeof (r), r);
+            if (r?.includes("max-filesize")) {
+                return sendMessageWTyping(
+                    from,
+                    {
+                        text: "File size exceeds more then 100MB."
+                    },
+                    { quoted: msg }
+                )
+            } else {
+                const steam = youtubedl.exec(URL, { format: "m4a", getFilename: true });
+                steam.then(async (r) => {
+                    if (command == 'song') {
+                        await sock.sendMessage(
+                            from,
+                            {
+                                document: fs.readFileSync(fileDown),
+                                mimetype: "audio/mpeg",
+                                fileName: r.stdout,
+                                ppt: true,
+                            },
+                            { quoted: msg }
+                        )
+                        fs.unlinkSync(fileDown);
+                    } else {
+                        await sock.sendMessage(
+                            from,
+                            {
+                                audio: fs.readFileSync(fileDown),
+                                mimetype: "audio/mpeg",
+                            },
+                            { quoted: msg },
+                        )
+                        fs.unlinkSync(fileDown);
+                        console.log("Sent");
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+                })
+            }
+        }).catch(err => {
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
         })
     } catch (err) {
         console.log(err);

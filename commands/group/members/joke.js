@@ -20,9 +20,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         "Chrimstmas"
     ];
     if (categories != "Any" && !(cate.includes(take))) return sendMessageWTyping(from, { text: `*Wrong Categories*\n *_Type any one_* :  *${cate}*` }, { quoted: msg });
-    const params = "blacklistFlags=religious,racist";
+    // const params = "blacklistFlags=religious,racist";
     try {
-        axios.get(`${baseURL}/joke/${categories}?${params}`).then((res) => {
+        axios.get(`${baseURL}/joke/${categories}`).then((res) => {
             let randomJoke = res.data;
             if (randomJoke.type == "single") {
                 mess = 'Category => ' + randomJoke.category + '\n\n' + randomJoke.joke;

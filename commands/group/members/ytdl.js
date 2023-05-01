@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const youtubedl = require('youtube-dl-exec')
 const yts = require('yt-search');
@@ -10,6 +9,7 @@ module.exports.command = () => {
     let cmd = ["yt", "ytv", "vs"];
     return { cmd, handler };
 }
+
 const findSong = async (sname) => {
     const r = await yts(`${sname}`)
     return r.all[0].url;
@@ -29,7 +29,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     try {
         let fileDown = getRandom(".mp4");
         youtubedl(search, { format: 'mp4', output: fileDown, maxFilesize: "104857600", }).then((r) => {
-            if (r.includes("max-filesize")) {
+            console.log(typeof (r), r);
+            if (r?.includes("max-filesize")) {
                 return sendMessageWTyping(
                     from,
                     {

@@ -1,15 +1,9 @@
-const {
-    instagramdl,
-    instagramdlv4,
-    instagramdlv2,
-    instagramdlv3,
-} = require('@bochilteam/scraper')
+const { savefrom } = require('@bochilteam/scraper');
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping, ig } = msgInfoObj;
-    //return sendMessageWTyping(from, { text: `Insta down for the moment, wait for update` }, { quoted: msg })
-    if (args.length === 0) return sendMessageWTyping(from, { text: `❌ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
 
+    if (args.length === 0) return sendMessageWTyping(from, { text: `❌ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
     let urlInsta = args[0];
 
     if (!(urlInsta.includes("instagram.com/p/") ||
@@ -24,70 +18,35 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (urlInsta.includes("?"))
         urlInsta = urlInsta.split("/?")[0];
     console.log(urlInsta);
-    ig.fetchPost(urlInsta).then((res) => {
-        if (res.media_count == 1) {
-            if (res.links[0].type == "video") {
-                sock.sendMessage(
-                    from,
-                    {
-                        video: { url: res.links[0].url }
-                    },
-                    { quoted: msg }
-                )
-            } else if (res.links[0].type == "image") {
-                sock.sendMessage(
-                    from,
-                    {
-                        image: { url: res.links[0].url }
-                    },
-                    { quoted: msg }
-                )
-            }
-        } else if (res.media_count > 1) {
-            for (let i = 0; i < res.media_count; i++) {
-                if (res.links[i].type == "video") {
-                    sock.sendMessage(
-                        from,
-                        {
-                            video: { url: res.links[i].url }
-                        },
-                        { quoted: msg }
-                    )
-                } else if (res.links[i].type == "image") {
-                    sock.sendMessage(
-                        from,
-                        {
-                            image: { url: res.links[i].url }
-                        },
-                        { quoted: msg }
-                    )
-                }
-            }
-        }
-    }).catch(async (err) => {
-        const results = await instagramdl(urlInsta)
-            .catch(async (_) => await instagramdlv2(urlInsta))
-            .catch(async (_) => await instagramdlv3(urlInsta))
-            .catch(async (_) => await instagramdlv4(urlInsta));
 
-        if (!results) return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-
-        for (const { url } of results) {
-            if (url.includes("jpg") || url.includes("png") || url.includes("jpeg")) {
-                await sendMessageWTyping(
-                    from,
-                    { image: { url: url } },
+    try {
+        savefrom(urlInsta).then(res => {
+            console.log(JSON.stringify(res, null, 2, 100));
+            if (res[0]?.url[0]?.type == "mp4") {
+                sendMessageWTyping(from,
+                    {
+                        video: { url: res[0].url[0].url },
+                        caption: res[0].meta.title
+                    },
                     { quoted: msg }
                 );
-            } else {
-                await sendMessageWTyping(
-                    from,
-                    { video: { url: url } },
+            } else if (res[0]?.url[0]?.type == "webp" || res[0]?.url[0]?.type == "jpg" || res[0]?.url[0]?.type == "png" || res[0]?.url[0]?.type == "jpeg") {
+                sendMessageWTyping(from,
+                    {
+                        image: { url: res[0].url[0].url },
+                        caption: res[0].meta.title
+                    },
                     { quoted: msg }
                 );
             }
-        }
-    });
+        }).catch(err => {
+            console.log(err);
+            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+        })
+    } catch (err) {
+        console.log(err);
+        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+    }
 }
 
 module.exports.command = () => ({ cmd: ["insta", "ig", "igd", "i"], handler });

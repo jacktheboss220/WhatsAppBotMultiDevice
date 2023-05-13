@@ -123,6 +123,6 @@ To run the bot, enter the following command:
 
 # References:
 
-- [@Baileys](https://github.com/adiwajshing/Baileys)
+- [@Baileys](https://github.com/WhiskeySockets/Baileys)
 
 If you enjoyed using this project, please consider giving it a :star: on GitHub. Your support is greatly appreciated! :heart:

@@ -84,6 +84,9 @@ To set up Koyeb for this project, follow these steps:
 - Set any necessary environment variables. All Required Env Are [Here](#evn)
 - Add the build and run commands: `npm i` and `node index.js`
 
+# Deploy on Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/jacktheboss220/WhatsAppBotMultiDevice)
 
 # Run locally
 

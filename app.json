@@ -24,9 +24,6 @@
     "botNumber": {
       "description": "Enter bot number to get access to all cmd (include 91 or country code)"
     },
-    "INSTA_API_KEY": {
-      "description": "Enter insta session key."
-    },
     "TRUECALLER_ID": {
       "description": "Enter true caller id"
     },

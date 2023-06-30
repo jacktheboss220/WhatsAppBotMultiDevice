@@ -29,7 +29,7 @@ ${readMore}
     _For Document use song for audio use play_
         Eg:${prefix}song love me like you do
 
-*${prefix}l*
+*${prefix}l* _Removed_
     _Get the lyrics for the song_
     _Eg: ${prefix}l Main woh chaand by darshan raval_
 
@@ -45,7 +45,7 @@ ${readMore}
 *${prefix}meme*
     _Get a random meme_
 
-*${prefix}movie _Name_*
+*${prefix}movie _Name_* _Not Working_
     _Get Download link for movie_
     _Eg: ${prefix}movie Avengers_
 
@@ -80,6 +80,10 @@ ${readMore}
     _For search image by google_
     eg: ${prefix}img cute cat_
 
+*${prefix}gen*
+    _Generate a image with your text_
+    eg: ${prefix}gen cute cat_
+
 *${prefix}mp3*
     _convert video to audio_
     _Alias ${prefix}mp4audio , ${prefix}tomp3_
@@ -93,7 +97,7 @@ ${readMore}
     _Use ${prefix}list for whole valid list_
     _category could be sports, business or anything_
 
-*${prefix}idp*
+*${prefix}idp* _Not Working_
     _download Instagram private profile picture_
     eg:${prefix}idp username
 
@@ -101,7 +105,7 @@ ${readMore}
     _download Instagram media_
     eg:${prefix}insta <linkadress>
 
-*${prefix}fb*
+*${prefix}fb* _Removed_
     _download Facebook public Media_
     eg:${prefix}fb LinkAddress
 
@@ -126,7 +130,7 @@ ${readMore}
 *${prefix}quote*
     _get a random quote from bot_
 
-*${prefix}proq*
+*${prefix}proq* _Removed_
     _get a programming quote from bot_
     _Alies: ${prefix}proquote_
 
@@ -142,12 +146,20 @@ ${readMore}
     _remove backgroung from any image_
     _reply to any image only_
 
-*${prefix}nsfw*
+*${prefix}nsfw* _Removed_ 
     _Get nsfw percentage of any image_
 
 *${prefix}tts*
     _Changes Text to Sticker_
     eg:${prefix}tts we Love Dev
+
+*${prefix}total*
+    _Get total number of messages sent by You in particular group_
+    eg:${prefix}total
+
+*${prefix}totalg*
+    _Get total number of messages sent by You in all groups_
+    eg:${prefix}totalg
 
 *${prefix}text*
     _Add Header and Footer to image_
@@ -184,7 +196,7 @@ ${readMore}
         _${prefix}sticker crop_
         _${prefix}sticker nometadata_
         
-*${prefix}idp*
+*${prefix}idp* _Not Working_
         _download Instagram private profile picture_
         eg:${prefix}idp mybitbot`
 

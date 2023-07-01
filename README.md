@@ -84,6 +84,9 @@ To set up Koyeb for this project, follow these steps:
 - Set any necessary environment variables. All Required Env Are [Here](#evn)
 - Add the build and run commands: `npm i` and `node index.js`
 
+# Deploy on Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/jacktheboss220/WhatsAppBotMultiDevice)
 
 # Run locally
 
@@ -123,6 +126,6 @@ To run the bot, enter the following command:
 
 # References:
 
-- [@Baileys](https://github.com/adiwajshing/Baileys)
+- [@Baileys](https://github.com/WhiskeySockets/Baileys)
 
 If you enjoyed using this project, please consider giving it a :star: on GitHub. Your support is greatly appreciated! :heart:

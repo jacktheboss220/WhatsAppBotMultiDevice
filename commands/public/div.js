@@ -22,8 +22,6 @@ const handler = async (sock, msg, from, args, msgTnfoObj) => {
         {
             text: `Github: https://github.com/jacktheboss220/WhatsAppBotMultiDevice\n\nTelegram: https://t.me/jackthebosss\n\nFollow me: https://github.com/jacktheboss220`
         },
-        {
-            quoted: msg
-        }
+        { quoted: msg }
     );
 }

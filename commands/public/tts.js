@@ -37,8 +37,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     fileSaved(streamPng, filename).then(async () => {
         const sticker = new Sticker(`./${filename}`, {
-            pack: "my",
-            author: "bitbot",
+            pack: "Bot",
+            author: "eva",
         });
         await sticker.build();
         const sticBuffer = await sticker.get();

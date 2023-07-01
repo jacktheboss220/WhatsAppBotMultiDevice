@@ -13,7 +13,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             from,
             {
                 image: { url: res.hd_profile_pic_url_info.url },
-                caption: `𝚂𝚎𝚗𝚍 𝙱𝚢 𝚖𝚢𝙱𝚒𝚝𝙱𝚘𝚝`
+                caption: `Send by eva`
             },
             { quoted: msg }
         )

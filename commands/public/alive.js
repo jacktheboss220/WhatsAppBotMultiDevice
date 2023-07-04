@@ -27,19 +27,20 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     await sendMessageWTyping(
         from,
-        { text: "```Yes Bot is Running...```❣️" },
-        {
-            quoted: {
-                key: {
-                    remoteJid: from,
-                    fromMe: false,
-                    id: "810B5GH29EE7481fakeid",
-                    participant: "0@s.whatsapp.net",
-                },
-                messageTimestamp: 1122334455,
-                pushName: "WhatsApp",
-                message: { conversation: "jacktheboss220" },
-            },
-        }
+        { text: "```Error: Eva not detected. Press any key to continue...```❣️" },
+        { quoted: msg }
+        // {
+        //     quoted: {
+        //         key: {
+        //             remoteJid: from,
+        //             fromMe: false,
+        //             id: "810B5GH29EE7481fakeid",
+        //             participant: "0@s.whatsapp.net",
+        //         },
+        //         messageTimestamp: 1122334455,
+        //         pushName: "WhatsApp",
+        //         message: { conversation: "jacktheboss220" },
+        //     },
+        // }
     );
 };

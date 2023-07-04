@@ -30,25 +30,25 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         {
             title: "Categories",
             rows: [
-                { title: `${prefix}horo aries`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo taurus`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo gemini`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo cancer`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo leo`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo virgo`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo libra`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo scorpio`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo sagittarius`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo capricorn`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo aquarius`, rowId: "mybitbot", description: "" },
-                { title: `${prefix}horo pisces`, rowId: "mybitbot", description: "" },
+                { title: `${prefix}horo aries`, rowId: "eva", description: "" },
+                { title: `${prefix}horo taurus`, rowId: "eva", description: "" },
+                { title: `${prefix}horo gemini`, rowId: "eva", description: "" },
+                { title: `${prefix}horo cancer`, rowId: "eva", description: "" },
+                { title: `${prefix}horo leo`, rowId: "eva", description: "" },
+                { title: `${prefix}horo virgo`, rowId: "eva", description: "" },
+                { title: `${prefix}horo libra`, rowId: "eva", description: "" },
+                { title: `${prefix}horo scorpio`, rowId: "eva", description: "" },
+                { title: `${prefix}horo sagittarius`, rowId: "eva", description: "" },
+                { title: `${prefix}horo capricorn`, rowId: "eva", description: "" },
+                { title: `${prefix}horo aquarius`, rowId: "eva", description: "" },
+                { title: `${prefix}horo pisces`, rowId: "eva", description: "" },
             ]
         },
     ]
 
     const listMessage = {
         text: "Horoscope",
-        footer: "Send by mybitbot",
+        footer: "Send by eva",
         buttonText: "Click here",
         viewOnce: true,
         sections

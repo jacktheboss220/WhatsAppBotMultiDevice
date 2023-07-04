@@ -192,13 +192,13 @@ ${readMore}
         _pack_ - Add metadata in sticker!
         _nometadata_ - Remove all metadata from sticker!
     *Examples:*
-        _${prefix}sticker pack mybitbot author jacktheboss220_
+        _${prefix}sticker pack eva author jacktheboss220_
         _${prefix}sticker crop_
         _${prefix}sticker nometadata_
         
 *${prefix}idp* _Not Working_
         _download Instagram private profile picture_
-        eg:${prefix}idp mybitbot`
+        eg:${prefix}idp eva`
 
 
     sendMessageWTyping(

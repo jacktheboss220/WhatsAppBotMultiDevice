@@ -106,7 +106,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         packName = "Bot"
     }
     if (authorName == "") {
-        authorName = "eva"
+        authorName = ""
     }
     try {
         if ((isMedia && !msg.message.videoMessage || isTaggedImage)) {

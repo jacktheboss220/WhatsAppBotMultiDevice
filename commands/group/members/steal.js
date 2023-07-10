@@ -14,7 +14,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         return sendMessageWTyping(from, { text: `❌ *Reply on Sticker*` }, { quoted: msg });
     }
 
-    let packName = authorName = "test";
+    let packName = authorName = "⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️";
     if (args.includes('pack')) {
         packName = args.join(' ').split('pack ')[1].split('author')[0];
     }

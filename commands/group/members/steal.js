@@ -35,8 +35,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
         const packOrAuthor = args.includes('pack') || args.includes('author');
         const webpWithMetadata = await WSF.setMetadata(
-            packOrAuthor ? packName : evv || 'myBitBot',
-            packOrAuthor ? authorName : evv ? "" : 'md',
+            packOrAuthor ? packName : evv || '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️',
+            packOrAuthor ? authorName : evv ? "" : '',
             media
         );
 

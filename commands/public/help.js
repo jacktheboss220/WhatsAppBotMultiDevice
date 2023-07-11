@@ -2,7 +2,7 @@ const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 module.exports.command = () => {
-    let cmd = ["help"];
+    let cmd = ["help,"menu"];
     return { cmd, handler };
 }
 

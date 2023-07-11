@@ -9,7 +9,7 @@ let {
     getString
 } = require('./misc/lang');
 let Lang = getString('plugin');
-var handler = app.jon.PREFIX !== 'false'?Config.PREFIX.split("")[0]:""
+var prefix = app.json.PREFIX !== 'false'?app.json.PREFIX.split("")[0]:""
 
 Module({
     pattern: "install",

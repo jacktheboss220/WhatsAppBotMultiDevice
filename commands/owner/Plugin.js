@@ -9,10 +9,10 @@ let {
     getString
 } = require('./misc/lang');
 let Lang = getString('plugin');
-var handler = Config.HANDLERS !== 'false'?Config.HANDLERS.split("")[0]:""
+var handler = app.jon.PREFIX !== 'false'?Config.PREFIX.split("")[0]:""
 
 Module({
-    pattern: '"nstall",
+    pattern: "install",
     fromMe: true,
     use: 'owner',
     desc: Lang.INSTALL_DESC

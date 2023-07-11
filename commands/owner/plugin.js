@@ -6,7 +6,6 @@ module.exports.command = () => {
     let cmd = ["plugin", "remove"];
     return { cmd, handler };
     fromMe: true,
-    use: 'owner',
     desc: Lang.INSTALL_DESC
 }, (async (message, match) => {
     match = match[1]!==""?match[1]:message.reply_message.text

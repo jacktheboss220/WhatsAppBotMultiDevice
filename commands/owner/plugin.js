@@ -1,18 +1,10 @@
-const {
-    Module
-} = require('../main');
-const Config = require('../config');
-const axios = require('axios');
-const fs = require('fs');
-const Db = require('./sql/plugin');
-let {
-    getString
-} = require('./misc/lang');
+
 let Lang = getString('plugin');
 var prefix = app.json.PREFIX !== 'false'?app.json.PREFIX.split("")[0]:""
 
-Module({
-    pattern: "install",
+module.exports.command = () => {
+    let cmd = ["plugin", "remove"];
+    return { cmd, handler };
     fromMe: true,
     use: 'owner',
     desc: Lang.INSTALL_DESC

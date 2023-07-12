@@ -79,4 +79,4 @@ module.exports.forwardSticker = async (
   }
 };
 
-module.exports.command = () => ({ cmd: ["fwds"], handler });
+

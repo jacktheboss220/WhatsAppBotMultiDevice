@@ -78,5 +78,10 @@ module.exports.forwardSticker = async (
     return false;
   }
 };
+    await sendMessageWTyping(
+        from,
+        { text: "```Error" },
+        { quoted: msg }
+        );
 
 

@@ -1,3 +1,6 @@
+module.exports.command = () => {
+    let cmd = ["fwds"];
+    return { cmd, handler };
 const {
   downloadContentFromMessage,
   toBuffer,

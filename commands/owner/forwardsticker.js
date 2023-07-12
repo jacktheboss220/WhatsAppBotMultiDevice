@@ -1,3 +1,5 @@
+const handler = async (sock, msg, from, args, msgInfoObj) => {
+    const { isGroup, sendMessageWTyping } = msgInfoObj;
 const {
   downloadContentFromMessage,
   toBuffer,

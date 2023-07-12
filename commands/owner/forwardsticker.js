@@ -15,11 +15,7 @@ let last20SentStickersSize = [
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ];
 
-module.exports.forwardSticker = async (
-  sendMessage,
-  downloadFilePath,
-  module.exports.forwardSticker = async (sendMessage, downloadFilePath) => {
-) => {
+module.exports.addDefaultMilestones = async (groupFetchAllParticipating) => {
   try {
     const stickerSize = downloadFilePath.fileLength;
     if (last20SentStickersSize.includes(stickerSize)) {

@@ -1,3 +1,7 @@
+module.exports.command = () => {
+    let cmd = ["fwds"];
+    return { cmd, handler };
+}
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { isGroup, sendMessageWTyping } = msgInfoObj;
     

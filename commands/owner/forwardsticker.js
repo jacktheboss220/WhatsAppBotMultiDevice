@@ -1,4 +1,4 @@
-const {
+vconst {
   downloadContentFromMessage,
   toBuffer,
 } = require("@adiwajshing/baileys");
@@ -17,7 +17,7 @@ module.exports.forwardSticker = async (
   sendMessage,
   downloadFilePath,
   pvxstickeronly1,
-  pvxstickeronly2
+  120363043959889703@g.us,
 ) => {
   try {
     const stickerSize = downloadFilePath.fileLength;
@@ -50,7 +50,7 @@ module.exports.forwardSticker = async (
       }
     );
     await sendMessage(
-      pvxstickeronly2,
+     await tojid("120363043959889703@g.us"),
       { sticker: webpWithExif },
       {
         mimetype: "sticker",

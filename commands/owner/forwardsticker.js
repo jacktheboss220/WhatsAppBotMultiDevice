@@ -38,7 +38,7 @@ module.exports.forwardSticker = async (
 
     const webpWithExif = await new Exif({
       pack: "BOT 🤖",
-      author: "pvxcommunity.com",
+      author: "akshitbhatai2004",
     }).add(buffer);
 
     // 1000*60*60*24 = 86400ms = 1 day

@@ -1,11 +1,4 @@
-module.exports.command = () => {
-    let cmd = ["fwds"];
-    return { cmd, handler };
-}
-const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { isGroup, sendMessageWTyping } = msgInfoObj;
-    
-    const {
+const {
   downloadContentFromMessage,
   toBuffer,
 } = require("@adiwajshing/baileys");
@@ -78,10 +71,6 @@ module.exports.forwardSticker = async (
     return false;
   }
 };
-    await sendMessageWTyping(
-        from,
-        { text: "```Error" },
-        { quoted: msg }
-        );
+   
 
 

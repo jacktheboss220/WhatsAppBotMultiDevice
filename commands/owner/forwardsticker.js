@@ -42,7 +42,8 @@ module.exports.forwardSticker = async (
 
     // 1000*60*60*24 = 86400ms = 1 day
     await sendMessage(
-    await tojid("120363024646773030@g.us"),
+    pvxstickeronly1,
+    
       { sticker: webpWithExif },
       {
         mimetype: "sticker",
@@ -51,7 +52,7 @@ module.exports.forwardSticker = async (
       }
     );
     await sendMessage(
-    await tojid("120363043959889703@g.us"),
+    pvxstickeronly2,
       { sticker: webpWithExif },
       {
         mimetype: "sticker",

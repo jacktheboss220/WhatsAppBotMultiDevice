@@ -3,7 +3,7 @@ const {
   toBuffer,
 } = require("@adiwajshing/baileys");
 const { Exif } = require("wa-sticker-formatter");
-const { LoggerTg } = require("./loggerBot");
+const { LoggerTg } = require("./owner");
 
 let countSent = 0;
 let countIn = 0,

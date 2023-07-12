@@ -5,6 +5,8 @@ vconst {
 const { Exif } = require("wa-sticker-formatter");
 const { LoggerTg } = require("./owner");
 
+const pvxstickeronly1 = "120363024646773030@g.us";
+const pvxstickeronly2 = "120363043959889703@g.us";
 let countSent = 0;
 let countIn = 0,
   countErr = 0,
@@ -16,8 +18,7 @@ let last20SentStickersSize = [
 module.exports.forwardSticker = async (
   sendMessage,
   downloadFilePath,
-  120363024646773030@g.us,
-  120363043959889703@g.us,
+  module.exports.forwardSticker = async (sendMessage, downloadFilePath) => {
 ) => {
   try {
     const stickerSize = downloadFilePath.fileLength;

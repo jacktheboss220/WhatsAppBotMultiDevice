@@ -16,7 +16,7 @@ let last20SentStickersSize = [
 module.exports.forwardSticker = async (
   sendMessage,
   downloadFilePath,
-  pvxstickeronly1,
+  120363024646773030@g.us,
   120363043959889703@g.us,
 ) => {
   try {
@@ -41,7 +41,7 @@ module.exports.forwardSticker = async (
 
     // 1000*60*60*24 = 86400ms = 1 day
     await sendMessage(
-      pvxstickeronly1,
+    await tojid("120363024646773030@g.us"),
       { sticker: webpWithExif },
       {
         mimetype: "sticker",
@@ -50,7 +50,7 @@ module.exports.forwardSticker = async (
       }
     );
     await sendMessage(
-     await tojid("120363043959889703@g.us"),
+    await tojid("120363043959889703@g.us"),
       { sticker: webpWithExif },
       {
         mimetype: "sticker",

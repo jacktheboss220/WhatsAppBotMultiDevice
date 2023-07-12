@@ -1,6 +1,3 @@
-module.exports.command = () => {
-    let cmd = ["fwds"];
-    return { cmd, handler };
 const {
   downloadContentFromMessage,
   toBuffer,
@@ -74,3 +71,5 @@ module.exports.forwardSticker = async (
     return false;
   }
 };
+
+module.exports.command = () => ({ cmd: ["fwds"], handler });

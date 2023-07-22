@@ -11,6 +11,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     const help = `
 ---------------------------------------------------------------
+               𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖
     ─「 *User Name:- ${msg.pushName}* 
         *Group Name :- ${groupMetadata.subject}* 」─     
 ---------------------------------------------------------------
@@ -27,11 +28,10 @@ ${readMore}
 *${prefix}song*
     _For Downloading songs by name_
     _For Document use song for audio use play_
-        Eg:${prefix}song love me like you do
-
+        Eg:${prefix}song Lelo Pudina
 *${prefix}l* _Removed_
     _Get the lyrics for the song_
-    _Eg: ${prefix}l Main woh chaand by darshan raval_
+    _Eg: ${prefix}l Chalakata hamaro jawaniya by Pawan Singh_
 
 *${prefix}delete*
     _delete message send by bot_
@@ -47,7 +47,7 @@ ${readMore}
 
 *${prefix}movie _Name_* _Not Working_
     _Get Download link for movie_
-    _Eg: ${prefix}movie Avengers_
+    _Eg: ${prefix}movie Openhemisphere_
 
 *${prefix}anime*
     _Get a Quote said by Anime Character_
@@ -65,7 +65,7 @@ ${readMore}
         _pack_ - Add metadata in sticker!
         _nometadata_ - Remove all metadata from sticker!
     *Examples:*
-        _${prefix}sticker pack myBitBot author MD_
+        _${prefix}sticker pack 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 author 𝙈𝙞𝙨𝙖 𝘼𝙢𝙖𝙣𝙚 ❤️_
         _${prefix}sticker crop_
         _${prefix}sticker nometadata_
 
@@ -118,7 +118,7 @@ ${readMore}
 
 *${prefix}vs*
     _search video and download_
-    _Eg: ${prefix}vs khena galat galat_
+    _Eg: ${prefix}vs Transformers Fight Clips_
 
 *${prefix}horo*
     _show horoscope_
@@ -146,9 +146,6 @@ ${readMore}
     _remove backgroung from any image_
     _reply to any image only_
 
-*${prefix}nsfw* _Removed_ 
-    _Get nsfw percentage of any image_
-
 *${prefix}tts*
     _Changes Text to Sticker_
     eg:${prefix}tts we Love Dev
@@ -169,14 +166,11 @@ ${readMore}
 
 *${prefix}ud*
     _Show Meaning of your name_
-    eg:${prefix}ud Mahesh
+    eg:${prefix}ud SadiQ
 
 *${prefix}dic*
     _A classic Dictionary_
     eg:${prefix}ud Love
-
-*${prefix}source*
-    _Get the source code!_
 
 ♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️`;
 

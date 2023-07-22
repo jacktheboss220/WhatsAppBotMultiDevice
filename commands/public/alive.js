@@ -12,8 +12,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     // const buttonMessage = {
     //     image: fs.readFileSync(__dirname + "/../../media/alive-img.jpg"),
-    //     // text: "```Yes Bot is Running...```❣️",
-    //     caption: "```Yes Bot is Running...```❣️",
+    //     // text: "```Yes 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 is Running...```❣️",
+    //     caption: "```Yes 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 is Running...```❣️",
     //     footer: 'mybitbot',
     //     buttons: buttons,
     //     viewOnce: true,
@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     await sendMessageWTyping(
         from,
-        { text: "```Error: Eva not detected. Press any key to continue...```❣️" },
+        { text: "```Error: 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 not detected. Press any key to continue...```❣️" },
         { quoted: msg }
         // {
         //     quoted: {

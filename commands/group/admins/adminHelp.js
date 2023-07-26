@@ -6,7 +6,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     const admin = `
 ---------------------------------------------------------------
-    ─「  *${groupMetadata.subject} Admin Commands* 」─
+    ─「  *${groupMetadata.subject} 𝙎𝘼𝘿𝙄𝙌 🤖 𝘽𝙊𝙏 Admin Commands* 」─
 ---------------------------------------------------------------
 
 ${readMore}

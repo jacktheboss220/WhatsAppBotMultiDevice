@@ -200,5 +200,4 @@ ${readMore}
         }
     );
 }
-
 module.exports.command = () => ({ cmd: ['help', 'menu'], handler });

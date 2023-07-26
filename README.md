@@ -52,7 +52,7 @@ Our WhatsApp bot project allows users to easily perform various actions such as 
 | -nsfw | Get the NSFW percentage of an image | `-nsfw` |
 | -tts | Change text to a sticker | `-tts text` |
 | -text | Add a header and footer to an image | `-text TopText;BottomText` |
-| -ud | Show the meaning of a name | `-ud Mahesh` |
+| -ud | Show the meaning of a name | `-ud dashu` |
 | -dic | Get the definition of a word from a dictionary | `-dic Love` |
 | -txtmeme | Add a header and footer to an image | `-txtmeme TopText;BottomText` |
 | -source | Get the source code | `-source` |

@@ -1,7 +1,8 @@
 const { getGroupData, createGroupData, group } = require('../../mongo-DB/groupDataDb');
 const { getMemberData, createMembersData, member } = require('../../mongo-DB/membersDataDb');
+const { getBotData, createBotData, bot } = require('../../mongo-DB/botDataDb');
 module.exports.command = () => {
-    let cmd = ["group", "member"];
+    let cmd = ["group", "member", "bot"];
     return { cmd, handler };
 }
 
@@ -47,6 +48,22 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 }
             } else
                 return sendMessageWTyping(from, { text: "*Reply On User's Message.*" }, { quoted: msg })
+            break;
+        case "bot":
+            if (!args[0]) {
+                let data = await getBotData("bot");
+                sendMessageWTyping(from, { text: JSON.stringify(data, null, 2, 100) }, { quoted: msg });
+            } else {
+                let data = args[0].split(":")[0];
+                let value = args[0].split(":")[1];
+                if (value.match(/^[0-9]+$/))
+                    value = Number(value);
+                if (value == "true") value = true;
+                if (value == "false") value = false;
+                bot.updateOne({ _id: "bot" }, { $set: { [data]: value } }).then(res => {
+                    sendMessageWTyping(from, { text: "Command Executed" }, { quoted: msg })
+                })
+            }
             break;
     }
 }

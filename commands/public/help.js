@@ -1,20 +1,15 @@
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
-module.exports.command = () => {
-    let cmd = ["help"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { prefix, isGroup, groupMetadata, sendMessageWTyping } = msgInfoObj;
+    let { prefix, isGroup, groupMetadata, sendMessageWTyping, senderJid } = msgInfoObj;
+    // *User Name:- ${msg.pushName}*
+    // *Group Name:- ${groupMetadata.subject}*
 
     const help = `
 ---------------------------------------------------------------
-    ─「 *User Name:- ${msg.pushName}* 
-        *Group Name :- ${groupMetadata.subject}* 」─     
+    *Wҽʅƈσɱҽ ƚσ Eʋα Bσƚ*
 ---------------------------------------------------------------
-
 ${readMore}
 
 *${prefix}alive*
@@ -26,12 +21,8 @@ ${readMore}
 
 *${prefix}song*
     _For Downloading songs by name_
-    _For Document use song for audio use play_
+    _For Document use ${prefix}song for audio use ${prefix}play_
         Eg:${prefix}song love me like you do
-
-*${prefix}l* _Removed_
-    _Get the lyrics for the song_
-    _Eg: ${prefix}l Main woh chaand by darshan raval_
 
 *${prefix}delete*
     _delete message send by bot_
@@ -51,7 +42,6 @@ ${readMore}
 
 *${prefix}anime*
     _Get a Quote said by Anime Character_
-
     *Example:*
         _${prefix}anime_
         _${prefix}anime name saitama_
@@ -71,6 +61,15 @@ ${readMore}
 
 *${prefix}steal*
         _Send sticker with bot metadata_
+    *Examples:*
+        _${prefix}steal this is eva_
+        
+*${prefix}sets*
+        _Set custom steal text_
+        _reply with only steal to get custom set pack name_
+        _Alias ${prefix}stealText_
+    *Examples:*
+        _${prefix}sets jacktheboss220_
         
 *${prefix}toimg*
     _For converting sticker to image_
@@ -80,11 +79,11 @@ ${readMore}
     _For search image by google_
     eg: ${prefix}img cute cat_
 
-*${prefix}gen*
+*${prefix}gen* _Not Working_
     _Generate a image with your text_
     eg: ${prefix}gen cute cat_
 
-*${prefix}mp3*
+*${prefix}mp3* 
     _convert video to audio_
     _Alias ${prefix}mp4audio , ${prefix}tomp3_
 
@@ -97,28 +96,26 @@ ${readMore}
     _Use ${prefix}list for whole valid list_
     _category could be sports, business or anything_
 
-*${prefix}idp* _Not Working_
+*${prefix}idp*
     _download Instagram private profile picture_
     eg:${prefix}idp username
 
 *${prefix}insta*
     _download Instagram media_
-    eg:${prefix}insta <linkadress>
-
-*${prefix}fb* _Removed_
-    _download Facebook public Media_
-    eg:${prefix}fb LinkAddress
+    eg:${prefix}insta linkAddress
 
 *${prefix}gender FirstName*
     _get gender % from name_
 
 *${prefix}yt*
     _download youTube video in best quality_
-    eg:${prefix}yt linkadress
+    eg:${prefix}yt linkAddress
+       ${prefix}ytv linkAddress
+       ${prefix}yta linkAddress download as audio
 
 *${prefix}vs*
     _search video and download_
-    _Eg: ${prefix}vs khena galat galat_
+    _Eg: ${prefix}vs shameless_
 
 *${prefix}horo*
     _show horoscope_
@@ -130,28 +127,26 @@ ${readMore}
 *${prefix}quote*
     _get a random quote from bot_
 
-*${prefix}proq* _Removed_
-    _get a programming quote from bot_
-    _Alies: ${prefix}proquote_
-
 *${prefix}qpt*
     _get a poet written by authors_
     *Examples:*
-        _${prefix}qpt auther Shakespeare title sonnet_
-        _${prefix}qpt auther Shakespeare_
-        _${prefix}qpt authers_
+        _${prefix}qpt author Shakespeare title sonnet_
+        _${prefix}qpt author Shakespeare_
+        _${prefix}qpt authors
     _Alies: ${prefix}qpoetry_
 
 *${prefix}removebg*
-    _remove backgroung from any image_
+    _remove background from any image_
     _reply to any image only_
-
-*${prefix}nsfw* _Removed_ 
-    _Get nsfw percentage of any image_
 
 *${prefix}tts*
     _Changes Text to Sticker_
     eg:${prefix}tts we Love Dev
+
+*${prefix}say*
+    _Text To Speech_
+    eg:${prefix}say we Love Dev (for english language)
+    eg:${prefix}say hin we Love Dev (for hindi language)
 
 *${prefix}total*
     _Get total number of messages sent by You in particular group_
@@ -171,9 +166,9 @@ ${readMore}
     _Show Meaning of your name_
     eg:${prefix}ud Mahesh
 
-*${prefix}dic*
+*${prefix}dict*
     _A classic Dictionary_
-    eg:${prefix}ud Love
+    eg:${prefix}dict Love
 
 *${prefix}source*
     _Get the source code!_
@@ -194,15 +189,16 @@ ${readMore}
     *Examples:*
         _${prefix}sticker pack eva author jacktheboss220_
         _${prefix}sticker crop_
-        _${prefix}sticker nometadata_
-        
-*${prefix}idp* _Not Working_
-        _download Instagram private profile picture_
-        eg:${prefix}idp eva`
+        _${prefix}sticker nometadata_`;
 
 
-    sendMessageWTyping(
+    sock.sendMessage(
         from,
-        { text: isGroup ? help : helpInDm }
+        {
+            text: isGroup ? help : helpInDm,
+            // mentions: [senderJid]
+        }
     );
 }
+
+module.exports.command = () => ({ cmd: ['help', 'menu'], handler });

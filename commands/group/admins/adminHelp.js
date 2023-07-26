@@ -30,11 +30,20 @@ ${readMore}
 
 *${prefix}welcome*
     _Set group welcome message!_
+    _Auto set my bot "Welcome {user} to {group Name}."_
+    _Set message will show in next line by default._
+    eg: Welcome Eva to EvaTest
+        Give respect and take respect!
+    ${prefix}welcome reset 
+    _Reset welcome message!_
 
 *${prefix}chat <on/off>*
     _Enable/disable group chat_
     _${prefix}chat on - for everyone!_
     _${prefix}chat off - for admin only!_
+
+*${prefix}count*
+    _Get message count of members_
 
 *${prefix}link*
     _Give the group link_

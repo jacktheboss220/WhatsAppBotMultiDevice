@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     await sendMessageWTyping(
         from,
-        { text: "```Error: 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 not detected. Press any key to continue...```❣️" },
+        { text: "𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 : ```Ha bhai zinda hoon bta kya kaam haj...```😋" },
         { quoted: msg }
         // {
         //     quoted: {

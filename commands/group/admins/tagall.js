@@ -17,7 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         : args.length ? args.join(" ") + "\n\n" : "```Total Members : " + groupMetadata.participants.length + "```\n\n";
 
     const mentions = groupMetadata.participants.map(i => i.id);
-    message += mentions.map(i => "👉🏻 @" + i.split("@")[0]).join("\n");
+    message += mentions.map(i => "🔥 @" + i.split("@")[0]).join("\n");
 
     try {
         sock.sendMessage(from, { text: message, mentions });

@@ -29,9 +29,6 @@ ${readMore}
     _For Downloading songs by name_
     _For Document use song for audio use play_
         Eg:${prefix}song Lelo Pudina
-*${prefix}l* _Removed_
-    _Get the lyrics for the song_
-    _Eg: ${prefix}l Chalakata hamaro jawaniya by Pawan Singh_
 
 *${prefix}𝐃𝐞𝐥𝐞𝐭𝐞*
     _delete message send by bot_
@@ -65,7 +62,7 @@ ${readMore}
         _pack_ - Add metadata in sticker!
         _nometadata_ - Remove all metadata from sticker!
     *Examples:*
-        _${prefix}sticker pack 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 author 𝙈𝙞𝙨𝙖 𝘼𝙢𝙖𝙣𝙚 ❤️_
+        _${prefix}sticker pack_ 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 _author_ 𝙈𝙞𝙨𝙖 𝘼𝙢𝙖𝙣𝙚 ❤️
         _${prefix}sticker crop_
         _${prefix}sticker nometadata_
 

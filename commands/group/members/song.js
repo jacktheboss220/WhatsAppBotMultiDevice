@@ -49,7 +49,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                             from,
                             {
                                 audio: fs.readFileSync(fileDown),
-                                mimetype: "audio/mpeg",
+                                mimetype: 'audio/mpeg',
+                                fileName: fileDown,
                             },
                             { quoted: msg },
                         )

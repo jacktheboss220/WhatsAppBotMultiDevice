@@ -75,7 +75,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             .sendMessage(from, {
               image: fs.readFileSync('./bg.png'),
               mimetype: 'image/png',
-              caption: `*Send by eva*`
+              caption: `*Sent by eva*`
             })
             .then(() => {
               try {

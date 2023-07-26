@@ -15,7 +15,7 @@ const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}`
 
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { type, content, evv, sendMessageWTyping, OwnerSend } = msgInfoObj;
+    const { type, content, evv, sendMessageWTyping } = msgInfoObj;
     const isMedia
         = type === "imageMessage" || type === "videoMessage";
     const isTaggedImage

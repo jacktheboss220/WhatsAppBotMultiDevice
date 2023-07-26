@@ -26,7 +26,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 sendMessageWTyping(from,
                     {
                         video: { url: res[0].url[0].url },
-                        caption: "Send by eva"
+                        caption: "Send by 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖"
                     },
                     { quoted: msg }
                 );

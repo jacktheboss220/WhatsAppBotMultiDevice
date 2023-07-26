@@ -11,7 +11,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (type === "extendedTextMessage" && content.includes("stickerMessage")) {
         // handle tagged sticker
     } else {
-        return sendMessageWTyping(from, { text: `❌ *Reply on Sticker*` }, { quoted: msg });
+        return sendMessageWTyping(from, { text: `❌ *Abey bangali😭 Sticker pr reply kr*` }, { quoted: msg });
     }
 
     let packName = authorName = "test";

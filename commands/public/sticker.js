@@ -35,7 +35,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (args.includes('nometadata') == false) {
         if (args.includes('pack') == true) packName = evv.split('pack')[1].split('author')[0];
-        else packName = '';
+        else packName = '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️';
         if (args.includes('author') == true) authorName = evv.split('author')[1].split('pack')[0];
         else authorName = '';
     }

@@ -18,35 +18,63 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (urlInsta.includes("?"))
         urlInsta = urlInsta.split("/?")[0];
     console.log(urlInsta);
-
-    try {
-        savefrom(urlInsta).then(res => {
-            console.log(JSON.stringify(res, null, 2, 100));
-            if (res[0]?.url[0]?.type == "mp4") {
-                sendMessageWTyping(from,
-                    {
-                        video: { url: res[0].url[0].url },
-                        caption: "Send by eva"
-                    },
+    ig.fetchPost(urlInsta).then((res) => {
+        if (res.media_count == 1) {
+            if (res.links[0].type == "video") {
+                sock.sendMessage(
+                    from,
+                    { video: { url: res.links[0].url } },
                     { quoted: msg }
-                );
-            } else if (res[0]?.url[0]?.type == "webp" || res[0]?.url[0]?.type == "jpg" || res[0]?.url[0]?.type == "png" || res[0]?.url[0]?.type == "jpeg") {
-                sendMessageWTyping(from,
-                    {
-                        image: { url: res[0].url[0].url },
-                        caption: "Send by eva"
-                    },
+                )
+            } else if (res.links[0].type == "image") {
+                sock.sendMessage(
+                    from,
+                    { image: { url: res.links[0].url } },
                     { quoted: msg }
-                );
+                )
             }
-        }).catch(err => {
+        } else if (res.media_count > 1) {
+            for (let i = 0; i < res.media_count; i++) {
+                if (res.links[i].type == "video") {
+                    sock.sendMessage(
+                        from,
+                        { video: { url: res.links[i].url } },
+                        { quoted: msg }
+                    )
+                } else if (res.links[i].type == "image") {
+                    sock.sendMessage(
+                        from,
+                        { image: { url: res.links[i].url } },
+                        { quoted: msg }
+                    )
+                }
+            }
+        }
+    }).catch((error) => {
+        console.log("Error");
+        try {
+            savefrom(urlInsta).then(res => {
+                console.log(JSON.stringify(res, null, 2, 100));
+                if (res[0]?.url[0]?.type == "mp4") {
+                    sock.sendMessage(from,
+                        { video: { url: res[0].url[0].url } },
+                        { quoted: msg }
+                    );
+                } else if (res[0]?.url[0]?.type == "webp" || res[0]?.url[0]?.type == "jpg" || res[0]?.url[0]?.type == "png" || res[0]?.url[0]?.type == "jpeg") {
+                    sock.sendMessage(from,
+                        { image: { url: res[0].url[0].url } },
+                        { quoted: msg }
+                    );
+                }
+            }).catch(err => {
+                console.log(err);
+                sendMessageWTyping(from, { text: "Error Try Again afterwards" }, { quoted: msg });
+            })
+        } catch (err) {
             console.log(err);
-            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        })
-    } catch (err) {
-        console.log(err);
-        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-    }
+            sendMessageWTyping(from, { text: "Error Try Again afterwards" }, { quoted: msg });
+        }
+    });
 }
 
-module.exports.command = () => ({ cmd: ["insta", "ig", "igd", "i"], handler });
+module.exports.command = () => ({ cmd: ["insta", "ig", "i"], handler });

@@ -13,7 +13,7 @@ const formatMessage = (data) => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { evv, sendMessageWTyping, OwnerSend } = msgInfoObj;
+    let { evv, sendMessageWTyping, ownerSend } = msgInfoObj;
     let SearchNum;
     if (msg.message.extendedTextMessage?.contextInfo?.participant?.length > 0) {
         SearchNum = msg.message.extendedTextMessage.contextInfo.participant.split("@")[0];
@@ -52,7 +52,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     quoted: msg
                 }
             );
-            OwnerSend(JSON.stringify(response.data[0]));
+            ownerSend(JSON.stringify(response.data[0], "", 2, 100));
         } catch (err) {
             sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
             console.log(err);

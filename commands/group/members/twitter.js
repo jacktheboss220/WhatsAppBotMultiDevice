@@ -19,9 +19,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                             video: { url: res.download[res.download.length - 1].url.split("?tag")[0] },
                             // gifPlayback: true
                         },
-                        {
-                            quoted: msg
-                        }
+                        { quoted: msg }
                     )
                 } catch {
                     sendMessageWTyping(
@@ -30,9 +28,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                             video: { url: res.download[0].url.endsWith('mp4') ? res.download[0].url : res.download[1].url },
                             // gifPlayback: true
                         },
-                        {
-                            quoted: msg
-                        }
+                        { quoted: msg }
                     )
                 }
             }
@@ -42,9 +38,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     {
                         image: { url: res.download },
                     },
-                    {
-                        quoted: msg
-                    }
+                    { quoted: msg }
                 )
             }
         }).catch((err) => {

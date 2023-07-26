@@ -50,7 +50,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     from,
                     {
                         image: fs.readFileSync("result.png"),
-                        caption: 'Send by eva',
+                        caption: 'Sent by eva',
                         mimetype: 'image/png',
                     },
                     {

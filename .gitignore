@@ -7,6 +7,7 @@ test.json
 index.html
 test-index.js
 assets
+baileys_store_multi.json
 # mongo-DB
 # indexMongodb.js
 # mongodb.js

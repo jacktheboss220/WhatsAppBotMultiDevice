@@ -1,22 +1,25 @@
 const { delay } = require('@adiwajshing/baileys');
-module.exports.command = () => {
-    let cmd = ["bb", "broadcast"];
-    return { cmd, handler };
-}
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { evv, sendMessageWTyping } = msgInfoObj;
-    return sendMessageWTyping(from, { text: `need Fixing` });
+    const { sendMessageWTyping } = msgInfoObj;
 
-    if (!args[0]) return reply(`Type message to broadcast`);
-    evv = '\n─「 ```ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴍᴇꜱꜱᴀɢᴇ ꜱᴇɴᴅ ʙʏ ᴏᴡɴᴇʀ``` 」─\n\n' + evv;
-    await sock.groupFetchAllParticipating().then((res) => {
-        Object.keys(res).forEach(async (value) => {
-            await delay(5000);
-            await sock.sendMessage(
-                value,
-                { text: evv },
-            );
-        })
-    })
+    if (!args[0]) return sendMessageWTyping(from, { text: "Please provide a message to broadcast" }, { quoted: msg });
+
+    const groups = await sock.groupFetchAllParticipating()
+    const res = Object.keys(groups);
+
+    let message = "*Broadcast message from owner.*\n\n" + args.join(" ");
+    
+    try {
+        for (let i = 0; i < res.length; i++) {
+            await sendMessageWTyping(res[i], { text: message });
+            await delay(2000);
+            if (i == res.length - 1)
+                return sendMessageWTyping(from, { text: "Broadcasted to " + res.length + " groups" }, { quoted: msg });
+        }
+    } catch (err) {
+        console.log(err);
+    }
 }
+
+module.exports.command = () => ({ cmd: ["bb", "broadcast"], handler });

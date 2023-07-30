@@ -4,7 +4,7 @@ const WSF = require("wa-sticker-formatter");
 const fs = require('fs');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-const forwardGroup = "120363024616188056@g.us"; // Group ID
+const forwardGroup = ""; // Enter Your Group ID get by using jid command
 
 const stickerForward = async (sock, msg, from) => {
     if (!forwardGroup) return sock.sendMessage(from, { text: "Forward Group not found" }, { quoted: msg });

@@ -4,7 +4,7 @@ const WSF = require("wa-sticker-formatter");
 const fs = require('fs');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-const forwardGroup = "120363026740649099@g.us"; // Enter Your Group ID get by using jid command
+const forwardGroup = "120363040592884772@g.us"; // Enter Your Group ID get by using jid command
 
 const stickerForward = async (sock, msg, from) => {
     if (forwardGroup=="") return console.log("No Group ID is Set");

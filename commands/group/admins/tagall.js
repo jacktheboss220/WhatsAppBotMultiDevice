@@ -4,25 +4,57 @@ module.exports.command = () => {
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { sendMessageWTyping } = msgInfoObj;
-    const groupMetadata = await sock.groupMetadata(from);
-    let message = '';
-
-    if (!msg.message.extendedTextMessage && args.length === 0) {
-        return sendMessageWTyping(from, { text: "```Reply On Any Message```" }, { quoted: msg });
+    const { prefix, sendMessageWTyping, groupMetadata, type, content } = msgInfoObj;
+    if (msg.message.extendedTextMessage) {
+        let temp = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text
+            || msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation
+            || msg.message?.conversation;
+        msg['message'] = msg.message.extendedTextMessage.contextInfo.quotedMessage
+        msg["message"]['conversation'] = temp;
     }
 
-    message += msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation
-        ? msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation + "\n\n"
-        : args.length ? args.join(" ") + "\n\n" : "```Total Members : " + groupMetadata.participants.length + "```\n\n";
-
-    const mentions = groupMetadata.participants.map(i => i.id);
-    message += mentions.map(i => "👉🏻 @" + i.split("@")[0]).join("\n");
+    const isMedia = type === "imageMessage" || type === "videoMessage";
+    const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
+    const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
 
     try {
-        sock.sendMessage(from, { text: message, mentions });
+        if (isMedia || isTaggedImage || isTaggedVideo) {
+            delete msg["message"]['conversation'];
+            let tempMess = Object.assign({}, msg.message);
+            const tempCaption = tempMess[Object.keys(tempMess)[0]]['caption'];
+            tempMess[Object.keys(tempMess)[0]]['caption'] = tempCaption.includes(prefix + 'tagall') ? tempCaption.split(prefix + "tagall")[1].trim() : tempCaption;
+            const tags = groupMetadata.participants.map(i => "👉🏻 @" + i.id.split("@")[0]).join("\n");
+            const tt = await sock.sendMessage(from, {
+                forward: {
+                    "key": {
+                        "remoteJid": msg.key.remoteJid,
+                        "fromMe": msg.key.fromMe,
+                        "id": msg.key.id,
+                        "participant": msg.key.participant ? msg.key.participant : null
+                    },
+                    "messageTimestamp": msg.messageTimestamp,
+                    "pushName": msg.pushName,
+                    "broadcast": msg.broadcast,
+                    "message": tempMess
+                },
+                contextInfo: { forwardingScore: 0, isForwarded: false }
+            });
+            await sock.sendMessage(from, {
+                text: "*Total Members* : " + groupMetadata.participants.length + "\n\n" + tags,
+                mentions: [...groupMetadata.participants.map(e => e.id)],
+            }, { quoted: tt });
+        } else {
+            let message = msg.message.conversation;
+            message = message.includes(prefix + 'tagall') ? message.split(prefix + "tagall")[1].trim() : message;
+            message = message ? message + "\n\n" : "*Total Members* :" + groupMetadata.participants.length + "\n\n";
+            message += groupMetadata.participants.map(i => "👉🏻 @" + i.id.split("@")[0]).join("\n");
+            sendMessageWTyping(from, {
+                text: message,
+                mentions: [...groupMetadata.participants.map(e => e.id)]
+            });
+        }
     } catch (err) {
-        console.error(err);
+        console.log(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 };

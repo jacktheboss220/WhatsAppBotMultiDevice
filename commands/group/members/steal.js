@@ -3,7 +3,6 @@ const { downloadContentFromMessage } = require("@adiwajshing/baileys");
 const { Sticker, createSticker, StickerTypes } = require("wa-sticker-formatter-1");
 const WSF = require("wa-sticker-formatter");
 
-
 const fs = require('fs');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
@@ -38,8 +37,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 media
             );
 
-            await sock.sendMessage(
-                from,
+            await sock.sendMessage(from,
                 { sticker: Buffer.from(webpWithMetadata) },
                 { quoted: msg }
             );

@@ -15,14 +15,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 ${readMore}
 
-*${prefix}blockc* _commands_
-    _block command for a group_
-
-*${prefix}removec* _commands_
-    _unblock commands for a group_
-
-*${prefix}emptyc*
-    _remove all command from db_
 
 *${prefix}block <@mention>*
     _block user from using bot_

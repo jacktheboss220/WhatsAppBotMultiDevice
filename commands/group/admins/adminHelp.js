@@ -25,6 +25,18 @@ ${readMore}
 *${prefix}demote <@mention>*
     _Remove admin permission of a member!_
 
+*${prefix}blockc* _commands_
+    _block command for a group_
+    _${prefix}blockc insta_
+    _not type all alias of insta command_
+
+*${prefix}removec* _commands_
+    _unblock commands for a group_
+    _${prefix}removec insta_
+
+*${prefix}emptyc*
+    _Unblock all commands_
+
 *${prefix}rename <new-subject>*
     _Change group subject!_
 

@@ -7,7 +7,7 @@ const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}`
 const forwardGroup = ""; // Enter Your Group ID get by using jid command
 
 const stickerForward = async (sock, msg, from) => {
-    if (!forwardGroup) return console.log("No Group ID is Set");
+    if (forwardGroup == "") return console.log("No Group ID is Set");
 
     if (from == forwardGroup) return;
 

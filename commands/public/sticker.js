@@ -31,13 +31,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
 
-    let packName = "", authorName = ""
+    let packName = "⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️", authorName = ""
 
     if (args.includes('nometadata') == false) {
         if (args.includes('pack') == true) packName = evv.split('pack')[1].split('author')[0];
-        else packName = 'eva';
+        else packName = '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️';
         if (args.includes('author') == true) authorName = evv.split('author')[1].split('pack')[0];
-        else authorName = 'eva';
+        else authorName = '';
     }
     /* cSpell:disable */
     outputOptions = [
@@ -54,7 +54,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
     /* cSpell:enable */
     const media = isTaggedImage ? getRandom('.png') : getRandom('.mp4');
-
     if (isMedia || isTaggedImage || isTaggedVideo) {
         if (msg.message?.videoMessage?.seconds > 11) {
             return sendMessageWTyping(from,

@@ -11,7 +11,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const memberData = await getMemberData(senderJid);
 
     if (type === "extendedTextMessage" && content.includes("stickerMessage")) {
-        let packName = authorName = "eva";
+        let packName = authorName = "⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️";
         if (args.includes('pack')) {
             packName = args.join(' ').split('pack ')[1].split('author')[0];
         }
@@ -32,8 +32,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
         try {
             const webpWithMetadata = await WSF.setMetadata(
-                packOrAuthor ? packName : evv ? evv : memberData.customStealText || 'eva',
-                packOrAuthor ? authorName : evv ? "" : memberData.customStealText ? "" : 'eva',
+                packOrAuthor ? packName : evv ? evv : memberData.customStealText || '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️',
+                packOrAuthor ? authorName : evv ? "" : memberData.customStealText ? "" : '',
                 media
             );
 
@@ -48,8 +48,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             // console.log(err);
             // sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
             const buffer = await new Sticker(media)
-                .setPack(packOrAuthor ? packName : evv ? evv : memberData.customStealText || 'eva')
-                .setAuthor(packOrAuthor ? authorName : evv ? "" : memberData.customStealText ? "" : 'eva')
+                .setPack(packOrAuthor ? packName : evv ? evv : memberData.customStealText || '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️')
+                .setAuthor(packOrAuthor ? authorName : evv ? "" : memberData.customStealText ? "" : '')
                 .setType(StickerTypes.FULL)
                 .setQuality(80)
                 .toBuffer();

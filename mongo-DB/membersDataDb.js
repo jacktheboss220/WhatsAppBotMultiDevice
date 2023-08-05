@@ -12,7 +12,7 @@ const createMembersData = (jid, name) => {
                 username: name,
                 isBlock: false,
                 totalmsg: 0,
-                dmLimit: 100,
+                dmLimit: 1000,
                 warning: []
             })
         } else {

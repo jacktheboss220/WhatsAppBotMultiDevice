@@ -14,8 +14,11 @@ const getGender = async (name) => {
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping } = msgInfoObj;
-    if (args.length == 0) return sendMessageWTyping(from, { text: `❌ Name is not given! \nSend ${prefix}gender firstname` }, { quoted: msg });
-    if (args[0].includes("@")) return sendMessageWTyping(from, { text: `❌ Don't tag! \nSend ${prefix}gender firstname` }, { quoted: msg });
+
+    if (args.length == 0) return sendMessageWTyping(from, { text: `❌ Name is not given! \nSend ${prefix}gender first_name` }, { quoted: msg });
+
+    if (args[0].includes("@")) return sendMessageWTyping(from, { text: `❌ Don't tag! \nSend ${prefix}gender first_name` }, { quoted: msg });
+
     getGender(args[0]).then((message) => {
         sendMessageWTyping(from, { text: message }, { quoted: msg });
     }).catch((error) => {
@@ -23,6 +26,5 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         console.log(error);
     });
 }
-
 
 module.exports.command = () => ({ cmd: ['gender'], handler }); 

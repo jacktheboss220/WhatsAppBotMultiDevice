@@ -40,13 +40,6 @@ ${readMore}
     _Get Download link for movie_
     _Eg: ${prefix}movie Avengers_
 
-*${prefix}anime*
-    _Get a Quote said by Anime Character_
-    *Example:*
-        _${prefix}anime_
-        _${prefix}anime name saitama_
-        _${prefix}anime title one punch man_
-        
 *${prefix}sticker*
     _Create a sticker from different media types!_
     *Properties of sticker:*
@@ -78,6 +71,11 @@ ${readMore}
 *${prefix}img*
     _For search image by google_
     eg: ${prefix}img cute cat_
+
+*${prefix}search*
+    _For search text by google_
+    eg: ${prefix}search cats_
+    _Alias ${prefix}gs cats_
 
 *${prefix}gen* _Not Working_
     _Generate a image with your text_
@@ -158,6 +156,7 @@ ${readMore}
 
 *${prefix}text*
     _Add Header and Footer to image_
+    _Format FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_
     _eg: ${prefix}text TopText;BottomText_
     _Font size is optional_
     _Alias: ${prefix}txtmeme_

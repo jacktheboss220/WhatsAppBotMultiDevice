@@ -2,11 +2,11 @@ const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { prefix, groupMetadata } = msgInfoObj;
+    let { prefix } = msgInfoObj;
 
     const admin = `
 ---------------------------------------------------------------
-    ─「  *${groupMetadata.subject} Admin Commands* 」─
+    ─「 *Admin Commands* 」─
 ---------------------------------------------------------------
 
 ${readMore}
@@ -73,10 +73,7 @@ ${readMore}
 
 ♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️`
 
-    sock.sendMessage(
-        from,
-        { text: admin }
-    );
+    sock.sendMessage(from, { text: admin });
 }
 
 module.exports.command = () => ({ cmd: ["admin"], handler });

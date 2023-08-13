@@ -13,7 +13,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         lang = 'hi-IN'
         message = evv.split("hin")[1].trim();
     }
-    if (message == undefined) return sendMessageWTyping(from, { text: `❌ Text is empty! \nSend ${prefix}say text` }, { quoted: msg });
+    if (message == undefined || message == "") return sendMessageWTyping(from, { text: `❌ Text is empty! \nSend ${prefix}say text` }, { quoted: msg });
 
     if (message.split("").length >= 200) return sendMessageWTyping(from, { text: `❌ Word Limit: ${message.split("").length}/200 \nSend ${prefix}say text` }, { quoted: msg });
 

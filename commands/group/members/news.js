@@ -8,6 +8,7 @@ module.exports.command = () => {
     let cmd = ["news"];
     return { cmd, handler };
 }
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, command, sendMessageWTyping } = msgInfoObj;
     let arr = ['national', 'business', 'sports', 'world', 'politics', 'technology', 'startup', 'entertainment', 'miscellaneous', 'hatke', 'science', 'automobile'];

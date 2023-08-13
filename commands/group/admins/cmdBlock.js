@@ -1,10 +1,5 @@
 const { getGroupData, group } = require('../../../mongo-DB/groupDataDb');
 
-module.exports.command = () => {
-    let cmd = ["blockc", "emptyc", "getblockc", "removec"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { command, isGroup, sendMessageWTyping } = msgInfoObj;
     if (!isGroup) return sendMessageWTyping(from, { text: 'Use In Group Only!' }, { quoted: msg });
@@ -44,9 +39,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 sendMessageWTyping(from, { text: '*UnBlocked* _' + args[0] + '_ *in this Group*.' }, { quoted: msg })
             })
             break;
+            
         default:
             break;
     }
-
-
 }
+
+module.exports.command = () => ({ cmd: ["blockc", "emptyc", "getblockc", "removec"], handler });

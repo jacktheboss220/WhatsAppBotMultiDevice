@@ -1,20 +1,23 @@
 const fs = require('fs');
 const axios = require('axios');
+
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath);
+
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
+
 const { delay } = require("@adiwajshing/baileys");
 module.exports.command = () => {
     let cmd = ["meme"];
     return { cmd, handler };
 }
 
-let downMeme = getRandom('.mp4');
-let downgif = getRandom('.gif');
+let down_meme = getRandom('.mp4');
+let down_gif = getRandom('.gif');
 
-const downloadmeme = async (url) => {
-    const writer = fs.createWriteStream(downgif);
+const downloadMedia = async (url) => {
+    const writer = fs.createWriteStream(down_gif);
     const response = await axios({
         url,
         method: 'GET',
@@ -25,7 +28,6 @@ const downloadmeme = async (url) => {
         writer.on('finish', resolve("done"))
         writer.on("error", reject)
     })
-    // writer.on('error', reject)
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -33,32 +35,23 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     await axios.get(`${memeURL}`).then((res) => {
         let url = res.data.url;
         if (url.includes("jpg") || url.includes("jpeg") || url.includes("png")) {
-            sock.sendMessage(
-                from,
-                {
-                    image: { url: res.data.url },
-                    caption: `${res.data.title}`,
-                }
+            sock.sendMessage(from,
+                { image: { url: res.data.url }, caption: `${res.data.title}` }
             );
         } else {
             outputOptions = [
-                `-movflags faststart`,
-                `-pix_fmt yuv420p`,
-                `-vf`,
+                `-movflags faststart`, `-pix_fmt yuv420p`, `-vf`,
                 `scale=trunc(iw/2)*2:trunc(ih/2)*2`,
             ];
-            downloadmeme(res.data.url).then(async (res1) => {
+            downloadMedia(res.data.url).then(async (res1) => {
                 if (res1 == 'done') {
-                    ffmpeg(downgif).input(downgif).addOutputOptions(outputOptions).save(downMeme).on("end", async () => {
+                    ffmpeg(down_gif).input(down_gif).addOutputOptions(outputOptions).save(down_meme).on("end", async () => {
                         await delay(4000);
-                        sock.sendMessage(
-                            from,
-                            {
-                                video: fs.readFileSync(downMeme),
-                                caption: `${res.data.title}`,
-                                gifPlayback: true
-                            }
-                        )
+                        sock.sendMessage(from, {
+                            video: fs.readFileSync(down_meme),
+                            caption: `${res.data.title}`,
+                            gifPlayback: true
+                        })
                     });
                 }
             })

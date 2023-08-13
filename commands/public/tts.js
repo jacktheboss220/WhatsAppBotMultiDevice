@@ -1,8 +1,8 @@
+const fs = require('fs');
 const { UltimateTextToImage } = require('ultimate-text-to-image');
 const { Sticker } = require("wa-sticker-formatter");
-const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-const fs = require('fs');
+const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
@@ -41,8 +41,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             author: "eva",
         });
         await sticker.build();
-        const sticBuffer = await sticker.get();
-        await sock.sendMessage(from, { sticker: Buffer.from(sticBuffer) }, { quoted: msg });
+        const stickerBuffer = await sticker.get();
+        await sock.sendMessage(from, { sticker: Buffer.from(stickerBuffer) }, { quoted: msg });
         fs.unlinkSync(filename);
     });
 }

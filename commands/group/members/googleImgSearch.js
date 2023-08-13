@@ -42,11 +42,10 @@ const sendImage = async (links, from, msg, { args, sendMessageWTyping }) => {
         return sendMessageWTyping(from, { text: "No image found" }, { quoted: msg });
     }
     let random = 0;
-    if (links.length > 5) {
-        random = Math.floor(Math.random() * 5);
-    }
     if (args[0] == '1') {
         random = 0;
+    } else if (links.length > 5) {
+        random = Math.floor(Math.random() * 5);
     }
     const url = links[random];
     try {

@@ -1,15 +1,7 @@
 require('dotenv').config();
 //-------------------------------------------------------------------------------------------------------------//
-//-------------------------------------------------------------------------------------------------------------//
 const { MongoClient, ServerApiVersion } = require('mongodb');
-
 const uri = `${process.env.MONGODB_KEY}`;
-
-// const mdClient = new MongoClient(uri, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//     serverApi: ServerApiVersion.v1
-// });
 //-------------------------------------------------------------------------------------------------------------//
 const mdClient = new MongoClient(uri, {
     serverApi: {
@@ -19,10 +11,9 @@ const mdClient = new MongoClient(uri, {
     }
 });
 //-------------------------------------------------------------------------------------------------------------/
-async function main() {
+(async () => {
     let flag = false;
-    await mdClient.connect();
-    console.log('Connected successfully to Database');
+    await mdClient.connect().then(() => { console.log("Connected to Database") }).catch(err => { console.log(err) });
     const db = mdClient.db('MyBotDataDB');
     const collection = await db.collections();
     collection.forEach(ele => {
@@ -33,27 +24,7 @@ async function main() {
     if (flag == false) {
         await db.createCollection("AuthTable");
     }
-    return "done";
-}
-//-------------------------------------------------------------------------------------------------------------//
-main();
-//-------------------------------------------------------------------------------------------------------------//
-// client.connect(async (err) => {
-//     if (err) throw err;
-//     let flag = false;
-//     let collection = client.db("MyBotDataDB");
-//     collection.collections((err, names) => {
-//         names.forEach(ele => {
-//             if (ele.namespace == "MyBotDataDB.AuthTable") {
-//                 flag = true;
-//             }
-//         })
-//         if (flag == false) {
-//             collection.createCollection("AuthTable")
-//         }
-//     })
-// });
-
+})();
 //-------------------------------------------------------------------------------------------------------------//
 
 module.exports = mdClient;

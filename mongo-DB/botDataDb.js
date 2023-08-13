@@ -21,8 +21,8 @@ const createBotData = () => {
     })
 }
 
-const getBotData = async (groupJid) => {
-    return await bot.findOne({ _id: groupJid }).then(res => {
+const getBotData = async () => {
+    return await bot.findOne({ _id: "bot" }).then(res => {
         return res;
     }).catch(err => {
         return -1;

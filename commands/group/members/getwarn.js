@@ -1,12 +1,6 @@
-const { createMembersData, getMemberData, member } = require('../../../mongo-DB/membersDataDb');
-const { getGroupData, createGroupData, group } = require('../../../mongo-DB/groupDataDb');
-
 require('dotenv').config();
 
-module.exports.command = () => {
-    let cmd = ["getwarn"];
-    return { cmd, handler };
-}
+const { getGroupData, createGroupData, group } = require('../../../mongo-DB/groupDataDb');
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { senderJid } = msgInfoObj;
@@ -40,12 +34,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     let num_split = taggedJid.split("@s.whatsapp.net")[0];
     let warnMsg;
     warnMsg = `@${num_split}, Your warning status is (${warnCount}/3) in this group.`;
-    sock.sendMessage(
-        from,
-        {
-            text: warnMsg,
-            mentions: [taggedJid]
-        },
+    sock.sendMessage(from,
+        { text: warnMsg, mentions: [taggedJid] },
         { quoted: msg }
     );
 }
+
+module.exports.command = () => ({ cmd: ["getwarn"], handler });

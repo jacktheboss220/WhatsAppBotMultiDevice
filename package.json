@@ -29,7 +29,7 @@
     "genius-lyrics": "^4.4.2",
     "genius-lyrics-api": "^3.2.0",
     "google-tts-api": "^2.0.2",
-    "inshorts-api": "^1.0.3",
+    "inshorts-api": "github:jacktheboss220/inshorts-api",
     "insta-fetcher": "^1.3.25",
     "jsdom": "^20.0.3",
     "link-preview-js": "^3.0.4",

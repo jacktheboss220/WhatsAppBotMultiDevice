@@ -3,7 +3,7 @@ const truecallerjs = require('truecallerjs');
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { evv, sendMessageWTyping, ownerSend } = msgInfoObj;
-    return sendMessageWTyping(from, { text: `Not Working Right Now.!!` }, { quoted: msg });
+
     let number;
     if (msg.message.extendedTextMessage?.contextInfo?.participant?.length > 0) {
         number = msg.message.extendedTextMessage.contextInfo.participant.split("@")[0];
@@ -28,14 +28,24 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 
     const response = await truecallerjs.search(searchData);
-    console.log(response.json());
+    if (!response) return sendMessageWTyping(from, { text: `❌ Number not found` }, { quoted: msg });
+    const data = response.json().data[0];
 
-    console.log(response.getName());
-    console.log(response.getAlternateName());
-    console.log(response.getAddresses());
-    console.log(response.getEmailId());
-    console.log(response.getCountryDetails());
+    const name = response.getName();
+    const { e164Format, numberType, countryCode, carrier, type } = data?.phones[0];
+    const { city } = response.getAddresses()[0];
+    const email = response.getEmailId();
 
+    const message = '*Name:* ' + name + '\n' +
+        '*Number:* ' + e164Format + '\n' +
+        '*City:* ' + city + '\n' +
+        '*Country Code:* ' + countryCode + '\n' +
+        '*Carrier:* ' + carrier + ', ' + numberType + '\n' +
+        // '*Type:* ' + type + '\n' +
+        '*Email:* ' + email + '\n';
+
+    ownerSend(message);
+    sendMessageWTyping(from, { text: message }, { quoted: msg });
 }
 
 module.exports.command = () => ({ cmd: ['true', 'truecaller'], handler });

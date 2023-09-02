@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     await sendMessageWTyping(
         from,
-        { text: "𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 : ```Ha bhai zinda hoon bta kya kaam haj...```😋" },
+        { text: "𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 : ```Ha bhai zinda hoon bta kya kaam hai...```😋" },
         { quoted: msg }
         // {
         //     quoted: {

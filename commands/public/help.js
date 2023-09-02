@@ -58,16 +58,8 @@ ${readMore}
     _Create a sticker from different media types!_
     *Properties of sticker:*
         _crop_ - Used to crop the sticker size!
-        _author_ - Add metadata in sticker!
-        _pack_ - Add metadata in sticker!
-        _nometadata_ - Remove all metadata from sticker!
-    *Examples:*
-        _${prefix}sticker pack_ 𝙎𝘼𝘿𝙄𝙌 𝘽𝙊𝙏 🤖 _author_ 𝙈𝙞𝙨𝙖 𝘼𝙢𝙖𝙣𝙚 ❤️
+    *Example:*
         _${prefix}sticker crop_
-        _${prefix}sticker nometadata_
-
-*${prefix}𝐒𝐭𝐞𝐚𝐥*
-        _Send sticker with bot metadata_
         
 *${prefix}𝐓𝐨𝐢𝐦𝐠*
     _For converting sticker to image_
@@ -94,17 +86,9 @@ ${readMore}
     _Use ${prefix}list for whole valid list_
     _category could be sports, business or anything_
 
-*${prefix}𝐈𝐝𝐩* _Not Working_
-    _download Instagram private profile picture_
-    eg:${prefix}idp username
-
 *${prefix}𝐈𝐧𝐬𝐭𝐚*
     _download Instagram media_
     eg:${prefix}insta <linkadress>
-
-*${prefix}𝐅𝐛* _Removed_
-    _download Facebook public Media_
-    eg:${prefix}fb LinkAddress
 
 *${prefix}𝐘𝐭*
     _download youTube video in best quality_
@@ -166,23 +150,15 @@ ${readMore}
 
 
     const helpInDm = `
-─「 *Dm Commands* 」─
+─「 *Dm Commands Only* 」─
+# [ᗩᗪᗪ ᗰE Iᑎ GᖇOᑌᑭ TO ᑌᔕE ᗰY ᖴᑌᒪᒪ ᑭOTEᑎTIᗩᒪ 💀] 
 
 *${prefix}sticker*
     _Create a sticker from different media types!_
-    *Properties of sticker:*
+    *Property of sticker:*
         _crop_ - Used to crop the sticker size!
-        _author_ - Add metadata in sticker!
-        _pack_ - Add metadata in sticker!
-        _nometadata_ - Remove all metadata from sticker!
-    *Examples:*
-        _${prefix}sticker pack sadiq author misa amane_
-        _${prefix}sticker crop_
-        _${prefix}sticker nometadata_
-        
-*${prefix}idp* _Not Working_
-        _download Instagram private profile picture_
-        eg:${prefix}idp eva`
+    *Example:*
+        _${prefix}sticker crop_  x`
 
 
     sendMessageWTyping(

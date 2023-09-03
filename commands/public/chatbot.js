@@ -1,18 +1,17 @@
 require('dotenv').config()
 const { getGroupData } = require('../../mongo-DB/groupDataDb')
-const { Configuration, OpenAIApi } = require("openai");
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
+
+const OpenAI = require('openai');
+
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
 });
 
-const openai = new OpenAIApi(configuration);
-
-
 async function chat(prompt, from, msg, tag, sendMessageWTyping) {
-    await openai.createCompletion({
+    await openai.chat.completions.create({
         model: "text-davinci-003",
         prompt: prompt,
-        max_tokens: 2048,
+        max_tokens: 30,
         temperature: 0.3,
         top_p: 1,
         frequency_penalty: 0,

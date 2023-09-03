@@ -34,7 +34,7 @@
     "jsdom": "^20.0.3",
     "link-preview-js": "^3.0.4",
     "mongodb": "^5.7.0",
-    "openai": "^3.1.0",
+    "openai": "^4.0.1",
     "qrcode-terminal": "^0.12.0",
     "sharp": "^0.30.2",
     "snapsave-downloader": "^6.9.5",

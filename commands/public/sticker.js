@@ -31,7 +31,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
 
-    let packName = "", authorName = ""
+    let packName = "", authorName = "";
 
     if (args.includes('nometadata') == false) {
         if (args.includes('pack') == true) packName = evv.split('pack')[1].split('author')[0];

@@ -37,8 +37,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
 
-    var packName = "𝙈𝙞𝙨𝙖 𝘼𝙢𝙖𝙣𝙚"
-    var authorName = "♥️"
+    var packName = "🦄𝐒𝐀𝐃𝐈𝐐"
+    var authorName = ""
 
     if (args.includes('pack') == true) {
         packNameDataCollection = false;

@@ -23,7 +23,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
     try {
         let fileDown = getRandom(".mp4");
-        let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
+        let title = await ytdl.getInfo(URL).then(res => res.videoDetails.title.trim());
         youtubedl(URL, { format: 'mp4', output: fileDown, maxFilesize: "104857600" }).then((r) => {
             console.log(r);
             if (r?.includes("max-filesize")) {

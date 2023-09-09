@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@adiwajshing/baileys": "github:jacktheboss220/Baileys-New",
-    "@bochilteam/scraper": "^4.0.22-alpha.0",
+    "@bochilteam/scraper": "^4.2.4",
     "@erickwendel/meme-maker": "^2.3.1",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@hapi/hoek": "^10.0.1",
@@ -45,9 +45,9 @@
     "urban-dictionary": "^3.0.2",
     "wa-sticker-formatter": "^3.6.0",
     "wa-sticker-formatter-1": "github:AlenVelocity/wa-sticker-formatter",
-    "youtube-dl-exec": "^2.4.0",
-    "yt-search": "^2.10.3",
-    "ytdl-core": "^4.11.3"
+    "youtube-dl-exec": "^2.4.8",
+    "yt-search": "^2.10.4",
+    "ytdl-core": "git+ssh://git@github.com:khlevon/node-ytdl-core.git#v4.11.4-patch.2"
   },
   "devDependencies": {
     "g-i-s": "github:jacktheboss220/g-i-s",

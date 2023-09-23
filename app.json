@@ -25,16 +25,28 @@
       "description": "Enter bot number to get access to all cmd (include 91 or country code)"
     },
     "INSTA_API_KEY": {
-      "description": "Enter insta session key."
+      "description": "Enter insta session key. Get from inspecting your insta session cookie"
     },
     "TRUECALLER_ID": {
-      "description": "Enter true caller id"
+      "description": "Enter true caller id. Get form https://www.npmjs.com/package/truecallerjs"
     },
     "MONGODB_KEY": {
-      "description": "Enter the mongodb username:password"
+      "description": "Enter the mongodb uri"
     },
-    "LYRICS_KEY": {
-      "description": "Enter genius api key"
+    "GOOGLE_API_KEY": {
+      "description": "Enter your Google API key"
+    },
+    "SEARCH_ENGINE_KEY": {
+      "description": "Enter your search engine key"
+    },
+    "OPENAI_API_KEY": {
+      "description": "Enter your OpenAI API key"
+    },
+    "GENIUS_ACCESS_SECRET": {
+      "description": "Enter your Genius API key"
+    },
+    "HOST_URL": {
+      "description": "Enter your host URL after hosting the bot"
     }
   },
   "buildpacks": [

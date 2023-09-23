@@ -1,9 +1,11 @@
 const fs = require('fs');
 const yts = require('yt-search');
+const ytdl = require('ytdl-core');
 const youtubedl = require('youtube-dl-exec');
+
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-const findSong = async (name) => {
+const findSongURL = async (name) => {
     const r = await yts(`${name}`);
     return r.all[0].url;
 }
@@ -14,22 +16,24 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (!args[0]) return sendMessageWTyping(from, { text: `❌ *Enter song name*` }, { quoted: msg });
     console.log("Song:", evv);
 
-    let URL = await findSong(evv);
+    let URL = await findSongURL(evv);
     let fileDown = getRandom(".mp3");
     try {
-        await youtubedl(URL, { format: 'mp4', output: fileDown, maxFilesize: "104857600", }).then(async (r) => {
+        let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
+        await youtubedl(URL, { format: 'm4a', output: fileDown, maxFilesize: "104857600", }).then(async (r) => {
             console.log(r);
             if (r?.includes("max-filesize")) {
-                return sendMessageWTyping(from, {
-                    text: "File size exceeds more then 100MB."
-                }, { quoted: msg })
+                return sendMessageWTyping(from,
+                    { text: "File size exceeds more then 100MB." },
+                    { quoted: msg }
+                )
             } else {
                 let sock_data;
                 if (command == 'song') {
                     sock_data = {
                         document: fs.readFileSync(fileDown),
                         mimetype: "audio/mpeg",
-                        fileName: fileDown,
+                        fileName: title + ".mp3",
                         ppt: true,
                     }
                 } else {

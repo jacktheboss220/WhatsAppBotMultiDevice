@@ -1,77 +1,51 @@
-const {
-    downloadContentFromMessage,
-} = require("@adiwajshing/baileys");
+const { downloadMediaMessage } = require("@adiwajshing/baileys");
 
+const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const { writeFile } = require('fs/promises');
-const fs = require('fs');
-const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-module.exports.command = () => {
-    let cmd = ["mp3", "mp4audio", "tomp3"];
-    return { cmd, handler };
-}
+const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { type, content, sendMessageWTyping } = msgInfoObj;
 
-    const isMedia
-        = type === "imageMessage" || type === "videoMessage";
-    const isTaggedVideo
-        = type === "extendedTextMessage" && content.includes("videoMessage");
+    if (msg.message.extendedTextMessage) {
+        msg['message'] = msg.message.extendedTextMessage.contextInfo.quotedMessage
+    }
 
-    if ((isMedia && !msg.message.imageMessage || isTaggedVideo)) {
-        let downloadFilePath;
-        if (msg.message.videoMessage) {
-            downloadFilePath = msg.message.videoMessage;
-        } else {
-            downloadFilePath = msg.message.extendedTextMessage.contextInfo.quotedMessage.videoMessage;
-        }
-        const stream = await downloadContentFromMessage(downloadFilePath, 'video');
-        let buffer = Buffer.from([])
-        for await (const chunk of stream) {
-            buffer = Buffer.concat([buffer, chunk])
-        }
-        const media = getRandom('.mp4')
-        await writeFile(media, buffer)
-        const path = getRandom('.mp3')
-        function convert(input, output, callback) {
-            ffmpeg(input)
-                .output(output)
-                .on('end', function () {
-                    console.log('conversion ended');
-                    callback(null);
-                }).on('error', function (err) {
-                    console.log('error: ', e.code, e.msg);
-                    callback(err);
-                }).run();
-        }
-        convert(media, path, function (err) {
-            if (!err) {
-                console.log('conversion complete');
-                (async () => {
-                    await sock.sendMessage(
-                        from,
-                        {
-                            audio: fs.readFileSync(path),
-                            mimetype: 'audio/mp4'
-                        },
-                        { quoted: msg }
-                    ).then(() => {
+    const isMedia = type === "imageMessage" || type === "videoMessage";
+    const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
+    const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
 
-                        try {
-                            fs.unlinkSync(media);
-                            fs.unlinkSync(path);
-                        } catch { }
-                    })
-                })();
-            } else {
+    if (isMedia || isTaggedImage || isTaggedVideo) {
+        const media = getRandom('.mp4');
+        const path = getRandom('.mp3');
+        const buffer = await downloadMediaMessage(msg, 'buffer', {},);
+        await writeFile(media, buffer);
+
+        ffmpeg().input(media).audioCodec('libmp3lame').audioBitrate('320k').noVideo()
+            .outputOptions(['-preset ultrafast'])
+            .on('end', async () => {
+                console.log('Conversion finished');
+                await sock.sendMessage(from, {
+                    audio: fs.readFileSync(path),
+                    mimetype: "audio/mpeg",
+                    fileName: path,
+                }, { quoted: msg }).then(() => {
+                    try {
+                        fs.unlinkSync(media);
+                        fs.unlinkSync(path);
+                    } catch { }
+                })
+            }).on('error', (err) => {
+                console.error('Error:', err);
                 sendMessageWTyping(from, { text: `Error while converting` }, { quoted: msg })
-            }
-        });
+            }).save(path);
     }
     else {
         console.log("No Media tag");
         sendMessageWTyping(from, { text: `*Reply to video only*` }, { quoted: msg })
     }
 }
+
+module.exports.command = () => ({ cmd: ["mp3", "mp4audio", "tomp3"], handler });

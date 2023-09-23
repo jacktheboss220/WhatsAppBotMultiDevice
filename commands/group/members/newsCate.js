@@ -32,8 +32,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const typeOfNews = ['world', 'national', 'business', 'sports', 'politics', 'technology', 'startup', 'entertainment', 'miscellaneous', 'hatke', 'science', 'automobile']
     // await sock.sendMessage(from, listMessage);
 
-    sendMessageWTyping(from, { text: typeOfNews.join(",") }, { quoted: msg });
+    sendMessageWTyping(from, {
+        text: typeOfNews.map((e, i) => `${i + 1}. ${e}`).join("\n"),
+    }, { quoted: msg });
 }
-
 
 module.exports.command = () => ({ cmd: ["categories", "cate"], handler })

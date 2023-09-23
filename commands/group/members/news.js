@@ -1,38 +1,36 @@
 const inshorts = require('inshorts-api');
-const axios = require('axios');
+const readMore = String.fromCharCode(8206).repeat(4000);
 
-const more = String.fromCharCode(8206);
-const readMore = more.repeat(4001);
-
-module.exports.command = () => {
-    let cmd = ["news"];
-    return { cmd, handler };
-}
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, command, sendMessageWTyping } = msgInfoObj;
+
     let arr = ['national', 'business', 'sports', 'world', 'politics', 'technology', 'startup', 'entertainment', 'miscellaneous', 'hatke', 'science', 'automobile'];
-    let z;
-    if (!args[0]) {
-        z = arr[0];
-    }
-    else {
-        z = args[0];
-    }
-    if (!arr.includes(z)) {
-        return sendMessageWTyping(from, { text: `Enter a valid category:) or use ${prefix}categories for more info` }, { quoted: msg })
+
+    let newsType = args[0] || '';
+
+    if (!arr.includes(newsType) && newsType != "") {
+        return sendMessageWTyping(from, { text: `Enter a valid category :) or use ${prefix}categories for more info` }, { quoted: msg })
     }
 
-    let news = `☆☆☆☆💥 ${z.toUpperCase()} 💥☆☆☆☆ \n\n${readMore}`;
     var options = {
         lang: 'en',
-        category: z,
-        numOfResults: 13
+        category: newsType,
+        numOfResults: 10
     }
 
     inshorts.get(options, function (result) {
-        for (i of result) {
-            news = news + "🌐 " + i.title + "\n\n";
+        let message = `☆☆☆☆💥 ${newsType == "" ? "All" : newsType.toUpperCase()} 💥☆☆☆☆ \n\n${readMore}`;
+        for (const news of result) {
+            message += '🌐 ';
+            message += `${news.title} ~ ${news.author}\n`;
+            // message += `Author: ${news.author}\n`;
+            // message += `Content: ${news.content}\n`;
+            // message += `Posted At: ${news.postedAt}\n`;
+            // message += `Source URL: ${news.sourceURL}\n`;
+            message += '\n';
         }
-        sendMessageWTyping(from, { text: news });
+        sendMessageWTyping(from, { text: message });
     });
 }
+
+module.exports.command = () => ({ cmd: ["news"], handler });

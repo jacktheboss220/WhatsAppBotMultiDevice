@@ -1,4 +1,4 @@
-const snapsave = require("snapsave-downloader");
+const snapsave = require("insta-downloader");
 const { savefrom } = require('@bochilteam/scraper');
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -17,7 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (urlInsta.includes("?")) urlInsta = urlInsta.split("/?")[0];
     console.log(urlInsta);
-    
+
     ig.fetchPost(urlInsta).then(async (res) => {
         if (res.media_count == 1) {
             if (res.links[0].type == "video") {

@@ -1,56 +1,56 @@
 {
-  "name": "whatsappbot",
-  "version": "1.0.0",
-  "description": "well...Unique and intreating project",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
-  "scripts": {
-    "start": "node index.js"
-  },
-  "keywords": [],
-  "author": "mahesh",
-  "license": "MIT",
-  "engines": {
-    "node": "18.x",
-    "heroku/nodejs-engine": "0.10.0"
-  },
-  "dependencies": {
-    "@adiwajshing/baileys": "github:jacktheboss220/Baileys-New",
-    "@bochilteam/scraper": "^4.2.4",
-    "@erickwendel/meme-maker": "^2.3.1",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@hapi/hoek": "^10.0.1",
-    "axios": "^1.2.1",
-    "deepai": "^1.0.21",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "genius-lyrics": "^4.4.2",
-    "genius-lyrics-api": "^3.2.0",
-    "google-tts-api": "^2.0.2",
-    "inshorts-api": "github:jacktheboss220/inshorts-api",
-    "insta-fetcher": "^1.3.25",
-    "jsdom": "^20.0.3",
-    "link-preview-js": "^3.0.4",
-    "mongodb": "^5.7.0",
-    "openai": "^4.0.1",
-    "qrcode-terminal": "^0.12.0",
-    "sharp": "^0.30.2",
-    "snapsave-downloader": "^6.9.5",
-    "truecallerjs": "^2.2.0",
-    "twitter-url-direct": "^1.0.9",
-    "typescript": "^5.1.6",
-    "ultimate-text-to-image": "^1.0.1",
-    "urban-dictionary": "^3.0.2",
-    "wa-sticker-formatter": "^3.6.0",
-    "wa-sticker-formatter-1": "github:AlenVelocity/wa-sticker-formatter",
-    "youtube-dl-exec": "^2.4.8",
-    "yt-search": "^2.10.4",
-    "ytdl-core": "git+ssh://git@github.com:khlevon/node-ytdl-core.git#v4.11.4-patch.2"
-  },
-  "devDependencies": {
-    "g-i-s": "github:jacktheboss220/g-i-s",
-    "googleapis": "^112.0.0"
-  }
+	"name": "whatsappbot",
+	"version": "1.0.0",
+	"description": "well...Unique and intreating project",
+	"main": "index.js",
+	"directories": {
+		"lib": "lib"
+	},
+	"scripts": {
+		"start": "node index.js"
+	},
+	"keywords": [],
+	"author": "mahesh",
+	"license": "MIT",
+	"engines": {
+		"node": "18.x",
+		"heroku/nodejs-engine": "0.10.0"
+	},
+	"dependencies": {
+		"@adiwajshing/baileys": "github:jacktheboss220/Baileys-New",
+		"@bochilteam/scraper": "^4.2.4",
+		"@erickwendel/meme-maker": "^2.3.1",
+		"@ffmpeg-installer/ffmpeg": "^1.1.0",
+		"@hapi/hoek": "^10.0.1",
+		"axios": "^1.2.1",
+		"deepai": "^1.0.21",
+		"dotenv": "^16.0.3",
+		"express": "^4.18.2",
+		"genius-lyrics": "^4.4.2",
+		"genius-lyrics-api": "^3.2.0",
+		"google-tts-api": "^2.0.2",
+		"inshorts-api": "github:jacktheboss220/inshorts-api",
+		"insta-downloader": "github:jacktheboss220/insta-downloader",
+		"insta-fetcher": "^1.3.25",
+		"jsdom": "^20.0.3",
+		"link-preview-js": "^3.0.4",
+		"mongodb": "^5.7.0",
+		"openai": "^4.0.1",
+		"qrcode-terminal": "^0.12.0",
+		"sharp": "^0.30.2",
+		"truecallerjs": "^2.2.0",
+		"twitter-url-direct": "^1.0.9",
+		"typescript": "^5.1.6",
+		"ultimate-text-to-image": "^1.0.1",
+		"urban-dictionary": "^3.0.2",
+		"wa-sticker-formatter": "^3.6.0",
+		"wa-sticker-formatter-1": "github:AlenVelocity/wa-sticker-formatter",
+		"youtube-dl-exec": "^2.4.8",
+		"yt-search": "^2.10.4",
+		"ytdl-core": "git+ssh://git@github.com:khlevon/node-ytdl-core.git#v4.11.4-patch.2"
+	},
+	"devDependencies": {
+		"g-i-s": "github:jacktheboss220/g-i-s",
+		"googleapis": "^112.0.0"
+	}
 }

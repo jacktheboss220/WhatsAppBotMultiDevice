@@ -116,6 +116,10 @@ LYRICS_KEY = Get form [Genius.com](https://docs.genius.com/#/getting-started-h1)
 
 PIN_KEY = Get from [Pin](https://api.xteam.xyz/)
 
+Install the dependencies:
+
+    npm install
+    
 To run the bot, enter the following command:
 
     node index.js

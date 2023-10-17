@@ -16,6 +16,10 @@ ${readMore}
     _Know if Bot is Online or not_
     _Alias ${prefix}a_
 
+*${prefix}donate*
+    _Donate to keep this bot alive!_
+    _Alias ${prefix}donation_
+
 *${prefix}admin*
     _For Admin Commands List_
 
@@ -188,7 +192,12 @@ ${readMore}
     *Examples:*
         _${prefix}sticker pack eva author jacktheboss220_
         _${prefix}sticker crop_
-        _${prefix}sticker nometadata_`;
+        _${prefix}sticker nometadata_
+        
+*${prefix}donate*
+     _Donate to keep this bot alive!_
+    _Alias ${prefix}donation_
+`;
 
 
     sock.sendMessage(

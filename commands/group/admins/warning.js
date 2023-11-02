@@ -1,7 +1,6 @@
 const { getGroupData, createGroupData, group } = require('../../../mongo-DB/groupDataDb');
 const { createMembersData, getMemberData, member } = require('../../../mongo-DB/membersDataDb');
 
-
 require('dotenv').config();
 const myNumber = process.env.myNumber + '@s.whatsapp.net';
 
@@ -21,7 +20,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         }
         const groupData = await getGroupData(from);
         const memberData = await getMemberData(taggedJid);
-        let warnCount;
+        let warnCount = 0;
         if (groupData) {
             try {
                 if (groupData.memberWarnCount == undefined || groupData.memberWarnCount.length == undefined) {
@@ -39,8 +38,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             } catch (err) {
                 return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
             }
-        } else {
-            warnCount = 0;
         }
         if (memberData) {
             try {
@@ -53,21 +50,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
             }
         }
-        warnCount = (warnCount == undefined) ? 0 : warnCount;
         let num_split = taggedJid.split("@s.whatsapp.net")[0];
         let warnMsg;
         switch (command) {
             case 'warn':
             case 'warning':
-                warnMsg = `@${num_split} 😒,You've been warned. Status of warning ${(warnCount + 1)} / 3. Do not repeat this sort of action or you will be kicked!`;
-                sock.sendMessage(
-                    from,
-                    {
+                try {
+                    warnMsg = `@${num_split} 😒,You've been warned. Status of warning ${(++warnCount)} / 3. Do not repeat this sort of action or you will be kicked!`;
+                    sock.sendMessage(from, {
                         text: warnMsg,
                         mentions: [taggedJid]
-                    }
-                );
-                try {
+                    });
                     group.updateOne({ _id: from, "memberWarnCount.member": taggedJid }, { $inc: { "memberWarnCount.$.count": 1 } }).then(r => {
                         if (r.matchedCount == 0)
                             group.updateOne({ _id: from }, { $push: { "memberWarnCount": { member: taggedJid, count: warnCount } } });
@@ -75,7 +68,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     member.updateOne({ _id: taggedJid, "warning.group": from }, { $inc: { "warning.$.count": 1 } }).then((r) => {
                         if (r.matchedCount == 0)
                             member.updateOne({ _id: taggedJid }, { $push: { "warning": { group: from, count: warnCount } } });
-                        if (warnCount >= 2) {
+                        if (warnCount >= 3) {
                             if (!groupAdmins.includes(botNumberJid)) {
                                 sendMessageWTyping(from, { text: "❌ I'm not Admin here!" }, { quoted: msg });
                                 return;
@@ -84,16 +77,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                                 sendMessageWTyping(from, { text: "❌ Cannot remove admin!" }, { quoted: msg });
                                 return;
                             }
-                            sock.groupParticipantsUpdate(
-                                from,
-                                [taggedJid],
-                                "remove"
-                            )
+                            sock.groupParticipantsUpdate(from, [taggedJid], "remove");
                             sendMessageWTyping(from, { text: "✔ The number has been removed from the group!" }, { quoted: msg });
                         }
                     }).catch(err => {
                         console.log(err);
-                    })
+                    });
                 } catch (err) {
                     sendMessageWTyping(from, { text: err.toString() }, { quoted: msg })
                 }

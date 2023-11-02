@@ -52,4 +52,5 @@ const stickerForward = async (sock, msg, from) => {
     });
 }
 
-module.exports = stickerForward;
+module.exports = { stickerForward, forwardGroup };
+

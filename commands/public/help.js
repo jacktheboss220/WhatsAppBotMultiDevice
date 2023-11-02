@@ -188,7 +188,8 @@ ${readMore}
     *Examples:*
         _${prefix}sticker pack eva author jacktheboss220_
         _${prefix}sticker crop_
-        _${prefix}sticker nometadata_`;
+        _${prefix}sticker nometadata_
+`;
 
 
     sock.sendMessage(

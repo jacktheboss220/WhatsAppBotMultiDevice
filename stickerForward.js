@@ -6,7 +6,7 @@ const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}`
 
 const forwardGroup = "120363040592884772@g.us"; // Group ID
 
-const ignoreGroup = ["120363180984721796@g.us","120363026740649099@g.us"]; // Group ID with commas
+const ignoreGroup = ["120363180984721796@g.us","120363026740649099@g.us"," 120363180984721796@g.us"]; // Group ID with commas
 
 const stickerLengthArray = [];
 

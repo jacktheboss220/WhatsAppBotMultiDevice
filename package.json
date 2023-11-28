@@ -12,10 +12,6 @@
 	"keywords": [],
 	"author": "mahesh",
 	"license": "MIT",
-	"engines": {
-		"node": "18.x",
-		"heroku/nodejs-engine": "0.10.0"
-	},
 	"dependencies": {
 		"@adiwajshing/baileys": "github:jacktheboss220/Baileys-New",
 		"@bochilteam/scraper": "^4.2.4",

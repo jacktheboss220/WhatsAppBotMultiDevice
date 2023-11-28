@@ -11,7 +11,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             return sendMessageWTyping(from, { text: "❌ Tag someone! or reply to a message" }, { quoted: msg });
         }
 
-        const taggedJid = msg.message.extendedTextMessage.contextInfo.participant || msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+        let taggedJid = msg.message.extendedTextMessage.contextInfo.participant || msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+        taggedJid = taggedJid.includes(":") ? taggedJid.split(":")[0] + "@s.whatsapp.net" : taggedJid;
 
         let isGroupAdmin = groupAdmins.includes(taggedJid);
         if (command != "unwarn") {

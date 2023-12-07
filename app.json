@@ -5,48 +5,70 @@
   "repository": "https://github.com/jacktheboss220/WhatsAppBotMultiDevice",
   "keywords": [
     "whatsapp-bot",
-    "insta",
-    "multi-device"
+    "instagram",
+    "multi-device",
+    "whatsapp",
+    "bot",
+    "whatsapp-bot-multi-device",
+    "whatsapp-bot-md",
+    "whatsapp-bot-multi-device"
   ],
   "env": {
     "PREFIX": {
-      "description": "Prefix for the bot"
-    },
-    "REMOVE_BG_KEY": {
-      "description": "Get from remove.bg"
-    },
-    "DEEPAI_KEY": {
-      "description": "Get your api key from deepai.org"
-    },
-    "myNumber": {
-      "description": "Enter your number to get all update (include 91 or country code)"
-    },
-    "botNumber": {
-      "description": "Enter bot number to get access to all cmd (include 91 or country code)"
-    },
-    "INSTA_API_KEY": {
-      "description": "Enter insta session key. Get from inspecting your insta session cookie"
-    },
-    "TRUECALLER_ID": {
-      "description": "Enter true caller id. Get form https://www.npmjs.com/package/truecallerjs"
+      "description": "Bot Prefix to use before commands",
+      "required": true
     },
     "MONGODB_KEY": {
-      "description": "Enter the mongodb uri"
+      "description": "MongoDB Key to store data",
+      "required": true
+    },
+    "myNumber": {
+      "description": "Your WhatsApp Number to use as bot owner",
+      "required": true
+    },
+    "botNumber": {
+      "description": "Your WhatsApp Bot Number to use as bot",
+      "required": true
+    },
+    "REMOVE_BG_KEY": {
+      "description": "Remove.bg API key",
+      "required": false
+    },
+    "DEEPAI_KEY": {
+      "description": "Deepai.org API key",
+      "required": false
+    },
+    "TRUECALLER_ID": {
+      "description": "Truecaller API ID",
+      "required": false
     },
     "GOOGLE_API_KEY": {
-      "description": "Enter your Google API key"
+      "description": "Google API Key",
+      "required": false
     },
     "SEARCH_ENGINE_KEY": {
-      "description": "Enter your search engine key"
+      "description": "Google Search Engine Key",
+      "required": false
     },
     "OPENAI_API_KEY": {
-      "description": "Enter your OpenAI API key"
+      "description": "OpenAI API Key",
+      "required": false
     },
     "GENIUS_ACCESS_SECRET": {
-      "description": "Enter your Genius API key"
+      "description": "Genius Access Secret",
+      "required": false
     },
     "HOST_URL": {
-      "description": "Enter your host URL after hosting the bot"
+      "description": "Host URL",
+      "required": false
+    },
+    "HEROKU_API_TOKEN": {
+      "description": "Heroku API Token",
+      "required": true
+    },
+    "HEROKU_APP_NAME": {
+      "description": "Heroku App Name",
+      "required": true
     }
   },
   "buildpacks": [

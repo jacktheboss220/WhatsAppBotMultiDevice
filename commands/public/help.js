@@ -191,13 +191,9 @@ ${readMore}
         _${prefix}sticker nometadata_
 `;
 
-
-    sock.sendMessage(
-        from,
-        {
-            text: isGroup ? help : helpInDm,
-            // mentions: [senderJid]
-        }
-    );
+    await sendMessageWTyping(from, {
+        text: isGroup ? help : helpInDm,
+        // mentions: [senderJid]
+    });
 }
 module.exports.command = () => ({ cmd: ['help', 'menu'], handler });

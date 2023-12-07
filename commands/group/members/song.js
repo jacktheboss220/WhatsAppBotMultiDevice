@@ -20,7 +20,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     let fileDown = getRandom(".mp3");
     try {
         let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
-        await youtubedl(URL, { format: 'm4a', output: fileDown, maxFilesize: "104857600", }).then(async (r) => {
+        const stream = youtubedl(URL, { format: 'm4a', output: fileDown, maxFilesize: "104857600", preferFreeFormats: true, });
+        await Promise.all([stream]).then(async (r) => {
             console.log(r);
             if (r?.includes("max-filesize")) {
                 return sendMessageWTyping(from,

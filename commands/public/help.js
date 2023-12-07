@@ -196,5 +196,4 @@ ${readMore}
         // mentions: [senderJid]
     });
 }
-
 module.exports.command = () => ({ cmd: ['help', 'menu'], handler });

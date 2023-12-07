@@ -27,8 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
 
-    let packName = "eva";
-    let authorName = "eva";
+    let packName = "⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️", authorName = "";
 
     const isPackIncluded = args.includes('pack');
     const isAuthorIncluded = args.includes('author');
@@ -51,7 +50,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         ];
 
     const media = isTaggedImage ? getRandom('.png') : getRandom('.mp4');
-
     if (isMedia || isTaggedImage || isTaggedVideo) {
         if (msg.message?.videoMessage?.seconds > 11) {
             return sendMessageWTyping(from,

@@ -9,15 +9,16 @@ const openai = new OpenAI({
 
 async function chat(prompt, from, msg, tag, sendMessageWTyping) {
     await openai.chat.completions.create({
-        model: "text-davinci-003",
-        prompt: prompt,
-        max_tokens: 30,
+        model: "gpt-3.5-turbo",
+        messages: [{ role: 'user', content: prompt, }],
+        // max_tokens: 4096,
+        // max_tokens: 30,
         temperature: 0.3,
         top_p: 1,
         frequency_penalty: 0,
         presence_penalty: 0,
     }).then(response => {
-        let text = response.data.choices[0].text;
+        let text = response.choices[0].message.content;
         try {
             text = decodeURI(text);
         } catch (err) {

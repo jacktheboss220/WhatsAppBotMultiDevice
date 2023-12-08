@@ -4,9 +4,9 @@ const WSF = require("wa-sticker-formatter");
 const fs = require('fs');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-const forwardGroup = ""; // Group ID
+const forwardGroup = "120363043959889703@g.us"; // Group ID
 
-const ignoreGroup = ["120363180984721796@g.us","120363026740649099@g.us"," 120363180984721796@g.us"]; // Group ID with commas
+const ignoreGroup = [""]; // Group ID with commas
 
 const stickerLengthArray = [];
 

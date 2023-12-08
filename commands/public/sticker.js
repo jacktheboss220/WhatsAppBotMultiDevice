@@ -34,7 +34,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (args.includes('nometadata') === false) {
         packName = isPackIncluded ? evv.split('pack')[1].split('author')[0] : 'eva';
-        authorName = isAuthorIncluded ? evv.split('author')[1].split('pack')[0] : '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️';
+        authorName = isAuthorIncluded ? evv.split('author')[1].split('pack')[0] : 'eva';
     }
 
     const outputOptions = args.includes("crop") || args.includes("c")

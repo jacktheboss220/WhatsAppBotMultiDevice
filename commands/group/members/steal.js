@@ -66,4 +66,4 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ['steal'], handler });
+module.exports.command = () => ({ cmd: ['steal','take'], handler });

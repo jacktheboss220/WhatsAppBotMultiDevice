@@ -55,6 +55,35 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     } catch (err) {
         console.log(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+        let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
+        const result = await youtubedl(URL, {
+            format: 'bestaudio',
+            output: fileDown,
+            maxFilesize: "104857600",
+            preferFreeFormats: true,
+        });
+        if (result?.includes("max-filesize")) {
+            console.log("File size exceeds more then 100MB.");
+        } else {
+            let sock_data;
+            if (command == 'song') {
+                sock_data = {
+                    document: fs.readFileSync(fileDown),
+                    mimetype: "audio/mpeg",
+                    fileName: title + ".mp3",
+                    ppt: true,
+                }
+            } else {
+                sock_data = {
+                    audio: fs.readFileSync(fileDown),
+                    mimetype: "audio/mpeg",
+                    fileName: fileDown,
+                }
+            }
+            await sock.sendMessage(from, sock_data, { quoted: msg });
+            fs.unlinkSync(fileDown);
+            console.log("Sent");
+        }
     }
 }
 

@@ -6,6 +6,9 @@
 	"directories": {
 		"lib": "lib"
 	},
+	"engines": {
+		"node": "21.x"
+	},
 	"scripts": {
 		"start": "node index.js"
 	},
@@ -17,6 +20,7 @@
 		"@bochilteam/scraper": "^4.2.4",
 		"@erickwendel/meme-maker": "^2.3.1",
 		"@ffmpeg-installer/ffmpeg": "^1.1.0",
+		"@google/generative-ai": "^0.1.2",
 		"@hapi/hoek": "^10.0.1",
 		"axios": "^1.2.1",
 		"deepai": "^1.0.21",
@@ -39,7 +43,7 @@
 		"twitter-url-direct": "^1.0.9",
 		"typescript": "^5.1.6",
 		"ultimate-text-to-image": "^1.0.1",
-		"urban-dictionary": "^3.0.2",
+		"urban-dictionary": "github:jacktheboss220/urban-dictionary",
 		"wa-sticker-formatter": "^3.6.0",
 		"wa-sticker-formatter-1": "github:AlenVelocity/wa-sticker-formatter",
 		"youtube-dl-exec": "^2.4.17",

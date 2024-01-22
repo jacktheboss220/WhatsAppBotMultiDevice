@@ -29,61 +29,70 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     { quoted: msg }
                 )
             } else {
-                let sock_data;
-                if (command == 'song') {
-                    sock_data = {
-                        document: fs.readFileSync(fileDown),
-                        mimetype: "audio/mpeg",
-                        fileName: title + ".mp3",
-                        ppt: true,
+                if (fs.existsSync(fileDown)) {
+                    let sock_data;
+                    if (command == 'song') {
+                        sock_data = {
+                            document: fs.readFileSync(fileDown),
+                            mimetype: "audio/mpeg",
+                            fileName: title + ".mp3",
+                            ppt: true,
+                        }
+                    } else {
+                        sock_data = {
+                            audio: fs.readFileSync(fileDown),
+                            mimetype: "audio/mpeg",
+                            fileName: fileDown,
+                        }
                     }
+                    await sock.sendMessage(from, sock_data, { quoted: msg });
+                    fs.unlinkSync(fileDown);
+                    console.log("Sent");
                 } else {
-                    sock_data = {
-                        audio: fs.readFileSync(fileDown),
-                        mimetype: "audio/mpeg",
-                        fileName: fileDown,
+                    try {
+                        ytdl(URL, {
+                            quality: "highestaudio"
+                        }).pipe(fs.createWriteStream(fileDown)).on('finish', async () => {
+                            let sock_data;
+                            if (command == 'song') {
+                                sock_data = {
+                                    document: fs.readFileSync(fileDown),
+                                    mimetype: "audio/mpeg",
+                                    fileName: title + ".mp3",
+                                    ppt: true,
+                                }
+                            } else {
+                                sock_data = {
+                                    audio: fs.readFileSync(fileDown),
+                                    mimetype: "audio/mpeg",
+                                    fileName: fileDown,
+                                }
+                            }
+                            if (fs.existsSync(fileDown)) {
+                                await sock.sendMessage(from, sock_data, { quoted: msg });
+                                fs.unlinkSync(fileDown);
+                                console.log("Sent");
+                            } else {
+
+                            }
+                        }).on('error', (err) => {
+                            console.log(err);
+                            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+                        });
+                    } catch (err) {
+                        console.log(err);
+                        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
                     }
                 }
-                await sock.sendMessage(from, sock_data, { quoted: msg });
-                fs.unlinkSync(fileDown);
-                console.log("Sent");
             }
-        }).catch(err => {
+        }).catch(async err => {
             console.log(err);
             sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+
         })
     } catch (err) {
         console.log(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        let title = (await ytdl.getInfo(URL)).videoDetails.title.trim();
-        const result = await youtubedl(URL, {
-            format: 'bestaudio',
-            output: fileDown,
-            maxFilesize: "104857600",
-            preferFreeFormats: true,
-        });
-        if (result?.includes("max-filesize")) {
-            console.log("File size exceeds more then 100MB.");
-        } else {
-            let sock_data;
-            if (command == 'song') {
-                sock_data = {
-                    document: fs.readFileSync(fileDown),
-                    mimetype: "audio/mpeg",
-                    fileName: title + ".mp3",
-                    ppt: true,
-                }
-            } else {
-                sock_data = {
-                    audio: fs.readFileSync(fileDown),
-                    mimetype: "audio/mpeg",
-                    fileName: fileDown,
-                }
-            }
-            await sock.sendMessage(from, sock_data, { quoted: msg });
-            fs.unlinkSync(fileDown);
-            console.log("Sent");
-        }
     }
 }
 

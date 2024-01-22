@@ -21,8 +21,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     } else {
         URL = args[0];
     }
+    let fileDown = getRandom(".mp4");
     try {
-        let fileDown = getRandom(".mp4");
         let title = await ytdl.getInfo(URL).then(res => res.videoDetails.title.trim());
         const stream = await youtubedl(URL, { format: 'mp4', output: fileDown, maxFilesize: "104857600" })
         await Promise.all([stream]).then(async (r) => {
@@ -33,17 +33,41 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                     { quoted: msg }
                 );
             } else {
-                await sock.sendMessage(from, {
-                    video: fs.readFileSync(fileDown),
-                    caption: `*Title*: ${title}`,
-                    mimetype: "video/mp4",
-                }, { quoted: msg });
-                fs.unlinkSync(fileDown);
+                if (fs.existsSync(fileDown)) {
+                    await sock.sendMessage(from, {
+                        video: fs.readFileSync(fileDown),
+                        caption: `*Title*: ${title}`,
+                        mimetype: "video/mp4",
+                    }, { quoted: msg });
+                    fs.unlinkSync(fileDown);
+                } else {
+                    try {
+                        ytdl(URL, {
+                            // filter: info => info.hasVideo && info.hasAudio,
+                            filter: format => format.container === 'mp4',
+                        }).pipe(fs.createWriteStream(fileDown)).on('finish', async () => {
+                            await sock.sendMessage(from, {
+                                video: fs.readFileSync(fileDown),
+                                caption: `*Title*: ${title}`,
+                                mimetype: "video/mp4",
+                            }, { quoted: msg });
+                            fs.unlinkSync(fileDown);
+                        }).on('error', (err) => {
+                            console.log(err);
+                            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+                        });
+                    } catch (err) {
+                        console.log(err);
+                    }
+                }
             }
-        }).catch(err => {
+        }).catch(async err => {
+            console.log(err);
             sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+
         })
     } catch (err) {
+        console.log(err);
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }

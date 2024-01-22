@@ -7,7 +7,8 @@
 		"lib": "lib"
 	},
 	"engines": {
-		"node": "21.x"
+		"node": "21.x",
+		"python": "3.9.x"
 	},
 	"scripts": {
 		"start": "node index.js"
@@ -24,7 +25,7 @@
 		"@hapi/hoek": "^10.0.1",
 		"axios": "^1.2.1",
 		"deepai": "^1.0.21",
-		"dotenv": "^16.0.3",
+		"dotenv": "^16.3.1",
 		"express": "^4.18.2",
 		"genius-lyrics": "^4.4.2",
 		"genius-lyrics-api": "^3.2.0",
@@ -36,7 +37,7 @@
 		"jsdom": "^20.0.3",
 		"link-preview-js": "^3.0.4",
 		"mongodb": "^5.7.0",
-		"openai": "^4.20.1",
+		"openai": "^4.24.1",
 		"qrcode-terminal": "^0.12.0",
 		"sharp": "^0.30.2",
 		"truecallerjs": "^2.2.0",
@@ -46,7 +47,7 @@
 		"urban-dictionary": "github:jacktheboss220/urban-dictionary",
 		"wa-sticker-formatter": "^3.6.0",
 		"wa-sticker-formatter-1": "github:AlenVelocity/wa-sticker-formatter",
-		"youtube-dl-exec": "^2.4.17",
+		"youtube-dl-exec": "^2.5.3",
 		"yt-search": "^2.10.4",
 		"ytdl-core": "git+ssh://git@github.com:khlevon/node-ytdl-core.git#v4.11.4-patch.2"
 	},

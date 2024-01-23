@@ -1,12 +1,13 @@
 node_modules
-package-lock.json
+# package-lock.json
 baileys_auth_info
-test.js
 test.json
 .env
+all.json
+common.json
 index.html
 test-index.js
-assets
+# assets
 baileys_store_multi.json
 # mongo-DB
 # indexMongodb.js

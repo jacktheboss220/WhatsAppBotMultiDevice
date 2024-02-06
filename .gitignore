@@ -1,5 +1,5 @@
 node_modules
-# package-lock.json
+package-lock.json
 baileys_auth_info
 test.json
 .env

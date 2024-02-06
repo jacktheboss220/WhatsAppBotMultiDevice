@@ -29,15 +29,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
 
-    let packName = "eva";
-    let authorName = "eva";
+    let packName = "⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️", authorName = "";
 
     const isPackIncluded = args.includes('pack');
     const isAuthorIncluded = args.includes('author');
 
     if (args.includes('nometadata') === false) {
-        packName = isPackIncluded ? evv.split('pack')[1].split('author')[0] : 'eva';
-        authorName = isAuthorIncluded ? evv.split('author')[1].split('pack')[0] : 'eva';
+        packName = isPackIncluded ? evv.split('pack')[1].split('author')[0] : packName;
+        authorName = isAuthorIncluded ? evv.split('author')[1].split('pack')[0] : authorName;
     }
 
     const outputOptions = args.includes("crop") || args.includes("c")
@@ -53,7 +52,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         ];
 
     const media = isTaggedImage ? getRandom('.png') : getRandom('.mp4');
-
     if (isMedia || isTaggedImage || isTaggedVideo) {
         if (msg.message?.videoMessage?.seconds > 11) {
             return sendMessageWTyping(from,

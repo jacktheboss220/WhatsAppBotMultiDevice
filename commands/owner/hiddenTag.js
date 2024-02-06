@@ -1,5 +1,5 @@
 module.exports.command = () => {
-    let cmd = ["hidetag", "prank"];
+    let cmd = ["hidetag","tag", "prank"];
     return { cmd, handler };
 }
 

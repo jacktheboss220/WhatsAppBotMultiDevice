@@ -1,8 +1,15 @@
 require("dotenv").config();
+const TRUECALLER_ID = process.env.TRUECALLER_ID || "";
 const truecallerjs = require('truecallerjs');
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { evv, sendMessageWTyping, ownerSend } = msgInfoObj;
+
+    if (!TRUECALLER_ID)
+        return sendMessageWTyping(from,
+            { text: "```Truecaller ID is Missing```" },
+            { quoted: msg }
+        );
 
     let number;
     if (msg.message.extendedTextMessage?.contextInfo?.participant?.length > 0) {
@@ -24,7 +31,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     var searchData = {
         number: number,
         countryCode: "IN",
-        installationId: process.env.TRUECALLER_ID
+        installationId: TRUECALLER_ID,
     }
 
     const response = await truecallerjs.search(searchData);

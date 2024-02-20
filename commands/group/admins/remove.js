@@ -4,6 +4,11 @@ const myNumber = process.env.myNumber + '@s.whatsapp.net';
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     const { groupAdmins, sendMessageWTyping, groupMetadata, botNumberJid } = msgInfoObj;
+    return sendMessageWTyping(
+        from,
+        { text: "```❌ The admin commands are blocked for sometime to avoid ban on whatsapp!```" },
+        { quoted: msg }
+    );
 
     if (!groupAdmins.includes(botNumberJid)) {
         return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
@@ -31,4 +36,4 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["remove","kick","ban"], handler });
+module.exports.command = () => ({ cmd: ["remove", "kick", "ban"], handler });

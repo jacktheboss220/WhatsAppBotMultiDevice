@@ -1,12 +1,21 @@
+require('dotenv').config();
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+
 const OpenAI = require('openai');
 
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: OPENAI_API_KEY,
 });
 
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
+
+    if (!OPENAI_API_KEY)
+        return sendMessageWTyping(from,
+            { text: "```OpenAI API Key is Missing```" },
+            { quoted: msg }
+        );
     //return sendMessageWTyping(from, { text: "This command is currently disabled." }, { quoted: msg });
     if (!args[0]) return sendMessageWTyping(from, { text: "Please provide a prompt to generate an image from." }, { quoted: msg });
     await openai.images.generate({

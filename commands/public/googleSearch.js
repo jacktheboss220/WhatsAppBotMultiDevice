@@ -1,16 +1,24 @@
 const fs = require("fs");
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
+const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
 const axios = require("axios");
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 const baseURL = "https://www.googleapis.com/customsearch/v1";
-const googleapis = `?key=${process.env.GOOGLE_API_KEY}`;
-const searchEngineKey = `&cx=${process.env.SEARCH_ENGINE_KEY}`;
+const googleapis = `?key=${GOOGLE_API_KEY}`;
+const searchEngineKey = `&cx=${SEARCH_ENGINE_KEY}`;
 const defQuery = "&q=";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
+
+    if (!GOOGLE_API_KEY || !SEARCH_ENGINE_KEY)
+        return sendMessageWTyping(from,
+            { text: "```Google API Key or Search Engine Key is Missing```" },
+            { quoted: msg }
+        );
 
     if (args[0]?.startsWith("@") && msg.message.extendedTextMessage) {
         return sendMessageWTyping(from, { text: "```Enter Word to Search```" }, { quoted: msg });

@@ -1,3 +1,6 @@
+require("dotenv").config();
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
+const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
 const fs = require("fs");
 const axios = require("axios");
 const { googleImage } = require('@bochilteam/scraper')
@@ -6,13 +9,20 @@ const { getGroupData } = require("../../../mongo-DB/groupDataDb");
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
 const baseURL = "https://www.googleapis.com/customsearch/v1";
-const googleapis = `?key=${process.env.GOOGLE_API_KEY}`;
-const searchEngineKey = `&cx=${process.env.SEARCH_ENGINE_KEY}`;
+const googleapis = `?key=${GOOGLE_API_KEY}`;
+const searchEngineKey = `&cx=${SEARCH_ENGINE_KEY}`;
 const searchType = "&searchType=image";
 const defQuery = "&q=";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
+
+    if (!GOOGLE_API_KEY || !SEARCH_ENGINE_KEY)
+        return sendMessageWTyping(from,
+            { text: "```Google API Key or Search Engine Key is Missing```" },
+            { quoted: msg }
+        );
+
     const data = await getGroupData(from);
 
     if (!data.isImgOn) {

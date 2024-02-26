@@ -10,10 +10,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     args[0] = args[0].toLowerCase();
     try {
-        if (args[0] === 'off') {
+        if (args[0] === 'off,mute') {
             sock.groupSettingUpdate(from, 'announcement');
             sendMessageWTyping(from, { text: `✔️ *Only Admin can send Message*` }, { quoted: msg });
-        } else if (args[0] === 'on') {
+        } else if (args[0] === 'on,unmute') {
             sock.groupSettingUpdate(from, 'not_announcement');
             sendMessageWTyping(from, { text: `✔️ *Allowed all member can send Message*` }, { quoted: msg });
         } else {

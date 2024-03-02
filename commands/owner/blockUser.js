@@ -31,7 +31,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (command == "block") {
         member.updateOne({ _id: taggedJid + "@s.whatsapp.net" }, { $set: { isBlock: true } }).then(() => {
-            sendMessageWTyping(from, { text: `❌ Blocked`, }, { quoted: msg });
+            sendMessageWTyping(from, { text: `❌beti Blocked`, }, { quoted: msg });
         });
     }
 

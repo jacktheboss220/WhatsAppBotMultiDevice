@@ -32,7 +32,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
         try {
             const webpWithMetadata = await WSF.setMetadata(
-                packOrAuthor ? packName : evv ? evv : memberData.customStealText || '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️',
+                packOrAuthor ? packName : evv ? evv : memberData.customStealText || 'ｄａｓｈｕ<3❤️',
                 packOrAuthor ? authorName : evv ? "" : memberData.customStealText ? "" : '',
                 media
             );
@@ -48,7 +48,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             // console.log(err);
             // sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
             const buffer = await new Sticker(media)
-                .setPack(packOrAuthor ? packName : evv ? evv : memberData.customStealText || '⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️')
+                .setPack(packOrAuthor ? packName : evv ? evv : memberData.customStealText || 'ｄａｓｈｕ<3❤️')
                 .setAuthor(packOrAuthor ? authorName : evv ? "" : memberData.customStealText ? "" : '')
                 .setType(StickerTypes.FULL)
                 .setQuality(80)

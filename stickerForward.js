@@ -17,7 +17,7 @@ const stickerForward = async (sock, msg, from) => {
         msg['message'] = msg.message.extendedTextMessage.contextInfo.quotedMessage
     }
 
-    let packName = "⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️", authorName = "";
+    let packName = "ｄａｓｈｕ<3❤️", authorName = "";
 
     const media = getRandom('.webp');
     const buffer = await downloadMediaMessage(msg, 'buffer', {});

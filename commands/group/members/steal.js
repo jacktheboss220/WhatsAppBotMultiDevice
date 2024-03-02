@@ -11,7 +11,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const memberData = await getMemberData(senderJid);
 
     if (type === "extendedTextMessage" && content.includes("stickerMessage")) {
-        let packName = authorName = "⏤͟͟͞➣⃟⃟🍒𝐷Δ𝑆𝐻𝑈~ ⃟⃟⃟⃟<❤️";
+        let packName = authorName = "ｄａｓｈｕ<3❤️";
         if (args.includes('pack')) {
             packName = args.join(' ').split('pack ')[1].split('author')[0];
         }

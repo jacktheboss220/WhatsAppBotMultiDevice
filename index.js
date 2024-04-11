@@ -1,7 +1,7 @@
 /**
  * @author: github:jacktheboss220
  * @description: This is the main file of the bot.
- * @license: MIT
+ * @license: GPL-3.0 license
  * @file: index.js
  */
 const startSock = require("./connection");

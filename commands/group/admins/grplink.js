@@ -2,7 +2,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { groupAdmins, sendMessageWTyping } = msgInfoObj;
 
     if (!groupAdmins.includes(msgInfoObj.botNumberJid)) {
-        return sendMessageWTyping(from, { text: `❌ I'm not admin here` }, { quoted: msg });
+        return sendMessageWTyping(from, { text: `❎ I'm not admin here` }, { quoted: msg });
     }
 
     try {

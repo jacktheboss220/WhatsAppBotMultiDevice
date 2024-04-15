@@ -37,6 +37,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                             mimetype: "audio/mpeg",
                             fileName: title + ".mp3",
                             ppt: true,
+                            caption: title,
                         }
                     } else {
                         sock_data = {

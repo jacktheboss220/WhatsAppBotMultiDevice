@@ -4,7 +4,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { command, isGroup, sendMessageWTyping } = msgInfoObj;
     if (!isGroup) return sendMessageWTyping(from, { text: 'Use In Group Only!' }, { quoted: msg });
 
-    var resBlock = await getGroupData(from);
+    const resBlock = await getGroupData(from);
     if (resBlock == -1) return sendMessageWTyping("NO data found in DB");
     let blockCommandsInDB = resBlock.cmdBlocked;
 
@@ -39,7 +39,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 sendMessageWTyping(from, { text: '*UnBlocked* _' + args[0] + '_ *in this Group*.' }, { quoted: msg })
             })
             break;
-            
+
         default:
             break;
     }

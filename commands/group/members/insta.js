@@ -3,14 +3,14 @@ const snapsave = require("insta-downloader");
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping, ig } = msgInfoObj;
 
-    if (args.length === 0) return sendMessageWTyping(from, { text: `❌ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
+    if (args.length === 0) return sendMessageWTyping(from, { text: `❎ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
     let urlInsta = args[0];
 
     if (!(urlInsta.includes("instagram.com/p/") ||
         urlInsta.includes("instagram.com/reel/") ||
         urlInsta.includes("instagram.com/tv/")))
         return sendMessageWTyping(from,
-            { text: `❌ Wrong URL! Only Instagram posted videos, tv and reels can be downloaded.` },
+            { text: `❎ Wrong URL! Only Instagram posted videos, tv and reels can be downloaded.` },
             { quoted: msg }
         );
 

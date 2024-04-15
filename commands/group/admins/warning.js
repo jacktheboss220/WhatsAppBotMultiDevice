@@ -8,7 +8,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { command, groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
     try {
         if (!msg.message.extendedTextMessage) {
-            return sendMessageWTyping(from, { text: "❌ Tag someone! or reply to a message" }, { quoted: msg });
+            return sendMessageWTyping(from, { text: "❎ Tag someone! or reply to a message" }, { quoted: msg });
         }
 
         let taggedJid = msg.message.extendedTextMessage.contextInfo.participant || msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
@@ -71,15 +71,15 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                             member.updateOne({ _id: taggedJid }, { $push: { "warning": { group: from, count: warnCount } } });
                         if (warnCount >= 3) {
                             if (!groupAdmins.includes(botNumberJid)) {
-                                sendMessageWTyping(from, { text: "❌ I'm not Admin here!" }, { quoted: msg });
+                                sendMessageWTyping(from, { text: "❎ I'm not Admin here!" }, { quoted: msg });
                                 return;
                             }
                             if (isGroupAdmin) {
-                                sendMessageWTyping(from, { text: "❌ Cannot remove admin!" }, { quoted: msg });
+                                sendMessageWTyping(from, { text: "❎ Cannot remove admin!" }, { quoted: msg });
                                 return;
                             }
                             sock.groupParticipantsUpdate(from, [taggedJid], "remove");
-                            sendMessageWTyping(from, { text: "✔ The number has been removed from the group!" }, { quoted: msg });
+                            sendMessageWTyping(from, { text: "✅ The number has been removed from the group!" }, { quoted: msg });
                         }
                     }).catch(err => {
                         console.log(err);

@@ -9,16 +9,16 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     try {
 
         if (!msg.message.extendedTextMessage) {
-            return sendMessageWTyping(from, { text: `❌ Tag a message of to delete.` }, { quoted: msg });
+            return sendMessageWTyping(from, { text: `❎ Tag a message of to delete.` }, { quoted: msg });
         }
 
         if (!(msg.message.extendedTextMessage.contextInfo.participant == botNumberJid)) {
 
             if (!groupAdmins.includes(senderJid))
-                return sendMessageWTyping(from, { text: `❌ Only admin can delete others message` }, { quoted: msg });
+                return sendMessageWTyping(from, { text: `❎ Only admin can delete others message` }, { quoted: msg });
 
             if (!groupAdmins.includes(botNumberJid))
-                return sendMessageWTyping(from, { text: `❌ Bot need to be admin in order to delete others message` }, { quoted: msg });
+                return sendMessageWTyping(from, { text: `❎ Bot need to be admin in order to delete others message` }, { quoted: msg });
         }
 
         let options = {

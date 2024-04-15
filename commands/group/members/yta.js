@@ -11,7 +11,7 @@ module.exports.command = () => {
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { evv, command, sendMessageWTyping } = msgInfoObj;
 
-    if (!args[0]) return sendMessageWTyping(from, { text: `❌ *Enter Youtube link*` }, { quoted: msg });
+    if (!args[0]) return sendMessageWTyping(from, { text: `❎ *Enter Youtube link*` }, { quoted: msg });
 
     (async () => {
         try {

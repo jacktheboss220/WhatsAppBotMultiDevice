@@ -19,7 +19,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 
     if (args.length === 0) {
-        return sendMessageWTyping(from, { text: `❌ empty query!` }, { quoted: msg });
+        return sendMessageWTyping(from, { text: `❎ empty query!` }, { quoted: msg });
     }
     try {
         let resultTest = eval(evv);

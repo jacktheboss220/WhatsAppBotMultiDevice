@@ -12,7 +12,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { command, botNumberJid, sendMessageWTyping } = msgInfoObj;
 
     if (!msg.message.extendedTextMessage)
-        return sendMessageWTyping(from, { text: "❌ Tag / mentioned!" }, { quoted: msg });
+        return sendMessageWTyping(from, { text: "❎ Tag / mentioned!" }, { quoted: msg });
 
     let taggedJid;
 
@@ -31,13 +31,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     if (command == "block") {
         member.updateOne({ _id: taggedJid + "@s.whatsapp.net" }, { $set: { isBlock: true } }).then(() => {
-            sendMessageWTyping(from, { text: `❌ Blocked`, }, { quoted: msg });
+            sendMessageWTyping(from, { text: `❎ Blocked`, }, { quoted: msg });
         });
     }
 
     if (command == "unblock") {
         member.updateOne({ _id: taggedJid + "@s.whatsapp.net" }, { $set: { isBlock: false } }).then(() => {
-            sendMessageWTyping(from, { text: `✔️ *Unblocked*` }, { quoted: msg })
+            sendMessageWTyping(from, { text: `✅ *Unblocked*` }, { quoted: msg })
         });
     }
 }

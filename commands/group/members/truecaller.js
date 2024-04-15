@@ -17,7 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     } else if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
         number = msg.message.extendedTextMessage.contextInfo.mentionedJid[0].split("@")[0];
     } else {
-        if (!args[0]) return sendMessageWTyping(from, { text: `❌ Give number or tag on message` }, { quoted: msg });
+        if (!args[0]) return sendMessageWTyping(from, { text: `❎ Give number or tag on message` }, { quoted: msg });
         number = evv.replace(/\s*/g, "");
     }
     console.log(number);
@@ -25,7 +25,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         number = number.split("+")[1];
     }
     if (!number.startsWith("91")) {
-        return sendMessageWTyping(from, { text: `❌ Number must be start with 91` }, { quoted: msg });
+        return sendMessageWTyping(from, { text: `❎ Number must be start with 91` }, { quoted: msg });
     }
 
     var searchData = {
@@ -35,7 +35,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 
     const response = await truecallerjs.search(searchData);
-    if (!response) return sendMessageWTyping(from, { text: `❌ Number not found` }, { quoted: msg });
+    if (!response) return sendMessageWTyping(from, { text: `❎ Number not found` }, { quoted: msg });
     const data = response.json().data[0];
 
     const name = response.getName();

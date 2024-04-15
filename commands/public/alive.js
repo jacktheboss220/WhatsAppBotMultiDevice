@@ -1,46 +1,12 @@
-const fs = require('fs');
-module.exports.command = () => {
-    let cmd = ["alive", "a"];
-    return { cmd, handler };
-};
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
+    const start = process.hrtime();
     const { sendMessageWTyping } = msgInfoObj;
-    // const buttons = [
-    //     { buttonId: 'mybitbot', buttonText: { displayText: 'Help' }, type: 1 },
-    // ]
-
-    // const buttonMessage = {
-    //     image: fs.readFileSync(__dirname + "/../../media/alive-img.jpg"),
-    //     // text: "```Yes Bot is Running...```❣️",
-    //     caption: "```Yes Bot is Running...```❣️",
-    //     footer: 'mybitbot',
-    //     buttons: buttons,
-    //     viewOnce: true,
-    //     headerType: 4
-    // }
-
-    // await sock.sendMessage(
-    //     from,
-    //     buttonMessage,
-    // )
-
-    await sendMessageWTyping(
-        from,
-        { text: "*Error: Eva not detected...*❣️" },
-        { quoted: msg }
-        // {
-        //     quoted: {
-        //         key: {
-        //             remoteJid: from,
-        //             fromMe: false,
-        //             id: "810B5GH29EE7481fakeid",
-        //             participant: "0@s.whatsapp.net",
-        //         },
-        //         messageTimestamp: 1122334455,
-        //         pushName: "WhatsApp",
-        //         message: { conversation: "jacktheboss220" },
-        //     },
-        // }
-    );
+    const uptime = process.uptime();
+    // Response time calculation
+    const diff = process.hrtime(start);
+    const responseTime = (diff[0] * 1e9 + diff[1]) / 1e6;
+    const response = `*🎾 Pong!*\n\n*Response Time:* ${responseTime}ms\n*Uptime:* ${uptime.toFixed(2)}s`;
+    return sendMessageWTyping(from, { text: response }, { quoted: msg });
 };
+
+module.exports.command = () => ({ cmd: ["a", "alive", "ping"], handler });

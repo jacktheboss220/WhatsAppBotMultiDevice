@@ -1,6 +1,7 @@
 const { getGroupData, createGroupData, group } = require('../../mongo-DB/groupDataDb');
 const { getMemberData, createMembersData, member } = require('../../mongo-DB/membersDataDb');
 const axios = require('axios');
+const fs = require('fs');
 
 module.exports.command = () => {
     let cmd = ["test"];
@@ -18,7 +19,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 
     if (args.length === 0) {
-        return sendMessageWTyping(from, { text: `❌ empty query!` }, { quoted: msg });
+        return sendMessageWTyping(from, { text: `❎ empty query!` }, { quoted: msg });
     }
     try {
         let resultTest = eval(evv);

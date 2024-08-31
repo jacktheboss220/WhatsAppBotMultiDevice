@@ -41,4 +41,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["l", "lyric"], handler });
+module.exports.command = () => ({
+    cmd: ["l", "lyric"],
+    desc: "Get lyrics of a song",
+    usage: "lyric <song name>",
+    handler
+});

@@ -1,43 +1,31 @@
-module.exports.command = () => {
-    let cmd = ["owner"];
-    return { cmd, handler };
-}
+const { cmdToText } = require("../../functions/getAddCommands");
+
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping } = msgInfoObj;
+    const { ownerCommands } = await cmdToText();
 
     const owner = `
--------------------------------------------------------------- 
+--------------------------------------------------------------
     ─「  *Owner Commands* 」─
 ---------------------------------------------------------------
 
 ${readMore}
 
+${ownerCommands.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`).join("\n\n")}
 
-*${prefix}block <@mention>*
-    _block user from using bot_
+♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️`;
 
-*${prefix}unblock <@mention>*
-    _unblock user_
-
-*${prefix}removebot*
-    _Remove bot from group!_
-
-*${prefix}bb* _text_
-    _broadcast text to all groups_
-
-*${prefix}hidetag*
-    _tag all participants without tag showing_
-
-*${prefix}jid*
-    _get jid for the chat_
-
-♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️`
-
-    sendMessageWTyping(
-        from,
+    sendMessageWTyping(from,
         { text: owner }
     );
 }
+
+module.exports.command = () => ({
+    cmd: ['owner', 'ownerhelp', 'ownermenu'],
+    desc: "Owner help menu",
+    usage: "owner",
+    handler
+});

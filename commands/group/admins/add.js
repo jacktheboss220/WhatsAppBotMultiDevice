@@ -53,4 +53,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["add"], handler });
+module.exports.command = () => ({
+    cmd: ["add"],
+    desc: "Add a member to group.",
+    usage: "add number | reply",
+    handler
+});

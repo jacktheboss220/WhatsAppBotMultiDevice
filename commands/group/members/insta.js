@@ -6,7 +6,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (args.length === 0) return sendMessageWTyping(from, { text: `❎ URL is empty! \nSend ${prefix}insta url` }, { quoted: msg });
     let urlInsta = args[0];
 
-    if (!(urlInsta.includes("instagram.com/p/") ||
+    if (!(urlInsta.includes("instagram.com/") ||
+        urlInsta.includes("instagram.com/p/") ||
         urlInsta.includes("instagram.com/reel/") ||
         urlInsta.includes("instagram.com/tv/")))
         return sendMessageWTyping(from,
@@ -75,4 +76,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     // });
 }
 
-module.exports.command = () => ({ cmd: ["insta", "i"], handler });
+module.exports.command = () => ({
+    cmd: ["insta", "i"],
+    desc: "Download Instagram post",
+    usage: "insta | i <url>",
+    handler
+});

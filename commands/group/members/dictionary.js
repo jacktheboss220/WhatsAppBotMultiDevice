@@ -20,4 +20,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["dictionary", "dict"], handler });
+module.exports.command = () => ({
+    cmd: ["dictionary", "dict"],
+    desc: "Get meaning of a word",
+    usage: "dict <word>",
+    handler
+});

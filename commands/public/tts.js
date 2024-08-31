@@ -54,4 +54,9 @@ async function fileSaved(streamPng, filename) {
 }
 
 
-module.exports.command = () => ({ cmd: ["tts", "attp"], handler });
+module.exports.command = () => ({
+    cmd: ["tts", "attp"],
+    desc: "Convert text to sticker",
+    usage: "tts <text>",
+    handler
+});

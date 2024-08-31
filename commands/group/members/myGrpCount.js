@@ -1,5 +1,8 @@
 const { group } = require('../../../mongo-DB/groupDataDb');
 
+const more = String.fromCharCode(8206);
+const readMore = more.repeat(4001);
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, senderJid } = msgInfoObj;
 
@@ -22,7 +25,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 mess += `${data[0].count} - ${grp.grpName}\n`;
             });
             sendMessageWTyping(from, {
-                text: `*${userName}'s Message Count In All Groups are*: ${totalMessageCount}\n\n${mess}`
+                text: `*${userName}'s Message Count In All Groups are*: ${totalMessageCount}\n\n ${readMore}\n\n${mess}`
             }, { quoted: msg });
         } else {
             sendMessageWTyping(from, { text: "No Data Found" }, { quoted: msg });
@@ -30,4 +33,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     })
 }
 
-module.exports.command = () => ({ cmd: ["totalg"], handler });
+module.exports.command = () => ({
+    cmd: ["totalg"],
+    desc: "Get your message count in all groups",
+    usage: "totalg | reply to a message to get message count of that member",
+    handler
+});

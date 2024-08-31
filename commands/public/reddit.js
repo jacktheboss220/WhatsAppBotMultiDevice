@@ -3,10 +3,6 @@ const jsdom = require("jsdom");
 const { getMemberData, member } = require("../../mongo-DB/membersDataDb")
 
 const { JSDOM } = jsdom;
-module.exports.command = () => {
-    let cmd = ["redd", "reddit"];
-    return { cmd, handler };
-}
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { isGroup, senderJid, sendMessageWTyping } = msgInfoObj;
@@ -57,3 +53,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         console.log(err);
     })
 }
+
+module.exports.command = () => ({
+    cmd: ["reddit"],
+    desc: "Download post from reddit",
+    usage: "reddit | post link",
+    handler
+});

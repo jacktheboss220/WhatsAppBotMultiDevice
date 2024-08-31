@@ -25,4 +25,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["chat"], handler })
+module.exports.command = () => ({
+    cmd: ["chat"],
+    desc: "Enable/disable group chat",
+    usage: "chat on/off",
+    handler
+})

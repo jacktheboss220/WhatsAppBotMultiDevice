@@ -106,4 +106,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 };
 
 
-module.exports.command = () => ({ cmd: ["text", "txt", "texmeme"], handler });
+module.exports.command = () => ({
+    cmd: ["text", "txt", "texmeme"],
+    desc: "Create a meme with text",
+    usage: "textmeme _FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_ | reply to an image",
+    handler
+});

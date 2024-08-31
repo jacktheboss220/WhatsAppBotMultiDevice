@@ -55,7 +55,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         let warnMsg;
         switch (command) {
             case 'warn':
-            case 'warning':
                 try {
                     warnMsg = `@${num_split} 😒,You've been warned. Status of warning ${(++warnCount)} / 3. Do not repeat this sort of action or you will be kicked!`;
                     sock.sendMessage(from, {
@@ -100,4 +99,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["warn", "warning", "unwarn"], handler });
+module.exports.command = () => ({
+    cmd: ["warn", "unwarn"],
+    desc: "Warn a member",
+    usage: "warn @mention | unwarn @mention | reply",
+    handler
+});

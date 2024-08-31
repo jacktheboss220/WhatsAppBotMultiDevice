@@ -21,11 +21,13 @@
 		"@adiwajshing/baileys": "github:jacktheboss220/Baileys-New",
 		"@bochilteam/scraper": "^4.2.4",
 		"@erickwendel/meme-maker": "^3.0.0",
-		"@ffmpeg-installer/ffmpeg": "^1.1.0",
-		"@hapi/hoek": "^10.0.1",
-		"axios": "^1.2.1",
-		"deepai": "^1.0.21",
-		"dotenv": "^16.0.3",
+		"@ffmpeg-installer/ffmpeg": "^1.0.13",
+		"fluent-ffmpeg": "^2.1.2",
+		"axios": "^1.6.5",
+		"cheerio": "^1.0.0-rc.12",
+		"cors": "^2.8.5",
+		"dotenv": "^16.3.2",
+		"ejs": "^3.1.10",
 		"express": "^4.18.2",
 		"genius-lyrics": "^4.4.6",
 		"genius-lyrics-api": "^3.2.0",
@@ -48,6 +50,6 @@
 		"wa-sticker-formatter-1": "github:AlenVelocity/wa-sticker-formatter",
 		"youtube-dl-exec": "^2.5.6",
 		"yt-search": "^2.10.4",
-		"ytdl-core": "git+ssh://git@github.com:khlevon/node-ytdl-core.git#v4.11.4-patch.2"
+		"ytdl-core": "^4.11.5"
 	}
 }

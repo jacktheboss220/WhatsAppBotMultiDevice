@@ -1,8 +1,3 @@
-module.exports.command = () => {
-    let cmd = ["dev", "source"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgTnfoObj) => {
     const { sendMessageWTyping } = msgTnfoObj;
     // const templateButtons = [
@@ -17,9 +12,15 @@ const handler = async (sock, msg, from, args, msgTnfoObj) => {
     //     templateButtons: templateButtons
     // }
     // sendMessageWTyping(from, templateMessage);
-    sendMessageWTyping(from,
-        {
-            text: `Github: https://github.com/jacktheboss220/WhatsAppBotMultiDevice\n\nTelegram: https://t.me/jackthebosss\n\nFollow me: https://github.com/jacktheboss220`
-        },
-        { quoted: msg });
+    sendMessageWTyping(from, {
+        text: `Github: https://github.com/jacktheboss220/WhatsAppBotMultiDevice\n\nTelegram: https://t.me/jackthebosss\n\nFollow me: https://github.com/jacktheboss220`
+    }, { quoted: msg }
+    );
 }
+
+module.exports.command = () => ({
+    cmd: ["dev", "developer"],
+    desc: "Developer info",
+    usage: "dev | developer",
+    handler
+});

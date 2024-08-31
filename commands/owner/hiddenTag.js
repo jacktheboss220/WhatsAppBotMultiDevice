@@ -1,8 +1,3 @@
-module.exports.command = () => {
-    let cmd = ["hidetag", "prank"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping, groupMetadata, type, content } = msgInfoObj;
     if (msg.message.extendedTextMessage) {
@@ -55,3 +50,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }
+
+module.exports.command = () => ({
+    cmd: ["hidetag"],
+    desc: "Hide Tag Message",
+    usage: "hidetag <message>",
+    handler
+});

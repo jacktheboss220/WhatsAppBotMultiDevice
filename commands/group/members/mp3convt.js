@@ -48,4 +48,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["mp3", "mp4audio", "tomp3"], handler });
+module.exports.command = () => ({
+    cmd: ["mp3", "mp4audio", "tomp3"],
+    desc: 'Convert video to mp3',
+    usage: 'mp3 | reply to video',
+    handler
+});

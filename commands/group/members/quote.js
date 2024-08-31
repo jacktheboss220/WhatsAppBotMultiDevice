@@ -1,10 +1,5 @@
 const axios = require("axios");
 
-module.exports.command = () => {
-    let cmd = ["quote"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
 
@@ -14,3 +9,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: `ʕ•̫͡•ʔ❤️ 𝗧𝗼𝗱𝗮𝘆'𝘀 𝗤𝘂𝗼𝘁𝗲 𝗙𝗼𝗿 𝗬𝗼𝘂  ❤️ʕ•̫͡•ʔ\n\n${quote}` }, { quoted: msg });
     });
 }
+
+module.exports.command = () => ({
+    cmd: ['quote'],
+    desc: 'Get random quote',
+    usage: 'quote',
+    handler
+});

@@ -2,11 +2,6 @@ require('dotenv').config();
 const myNumber = process.env.myNumber + '@s.whatsapp.net';
 const { member } = require('../../mongo-DB/membersDataDb')
 
-module.exports.command = () => {
-    let cmd = ["block", "unblock"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     const { command, botNumberJid, sendMessageWTyping } = msgInfoObj;
@@ -41,3 +36,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         });
     }
 }
+
+module.exports.command = () => ({
+    cmd: ["block", "unblock"],
+    desc: "Block / Unblock a user",
+    usage: "block | unblock | tag / mention the user | reply to a message to block / unblock",
+    handler
+});

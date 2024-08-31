@@ -1,10 +1,5 @@
 const ud = require('urban-dictionary');
 
-module.exports.command = () => {
-    let cmd = ["ud", "name"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
     if (!args[0]) return sendMessageWTyping(from, { text: `*Provide any word to search*` }, { quoted: msg });
@@ -16,7 +11,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(
             from,
             {
-                text: `*Term*: ${term} 
+                text: `*Term*: ${term}
 *Definition*: ${def}
 *Example*: ${example}`
             },
@@ -26,3 +21,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }
+
+module.exports.command = () => ({
+    cmd: ['ud', 'urban'],
+    desc: 'Get Urban Dictionary meaning',
+    usage: 'ud <word>',
+    handler
+});

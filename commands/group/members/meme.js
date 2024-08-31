@@ -8,10 +8,6 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
 const { delay } = require("@adiwajshing/baileys");
-module.exports.command = () => {
-    let cmd = ["meme"];
-    return { cmd, handler };
-}
 
 let down_meme = getRandom('.mp4');
 let down_gif = getRandom('.gif');
@@ -58,3 +54,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         }
     });
 }
+
+module.exports.command = () => ({
+    cmd: ["meme"],
+    desc: "Get random meme",
+    usage: "meme",
+    handler
+});

@@ -15,4 +15,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["link"], handler });
+module.exports.command = () => ({
+    cmd: ["link"],
+    desc: "Get Group Link",
+    usage: "link",
+    handler
+});

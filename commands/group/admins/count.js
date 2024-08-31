@@ -22,4 +22,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     })
 }
 
-module.exports.command = () => ({ cmd: ['count'], handler });
+module.exports.command = () => ({
+    cmd: ['count'],
+    desc: 'Get message count of members',
+    usage: 'count',
+    handler
+});

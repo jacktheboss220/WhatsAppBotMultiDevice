@@ -7,7 +7,6 @@ const openai = new OpenAI({
     apiKey: OPENAI_API_KEY,
 });
 
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
 
@@ -34,4 +33,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 }
 
 
-module.exports.command = () => ({ cmd: ["make", "gen"], handler });
+module.exports.command = () => ({
+    cmd: ["make", "gen"],
+    desc: "Generate an image from a prompt",
+    usage: "gen <prompt>",
+    handler
+});

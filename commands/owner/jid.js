@@ -1,8 +1,3 @@
-module.exports.command = () => {
-    let cmd = ["jid", "grpid"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
     sendMessageWTyping(
@@ -11,3 +6,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         { quoted: msg }
     );
 }
+
+module.exports.command = () => ({
+    cmd: ['jid'],
+    desc: 'Get your jid',
+    usage: 'jid',
+    handler
+});

@@ -1,23 +1,28 @@
 const ytdl = require('ytdl-core');
-const yts = require('yt-search');
 const fs = require('fs');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-module.exports.command = () => {
-    let cmd = ["yta"];
-    return { cmd, handler };
-}
+const jsonCookie = fs.readFileSync('./www.youtube.com_cookies.json', 'utf8');
+const COOKIE = JSON.parse(jsonCookie).map(r => `${r.name}=${r.value}`).join("; ");
+const x_youtube_identity_token = `QUFFLUhqbHhVazkzOE5mVjlpWDdnLTF4R0Y1bk4wQTdZQXw\\u003d`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { evv, command, sendMessageWTyping } = msgInfoObj;
+    const { sendMessageWTyping } = msgInfoObj;
 
     if (!args[0]) return sendMessageWTyping(from, { text: `❎ *Enter Youtube link*` }, { quoted: msg });
 
     (async () => {
         try {
             let sany = getRandom('.mp3');
-            const stream = ytdl(args[0], { filter: info => info.audioBitrate == 160 || info.audioBitrate == 128 })
-                .pipe(fs.createWriteStream(sany));
+            const stream = ytdl(args[0], {
+                filter: info => info.audioBitrate == 160 || info.audioBitrate == 128,
+                requestOptions: {
+                    headers: {
+                        cookie: COOKIE,
+                        'x-youtube-identity-token': x_youtube_identity_token
+                    }
+                }
+            }).pipe(fs.createWriteStream(sany));
             console.log("Audio downloaded")
             await new Promise((resolve, reject) => {
                 stream.on('error', reject)
@@ -40,3 +45,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         }
     })();
 }
+
+module.exports.command = () => ({
+    cmd: ["yta"],
+    desc: 'Download youtube audio',
+    usage: 'yta <youtube link>',
+    handler
+});

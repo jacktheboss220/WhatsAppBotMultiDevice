@@ -55,4 +55,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     sendMessageWTyping(from, { text: message }, { quoted: msg });
 }
 
-module.exports.command = () => ({ cmd: ['true', 'truecaller'], handler });
+module.exports.command = () => ({
+    cmd: ['true', 'truecaller'],
+    desc: 'Get Truecaller details of a number',
+    usage: 'true | reply to a message to get Truecaller details of that number',
+    handler
+});

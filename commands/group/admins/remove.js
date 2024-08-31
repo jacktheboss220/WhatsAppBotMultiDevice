@@ -36,4 +36,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["remove", "kick", "ban"], handler });
+module.exports.command = () => ({
+    cmd: ["remove", "kick", "ban"],
+    desc: "Remove a member from group.",
+    usage: "remove @mention | reply",
+    handler
+});

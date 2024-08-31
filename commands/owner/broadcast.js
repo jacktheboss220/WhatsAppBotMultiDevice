@@ -9,7 +9,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const res = Object.keys(groups);
 
     let message = "*Broadcast message from owner.*\n\n" + args.join(" ");
-    
+
     try {
         for (let i = 0; i < res.length; i++) {
             await sendMessageWTyping(res[i], { text: message });
@@ -22,4 +22,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["bb", "broadcast"], handler });
+module.exports.command = () => ({
+    cmd: ["bb", "broadcast"],
+    desc: "Broadcast message to all groups",
+    usage: "broadcast <message>",
+    handler
+});

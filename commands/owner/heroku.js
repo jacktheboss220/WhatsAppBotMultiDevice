@@ -19,4 +19,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["heroku", "restart"], handler });
+module.exports.command = () => ({
+    cmd: ["heroku", "restart"],
+    desc: "Restart the dyno",
+    usage: "heroku | restart",
+    handler
+});

@@ -11,7 +11,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         const text = botData.instaSession_id;
         const sessionid = /sessionid=([^;]+);/.exec(text)[1];
         const ds_user_id = /ds_user_id=([^;]+);/.exec(text)[1];
-        
+
         await axios({
             url: `https://www.instagram.com/${prof}/?__a=1&__d=dis`,
             headers: {
@@ -64,4 +64,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["idp", "dp"], handler });
+module.exports.command = () => ({
+    cmd: ["idp", "dp"],
+    desc: "Get Instagram Profile Picture",
+    usage: "idp | dp <username>",
+    handler
+});

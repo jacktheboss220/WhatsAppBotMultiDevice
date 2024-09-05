@@ -8,9 +8,9 @@ Our WhatsApp bot project allows users to easily perform various actions such as 
 |---------|-------------|---------|
 | -alive | Check if the bot is online or not | `-alive` |
 | -admin | List of admin commands | `-admin` |
-| -song | Download a song by name | `-song love me like you do` |
+| .song | Download a song by name | `-song love me like you do` |
 | -l | Get lyrics for a song | `-l Main woh chaand by darshan raval` |
-| -delete | Delete a message sent by the bot | `-delete` |
+| .del | Delete a message sent by the bot | `-delete` |
 | -joke | Get a random joke | `-joke` |
 | -joke categories | Get a joke from a specific category | `-joke programming` |
 | -meme | Get a random meme | `-meme` |

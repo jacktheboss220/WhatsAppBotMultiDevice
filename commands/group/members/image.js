@@ -58,4 +58,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["image", "toimg"], handler });
+module.exports.command = () => ({
+    cmd: ["image", "toimg"],
+    desc: "Convert sticker to image",
+    usage: "image | reply to a sticker",
+    handler
+});

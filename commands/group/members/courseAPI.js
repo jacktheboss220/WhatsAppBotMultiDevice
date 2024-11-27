@@ -19,4 +19,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     })
 }
 
-module.exports.command = () => ({ cmd: ["un"], handler });
+module.exports.command = () => ({
+    cmd: ["un"],
+    desc: "Get Udemy courses for free",
+    usage: "un | <page number>",
+    handler
+});

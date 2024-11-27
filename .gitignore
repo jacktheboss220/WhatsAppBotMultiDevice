@@ -3,6 +3,8 @@ package-lock.json
 baileys_auth_info
 test.json
 .env
+.idea
+.vscode
 all.json
 common.json
 index.html

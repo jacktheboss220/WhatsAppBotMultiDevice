@@ -34,4 +34,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     });
 };
 
-module.exports.command = () => ({ cmd: ['say'], handler });
+module.exports.command = () => ({
+    cmd: ['say'],
+    desc: 'Text to speech',
+    usage: 'say <text>',
+    handler
+});

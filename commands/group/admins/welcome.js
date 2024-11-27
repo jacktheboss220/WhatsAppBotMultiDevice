@@ -17,4 +17,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["welcome"], handler });
+module.exports.command = () => ({
+    cmd: ["welcome"],
+    desc: "Set welcome message",
+    usage: "welcome <message> | reset",
+    handler
+});

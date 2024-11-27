@@ -1,8 +1,3 @@
-module.exports.command = () => {
-    let cmd = ["tagall"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { prefix, sendMessageWTyping, groupMetadata, type, content } = msgInfoObj;
     if (msg.message.extendedTextMessage) {
@@ -58,3 +53,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 };
+
+
+module.exports.command = () => ({
+    cmd: ["tagall"],
+    desc: "Tag all members in group",
+    usage: "tagall | tagall <message> | reply with tagall",
+    handler
+});

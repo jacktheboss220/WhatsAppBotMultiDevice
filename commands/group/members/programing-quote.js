@@ -1,10 +1,5 @@
 const axios = require('axios')
 
-module.exports.command = () => {
-    let cmd = ["proquote", "proq"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
     const proURl = 'https://programming-quotes-api.herokuapp.com/Quotes/random';
@@ -16,3 +11,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         console.log(err);
     })
 }
+
+module.exports.command = () => ({
+    cmd: ['proquote', 'pqoute'],
+    desc: 'Get random programming quote',
+    usage: 'proquote',
+    handler
+});

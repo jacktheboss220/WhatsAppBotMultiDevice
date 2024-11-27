@@ -28,4 +28,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 }
 
-module.exports.command = () => ({ cmd: ["mycount", "total"], handler });
+module.exports.command = () => ({
+    cmd: ["mycount", "total"],
+    desc: "Get your message count in group",
+    usage: "total | reply to a message to get message count of that member",
+    handler
+});

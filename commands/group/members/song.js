@@ -97,4 +97,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ['song', 'play'], handler });
+module.exports.command = () => ({
+    cmd: ['song', 'play'],
+    desc: 'Download song',
+    usage: 'song | play | song [song name]',
+    handler
+});

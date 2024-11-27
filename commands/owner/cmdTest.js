@@ -3,11 +3,6 @@ const { getMemberData, createMembersData, member } = require('../../mongo-DB/mem
 const axios = require('axios');
 const fs = require('fs');
 
-module.exports.command = () => {
-    let cmd = ["test"];
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
 
@@ -30,3 +25,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }
+
+module.exports.command = () => ({
+    cmd: ["test", "code"],
+    desc: "Test your code",
+    usage: "test | code",
+    handler
+});

@@ -78,4 +78,54 @@ const addCommands = async () => {
 
 addCommands();
 
-module.exports = { commandsPublic, commandsMembers, commandsAdmins, commandsOwners };
+const cmdToText = () => {
+    let adminCommands = [];
+    let publicCommands = [];
+    let ownerCommands = [];
+
+    return new Promise(async (resolve, reject) => {
+        let path = mainPath + "public/";
+        let filenames = await readdir(path);
+        filenames.forEach((file) => {
+            if (file.endsWith(".js")) {
+                let { command } = require(path + file);
+                let cmd_info = command();
+                publicCommands.push({ cmd: cmd_info.cmd, desc: cmd_info.desc, usage: cmd_info.usage });
+            }
+        });
+
+        path = mainPath + "group/members/";
+        filenames = await readdir(path);
+        filenames.forEach((file) => {
+            if (file.endsWith(".js")) {
+                let { command } = require(path + file);
+                let cmd_info = command();
+                publicCommands.push({ cmd: cmd_info.cmd, desc: cmd_info.desc, usage: cmd_info.usage });
+            }
+        });
+
+        path = mainPath + "group/admins/";
+        filenames = await readdir(path);
+        filenames.forEach((file) => {
+            if (file.endsWith(".js")) {
+                let { command } = require(path + file);
+                let cmd_info = command();
+                adminCommands.push({ cmd: cmd_info.cmd, desc: cmd_info.desc, usage: cmd_info.usage });
+            }
+        });
+
+        path = mainPath + "owner/";
+        filenames = await readdir(path);
+        filenames.forEach((file) => {
+            if (file.endsWith(".js")) {
+                let { command } = require(path + file);
+                let cmd_info = command();
+                ownerCommands.push({ cmd: cmd_info.cmd, desc: cmd_info.desc, usage: cmd_info.usage });
+            }
+        });
+        resolve({ publicCommands, adminCommands, ownerCommands });
+    });
+};
+
+
+module.exports = { commandsPublic, commandsMembers, commandsAdmins, commandsOwners, cmdToText };

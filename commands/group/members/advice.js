@@ -11,4 +11,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ['advice'], handler });
+module.exports.command = () => ({
+    cmd: ['advice'],
+    desc: 'Get random advice',
+    usage: 'advice',
+    handler
+});

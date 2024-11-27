@@ -40,4 +40,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     );
 }
 
-module.exports.command = () => ({ cmd: ["getwarn"], handler });
+module.exports.command = () => ({
+    cmd: ["getwarn"],
+    desc: "Get warning status of a member",
+    usage: "getwarn | reply to a message to get warning status of that member",
+    handler
+});

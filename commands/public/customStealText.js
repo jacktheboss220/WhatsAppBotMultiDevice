@@ -28,4 +28,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["sets", "stealText"], handler });
+module.exports.command = () => ({
+    cmd: ["sets", "stealText"],
+    desc: "Set custom steal text",
+    usage: "sets <text>",
+    handler
+});

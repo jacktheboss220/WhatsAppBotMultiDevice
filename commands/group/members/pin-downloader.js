@@ -2,10 +2,6 @@ require('dotenv').config();
 const PIN_KEY = process.env.PIN_KEY || "";
 
 const axios = require("axios");
-module.exports.command = () => {
-    let cmd = ["pin", "pd"];
-    return { cmd, handler };
-}
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
@@ -32,3 +28,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         console.log(JSON.stringify(res.data));
     })
 }
+
+module.exports.command = () => ({
+    cmd: ["pin"],
+    desc: "Download pin from pinterest",
+    usage: "pin <pinurl>",
+    handler
+});

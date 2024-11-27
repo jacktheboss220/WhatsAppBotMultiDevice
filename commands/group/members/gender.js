@@ -27,4 +27,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     });
 }
 
-module.exports.command = () => ({ cmd: ['gender'], handler }); 
+module.exports.command = () => ({
+    cmd: ['gender'],
+    desc: 'get gender of a name',
+    usage: 'gender <name> | reply to a message.',
+    handler
+});

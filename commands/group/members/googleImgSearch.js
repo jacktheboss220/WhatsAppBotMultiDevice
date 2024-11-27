@@ -79,4 +79,9 @@ const downloadImage = async (url, imageUrl) => {
     });
 };
 
-module.exports.command = () => ({ cmd: ["img"], handler });
+module.exports.command = () => ({
+    cmd: ["img"],
+    desc: "Search image from google",
+    usage: "img <search word> | <number> (optional) <search word>",
+    handler
+});

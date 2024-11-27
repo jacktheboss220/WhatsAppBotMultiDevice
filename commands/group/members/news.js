@@ -6,6 +6,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     let arr = ['national', 'business', 'sports', 'world', 'politics', 'technology', 'startup', 'entertainment', 'miscellaneous', 'hatke', 'science', 'automobile'];
 
+    if (command == "categories") {
+        return sendMessageWTyping(from, {
+            text: arr.map((e, i) => `${i + 1}. ${e}`).join("\n"),
+        }, { quoted: msg });
+    }
+
     let newsType = args[0] || '';
 
     if (!arr.includes(newsType) && newsType != "") {
@@ -33,4 +39,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     });
 }
 
-module.exports.command = () => ({ cmd: ["news"], handler });
+module.exports.command = () => ({
+    cmd: ["news", "categories"],
+    desc: "Get news",
+    usage: "news | news <category> | categories",
+    handler
+});

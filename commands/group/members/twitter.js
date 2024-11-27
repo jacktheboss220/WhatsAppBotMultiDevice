@@ -1,10 +1,5 @@
 const twitterGetUrl = require("twitter-url-direct");
 
-module.exports.command = () => {
-    let cmd = ["twitter", "twt", "td"]
-    return { cmd, handler };
-}
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     const { sendMessageWTyping } = msgInfoObj;
@@ -50,3 +45,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
     }
 }
+
+module.exports.command = () => ({
+    cmd: ["twitter", "twt", "td"],
+    desc: 'Download twitter media',
+    usage: 'twitter <twitter link>',
+    handler
+});

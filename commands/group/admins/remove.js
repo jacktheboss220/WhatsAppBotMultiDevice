@@ -1,5 +1,5 @@
 require('dotenv').config;
-const myNumber = process.env.myNumber + '@s.whatsapp.net';
+const myNumber = process.env.MY_NUMBER + '@s.whatsapp.net';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 
@@ -36,4 +36,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["remove", "kick", "ban"], handler });
+module.exports.command = () => ({
+    cmd: ["remove", "kick", "ban"],
+    desc: "Remove a member from group.",
+    usage: "remove @mention | reply",
+    handler
+});

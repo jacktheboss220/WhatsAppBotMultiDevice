@@ -2,10 +2,6 @@ const axios = require('axios')
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
-module.exports.command = () => {
-    let cmd = ["qpoetry", "qpt"];
-    return { cmd, handler };
-}
 const poetURL = 'https://poetrydb.org/';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -70,3 +66,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         sendMessageWTyping(from, { text: `Must include author in command` }, { quoted: msg })
     }
 }
+
+module.exports.command = () => ({
+    cmd: ['qpt', 'qpoetry'],
+    desc: 'Get random poetry',
+    usage: 'qpoetry <author>',
+    handler
+});

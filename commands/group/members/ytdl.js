@@ -7,8 +7,12 @@ const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}`
 
 const findVideoURL = async (name) => {
     const r = await yts(`${name}`)
-    return r.all[0].url;
+    return r.all[0].url + '&bpctr=9999999999&has_verified=1';
 }
+
+const jsonCookie = fs.readFileSync('./www.youtube.com_cookies.json', 'utf8');
+const COOKIE = JSON.parse(jsonCookie).map(r => `${r.name}=${r.value}`).join("; ");
+const x_youtube_identity_token = `QUFFLUhqbHhVazkzOE5mVjlpWDdnLTF4R0Y1bk4wQTdZQXw\\u003d`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, command, evv } = msgInfoObj;
@@ -23,8 +27,23 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
     let fileDown = getRandom(".mp4");
     try {
-        let title = await ytdl.getInfo(URL).then(res => res.videoDetails.title.trim());
-        const stream = await youtubedl(URL, { format: 'mp4', output: fileDown, maxFilesize: "104857600" })
+        let title = await ytdl.getInfo(URL, {
+            format: 'mp4',
+            maxFilesize: "104857600",
+            requestOptions: {
+                headers: {
+                    cookie: COOKIE,
+                    'x-youtube-identity-token': x_youtube_identity_token
+                }
+            }
+        }).then(res => res.videoDetails.title.trim());
+        console.log("Title:", title);
+        const stream = await youtubedl(URL, {
+            format: 'bestvideo+bestaudio+mp4',
+            maxFilesize: "104857600",
+            output: fileDown,
+            addHeader: [`cookie: ${COOKIE}`],
+        })
         await Promise.all([stream]).then(async (r) => {
             console.log(r);
             if (r?.includes("max-filesize")) {
@@ -45,6 +64,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                         ytdl(URL, {
                             // filter: info => info.hasVideo && info.hasAudio,
                             filter: format => format.container === 'mp4',
+                            // format: 'mp4',
+                            maxFilesize: "104857600",
+                            requestOptions: {
+                                headers: {
+                                    cookie: COOKIE,
+                                    'x-youtube-identity-token': x_youtube_identity_token
+                                }
+                            }
                         }).pipe(fs.createWriteStream(fileDown)).on('finish', async () => {
                             await sock.sendMessage(from, {
                                 video: fs.readFileSync(fileDown),
@@ -72,4 +99,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["yt", "ytv", "vs"], handler });
+module.exports.command = () => ({
+    cmd: ["yt", "ytv", "vs"],
+    desc: 'Download youtube video',
+    usage: 'yt <youtube link>',
+    handler
+});

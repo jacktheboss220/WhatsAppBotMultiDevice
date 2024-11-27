@@ -28,4 +28,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["demote"], handler });
+module.exports.command = () => ({
+    cmd: ["demote"],
+    desc: "Remove admin permission of a member",
+    usage: "demote @mention | reply",
+    handler
+});

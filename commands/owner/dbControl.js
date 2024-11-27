@@ -1,10 +1,6 @@
 const { getGroupData, createGroupData, group } = require('../../mongo-DB/groupDataDb');
 const { getMemberData, createMembersData, member } = require('../../mongo-DB/membersDataDb');
 const { getBotData, createBotData, bot } = require('../../mongo-DB/botDataDb');
-module.exports.command = () => {
-    let cmd = ["group", "member", "bot"];
-    return { cmd, handler };
-}
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, command } = msgInfoObj;
@@ -67,3 +63,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             break;
     }
 }
+
+module.exports.command = () => ({
+    cmd: ["group", "member", "bot"],
+    desc: "Control Database",
+    usage: "group | member | bot",
+    handler
+});

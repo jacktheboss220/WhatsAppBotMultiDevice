@@ -2,6 +2,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const start = process.hrtime();
     const { sendMessageWTyping } = msgInfoObj;
     const uptime = process.uptime();
+    //uptime to hours minutes seconds
     const hours = Math.floor(uptime / 3600);
     const minutes = Math.floor((uptime % 3600) / 60);
     const seconds = Math.floor(uptime % 60);
@@ -13,4 +14,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     return sendMessageWTyping(from, { text: response }, { quoted: msg });
 };
 
-module.exports.command = () => ({ cmd: ["a", "alive", "ping"], handler });
+module.exports.command = () => ({
+    cmd: ["a", "alive", "ping"],
+    desc: "Check if bot is alive",
+    usage: "alive | ping | a",
+    handler
+});

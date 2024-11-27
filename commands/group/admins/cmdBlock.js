@@ -45,4 +45,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["blockc", "emptyc", "getblockc", "removec"], handler });
+module.exports.command = () => ({
+    cmd: ["blockc", "emptyc", "getblockc", "removec"],
+    desc: "block command for a group",
+    usage: "blockc insta | insta,help",
+    handler
+});

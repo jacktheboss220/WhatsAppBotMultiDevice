@@ -28,4 +28,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ["promote"], handler })
+module.exports.command = () => ({
+    cmd: ["promote"],
+    desc: "Give admin permission to a member",
+    usage: "promote @mention | reply",
+    handler
+})

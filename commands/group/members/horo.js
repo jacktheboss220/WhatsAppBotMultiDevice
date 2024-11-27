@@ -61,4 +61,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({ cmd: ['horo'], handler });
+module.exports.command = () => ({
+    cmd: ['horo'],
+    desc: 'Get horoscope',
+    usage: 'horo <sign> | aries, taurus, gemini, cancer, leo, virgo, libra, scorpio, sagittarius, capricorn, aquarius, pisces',
+    handler
+});

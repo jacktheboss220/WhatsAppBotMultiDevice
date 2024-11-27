@@ -59,4 +59,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     });
 };
 
-module.exports.command = () => ({ cmd: ["search", "gs"], handler });
+module.exports.command = () => ({
+    cmd: ["search", "gs"],
+    desc: "Search on Google",
+    usage: "search | gs <query>",
+    handler
+});

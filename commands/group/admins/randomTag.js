@@ -25,4 +25,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({ cmd: ["rn", "randomtag"], handler })
+module.exports.command = () => ({
+    cmd: ["rn", "rt"],
+    desc: "Random Tag a member",
+    usage: "rn | rt ",
+    handler
+})

@@ -15,19 +15,19 @@
   ],
   "env": {
     "PREFIX": {
-      "description": "Bot Prefix to use before commands",
+      "description": "Bot "-",
       "required": true
     },
     "MONGODB_KEY": {
-      "description": "MongoDB Key to store data",
+      "description": "b1c3ad26-887c-4581-8df3-610ec9e93973",
       "required": true
     },
     "MY_NUMBER": {
-      "description": "Your WhatsApp Number to use as bot owner",
+      "description": "2348064610975",
       "required": true
     },
     "BOT_NUMBER": {
-      "description": "Your WhatsApp Bot Number to use as bot",
+      "description": "2348064610975",
       "required": true
     },
     "REMOVE_BG_KEY": {
@@ -43,7 +43,7 @@
       "required": false
     },
     "GOOGLE_API_KEY": {
-      "description": "Google API Key",
+      "description": "AIzaSyDl3v0hhk5Czm5eCf_5U_zg7p_agN0nvxM",
       "required": false
     },
     "SEARCH_ENGINE_KEY": {
@@ -62,12 +62,12 @@
       "description": "Host URL",
       "required": false
     },
-    "HEROKU_API_TOKEN": {
-      "description": "Heroku API Token",
+    "HEROKU_APP_TOKEN": {
+      "description": "HRKU-d7114cc5-48dc-4674-8016-dac0fb59f486",
       "required": true
     },
     "HEROKU_APP_NAME": {
-      "description": "Heroku App Name",
+      "description": "firebot",
       "required": true
     }
   },

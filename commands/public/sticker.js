@@ -12,6 +12,7 @@ const getRandom = (ext = '') => `${Math.floor(Math.random() * 10000)}${ext}`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { senderJid, type, content, isGroup, sendMessageWTyping, evv } = msgInfoObj;
+    const memberData = await getMemberData(senderJid);
 
     if (msg.message.extendedTextMessage) {
         msg.message = msg.message.extendedTextMessage.contextInfo.quotedMessage;
@@ -22,22 +23,21 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
 
     if (!isGroup) {
-        const limit = await getMemberData(senderJid);
-        if (limit.dmLimit <= 0) {
+        if (memberData.dmLimit <= 0) {
             return sendMessageWTyping(from, { text: 'You have used your monthly limit.\nWait for next month.' }, { quoted: msg });
         }
         member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
     }
 
-    let packName = "eva";
-    let authorName = "eva";
+    let packName = memberData ? await memberData?.customStealText : "eva";
+    let authorName = memberData?.customStealText ? undefined : "eva";
 
     const isPackIncluded = args.includes('pack');
     const isAuthorIncluded = args.includes('author');
 
     if (args.includes('nometadata') === false) {
-        packName = isPackIncluded ? evv.split('pack')[1].split('author')[0] : 'eva';
-        authorName = isAuthorIncluded ? evv.split('author')[1].split('pack')[0] : 'eva';
+        packName = isPackIncluded ? evv.split('pack')[1].split('author')[0] : packName;
+        authorName = isAuthorIncluded ? evv.split('author')[1].split('pack')[0] : authorName;
     }
 
     const outputOptions = args.includes("crop") || args.includes("c")

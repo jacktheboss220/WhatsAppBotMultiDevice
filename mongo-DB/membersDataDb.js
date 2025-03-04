@@ -1,7 +1,7 @@
 const mdClient = require("../mongodb");
 mdClient.connect();
 
-const member = mdClient.db("MyBotDataDB").collection("members");
+const member = mdClient.db("MyBotDataDB").collection("Members");
 
 const createMembersData = (jid, name) => {
     member.findOne({ _id: jid }).then(res => {

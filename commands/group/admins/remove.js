@@ -1,5 +1,5 @@
 require('dotenv').config;
-const myNumber = process.env.myNumber + '@s.whatsapp.net';
+const myNumber = process.env.MY_NUMBER + '@s.whatsapp.net';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 

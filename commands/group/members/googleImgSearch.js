@@ -3,7 +3,6 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
 const fs = require("fs");
 const axios = require("axios");
-const { googleImage } = require('@bochilteam/scraper')
 const { getGroupData } = require("../../../mongo-DB/groupDataDb");
 
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
@@ -34,15 +33,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 
     const urlToSearch = `${baseURL}${googleapis}${searchEngineKey}${searchType}${defQuery}${evv}`;
+    console.log(urlToSearch);
+
     await axios(urlToSearch).then(async (res) => {
         const links = res?.data?.items?.map((ele) => ele.link);
         sendImage(links, from, msg, { args, sendMessageWTyping });
     }).catch(() => {
-        googleImage(evv).then(async (res) => {
-            sendImage(res, from, msg, { args, sendMessageWTyping });
-        }).catch((err) => {
-            sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        });
+        sendMessageWTyping(from, { text: "Error while fetching data" }, { quoted: msg });
     });
 };
 

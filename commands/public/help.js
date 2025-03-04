@@ -1,10 +1,13 @@
+require("dotenv").config();
+
 const { cmdToText } = require("../../functions/getAddCommands");
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    let { prefix, isGroup, sendMessageWTyping } = msgInfoObj;
+    let { isGroup, sendMessageWTyping } = msgInfoObj;
+    let prefix = process.env.PREFIX;
 
     const { publicCommands } = await cmdToText();
 
@@ -41,8 +44,6 @@ ${publicCommands.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nU
         text: isGroup ? help : helpInDm,
     });
 }
-
-handler({ prefix: "/" });
 
 module.exports.command = () => ({
     cmd: ['help', 'menu'],

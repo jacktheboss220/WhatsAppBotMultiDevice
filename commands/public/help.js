@@ -34,11 +34,7 @@ ${publicCommands.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nU
     *Examples:*
         _${prefix}sticker pack eva author jacktheboss220_
         _${prefix}sticker crop_
-        _${prefix}sticker nometadata_
-
-*${prefix}donate*
-    _Donate to keep this bot alive!_
-    _Alias ${prefix}donation_`;
+        _${prefix}sticker nometadata_`;
 
     await sendMessageWTyping(from, {
         text: isGroup ? help : helpInDm,

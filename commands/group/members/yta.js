@@ -2,7 +2,7 @@ const ytdl = require('ytdl-core');
 const fs = require('fs');
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-const jsonCookie = fs.readFileSync('./www.youtube.com_cookies.json', 'utf8');
+const jsonCookie = fs.readFileSync('./cookies.json', 'utf8');
 const COOKIE = JSON.parse(jsonCookie).map(r => `${r.name}=${r.value}`).join("; ");
 const x_youtube_identity_token = `QUFFLUhqbHhVazkzOE5mVjlpWDdnLTF4R0Y1bk4wQTdZQXw\\u003d`;
 

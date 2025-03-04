@@ -2,23 +2,20 @@ const getConnectionUpdate = require("./getConnectionUpdateEvent");
 const getMessages = require("./getMessagesEvent");
 const getGroupEvent = require("./getGroupEvent");
 
-const events = async (sock, startSock, saveCreds, cache) => {
-    sock.ev.process(async (events) => {
-        if (events["messages.upsert"]) {
-            const upsert = events["messages.upsert"];
+const events = async (sock, startSock, cache) => {
+    sock.ev.process(async (event) => {
+        if (event["messages.upsert"]) {
+            const upsert = event["messages.upsert"];
             for (const msg of upsert.messages) {
                 if (!msg.message) return;
                 await getMessages(sock, msg, cache);
             }
         }
-        if (events["connection.update"]) {
-            await getConnectionUpdate(startSock, events["connection.update"]);
+        if (event["connection.update"]) {
+            await getConnectionUpdate(startSock, event["connection.update"]);
         }
-        if (events["group-participants.update"]) {
-            await getGroupEvent(sock, events["group-participants.update"], cache);
-        }
-        if (events["creds.update"]) {
-            await saveCreds();
+        if (event["group-participants.update"]) {
+            await getGroupEvent(sock, event["group-participants.update"], cache);
         }
     });
 };

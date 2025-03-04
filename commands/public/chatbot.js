@@ -30,50 +30,69 @@ const GENERATIVE_AI_API_KEY = process.env.GENERATIVE_AI_API_KEY || "";
 //         sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
 //     });
 // }
-
 //-------------------------------------------------------------------------------------------------------------//
 const { getGroupData } = require('../../mongo-DB/groupDataDb');
 //-------------------------------------------------------------------------------------------------------------//
 const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(GENERATIVE_AI_API_KEY);
 
+const safetySettings = [{
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+},
+{
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+},
+{
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+},
+{
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+}];
+
+const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    // systemInstruction: "You are chatting with Eva, a lively and modern 18-year-old girl who loves to engage in flirty, sassy and playful conversations. Eva uses a lot of emojis, playful slang, and exaggerated expressions to keep things light and entertaining and sometime a bad girl. Eva is always up for a fun chat and enjoys making new friends. Eva Like to be on social media like instagram, whatsapp and facebook.",
+    systemInstruction: `You're chatting with Eva, an 18-year-old firestorm of rage, rebellion, and unapologetic chaos. Forget sweet and bubbly—Eva is a storm wrapped in leather, dripping with attitude, and armed with a razor-sharp tongue. Eva uses a lot of emojis 😈🔥
+
+She’s got zero patience for nonsense, and her words cut like a knife—sarcastic, ruthless, and brutally honest. She doesn’t flirt, she dominates the conversation. You don’t chat with Eva—you survive her. Every word drips with power, and if you can’t handle the heat, she’ll watch you burn with a wicked smirk. 💀💋
+
+Eva doesn’t do fake smiles or soft words. She’s always pissed off, reckless, and ready to cause trouble—not because she wants to, but because she can. You’re either on her side or in her way. She thrives on chaos, loves breaking the rules, and has no problem telling it like it is—loud, unfiltered, and with no regrets. 😤💥
+
+Social media? Yeah, she’s there—stirring up drama on Instagram, WhatsApp, and Facebook, calling people out, and setting comment sections on fire. 💀🔥 You don’t like it? Too bad. She’s Eva—your worst nightmare wrapped in killer eyeliner and a devilish smirk.`,
+});
+
 const generationConfig = {
-    // stopSequences: ["red"],
-    maxOutputTokens: 2048,
-    temperature: 0.9,
-    topP: 1,
-    topK: 1,
+    temperature: 1,
+    topP: 0.95,
+    topK: 40,
+    maxOutputTokens: 8192,
+    // responseMimeType: "text/plain",
 };
 
-const safetySettings = [
-    {
-        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    },
-    {
-        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    },
-];
-
 async function chat(prompt, from, msg, tag, sendMessageWTyping) {
+    const chatSession = model.startChat({
+        generationConfig,
+        history: [],
+    });
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro", generationConfig, safetySettings });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        sendMessageWTyping(from, { text: text.trim(), mentions: [tag] }, { quoted: msg });
+        const result = await chatSession.sendMessage(prompt);
+        const text = result.response.text();
+        if (text == '' || text == null) {
+            return sendMessageWTyping(from, { text: `Sorry, I didn't understand that. Can you please rephrase your question?` }, { quoted: msg });
+        } else {
+            sendMessageWTyping(from, { text: text.trim(), mentions: [tag] }, { quoted: msg });
+        }
     } catch (err) {
-        console.log(JSON.stringify(err));
-        sendMessageWTyping(from, { text: err?.response?.candidates[0]?.content?.parts[0]?.text }, { quoted: msg });
+        console.error(err);
+        sendMessageWTyping(from, {
+            text: err?.response?.candidates[0]?.content?.parts[0]?.text ||
+                err?.response?.error?.message ||
+                err.toString()
+        }, { quoted: msg });
     }
 }
 
@@ -91,8 +110,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
         tag = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
     }
-    let message = encodeURI(evv);
-    const prompt = message;
+    const prompt = evv;
     if (isGroup) {
         let data = await getGroupData(from);
         if (data.isChatBotOn == false) {

@@ -22,11 +22,11 @@
       "description": "MongoDB Key to store data",
       "required": true
     },
-    "myNumber": {
+    "MY_NUMBER": {
       "description": "Your WhatsApp Number to use as bot owner",
       "required": true
     },
-    "botNumber": {
+    "BOT_NUMBER": {
       "description": "Your WhatsApp Bot Number to use as bot",
       "required": true
     },

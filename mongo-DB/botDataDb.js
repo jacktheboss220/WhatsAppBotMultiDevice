@@ -9,7 +9,7 @@ const createBotData = () => {
             // console.log('Creating Group Data : ', groupJid);
             bot.insertOne({
                 _id: "bot",
-                instaSession_id: "",
+                sessionAuth: ""
             })
         }
         // else console.log("Already Created : ", groupJid);

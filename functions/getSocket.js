@@ -9,7 +9,8 @@ const {
 
 const { startInterval } = require("./getInterval");
 
-const { fetchAuth } = require("./getAuthDB");
+
+const { fetchAuth, updateLogin } = require("./getAuthDB");
 
 const P = require("pino");
 const logger = P({ level: "silent" });
@@ -18,11 +19,16 @@ const store = makeInMemoryStore({ logger });
 store?.readFromFile("./baileys_store_multi.json");
 startInterval(store);
 
-const socket = async (connectionType) => {
-    await fetchAuth(connectionType);
+const socket = async () => {
     const { version, isLatest } = await fetchLatestBaileysVersion();
     console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}\n`);
     const { state, saveCreds } = await useMultiFileAuthState("baileys_auth_info");
+
+    const creds = await fetchAuth(state);
+    if (creds) {
+        state.creds = creds;
+    }
+
     const sock = makeWASocket({
         version,
         logger,
@@ -31,9 +37,10 @@ const socket = async (connectionType) => {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, logger),
         },
+        shouldSyncHistoryMessage: (msg) => false,
         generateHighQualityLinkPreview: true,
         shouldIgnoreJid: (jid) => isJidBroadcast(jid),
-        getMessage,
+        // getMessage,
     });
     store?.bind(sock.ev);
     async function getMessage(key) {
@@ -43,7 +50,13 @@ const socket = async (connectionType) => {
         }
         return proto.Message.fromObject({});
     }
-    return { sock, saveCreds };
+
+    sock.ev.on("creds.update", async (creds) => {
+        saveCreds(creds);
+        updateLogin(state);
+    });
+
+    return sock;
 };
 
 module.exports = socket;

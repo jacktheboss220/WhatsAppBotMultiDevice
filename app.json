@@ -26,6 +26,10 @@
       "description": "Your WhatsApp Number to use as bot owner",
       "required": true
     },
+    "MODERATORS": {
+      "description": "Your WhatsApp Number to use as bot moderators. Include country code. Example: +919876543210",
+      "required": true
+    },
     "BOT_NUMBER": {
       "description": "Your WhatsApp Bot Number to use as bot",
       "required": true
@@ -64,11 +68,15 @@
     },
     "HEROKU_API_TOKEN": {
       "description": "Heroku API Token",
-      "required": true
+      "required": false
     },
     "HEROKU_APP_NAME": {
       "description": "Heroku App Name",
-      "required": true
+      "required": false
+    },
+    "TWITTER_BEARER_TOKEN": {
+      "description": "Twitter Bearer Token",
+      "required": false
     }
   },
   "buildpacks": [

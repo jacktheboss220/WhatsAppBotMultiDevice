@@ -7,7 +7,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
-const { delay } = require("@adiwajshing/baileys");
+const { delay } = require("baileys");
 
 let down_meme = getRandom('.mp4');
 let down_gif = getRandom('.gif');

@@ -1,6 +1,6 @@
 const { getMemberData } = require("../../mongo-DB/membersDataDb");
-const { downloadContentFromMessage } = require("@adiwajshing/baileys");
-const { Sticker, createSticker, StickerTypes } = require("wa-sticker-formatter-1");
+const { downloadContentFromMessage } = require("baileys");
+const { Sticker, createSticker, StickerTypes } = require("wa-sticker-formatter-old");
 const WSF = require("wa-sticker-formatter");
 
 const fs = require('fs');

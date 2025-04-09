@@ -5,7 +5,7 @@ const {
     makeInMemoryStore,
     makeCacheableSignalKeyStore,
     isJidBroadcast,
-} = require("@adiwajshing/baileys");
+} = require("baileys");
 
 const { startInterval } = require("./getInterval");
 

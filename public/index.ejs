@@ -9,7 +9,15 @@
 
 <body>
   <h1>Eva - The Bot</h1>
-
+  <div id="qrcode"></div>
+  <script>
+    const socket = new WebSocket('ws://' + window.location.host);
+    socket.onmessage = function (event) {
+      const qrCode = event.data;
+      const qrCodeDiv = document.getElementById('qrcode');
+      qrCodeDiv.innerHTML = `<img src="${qrCode}" alt="QR Code" />`;
+    };
+  </script>
 </body>
 
 </html>

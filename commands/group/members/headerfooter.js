@@ -1,4 +1,4 @@
-const { downloadContentFromMessage } = require("@adiwajshing/baileys");
+const { downloadContentFromMessage } = require("baileys");
 const memeMaker = require('@erickwendel/meme-maker');
 const { writeFile } = require('fs/promises');
 const fs = require('fs');

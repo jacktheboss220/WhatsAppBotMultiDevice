@@ -3,30 +3,27 @@ mdClient.connect();
 
 const bot = mdClient.db("MyBotDataDB").collection("AuthTable");
 
-const createBotData = () => {
-    bot.findOne({ _id: "bot" }).then(res => {
-        if (res == null) {
-            // console.log('Creating Group Data : ', groupJid);
-            bot.insertOne({
-                _id: "bot",
-                sessionAuth: ""
-            })
-        }
-        // else console.log("Already Created : ", groupJid);
-        else {
-            // console.log("Updated Data");
-        }
-    }).catch(err => {
-        console.log(err);
-    })
-}
+const createBotData = async () => {
+	try {
+		const res = await bot.findOne({ _id: "bot" });
+		if (res == null) {
+			await bot.insertOne({
+				_id: "bot",
+				youtube_session: "",
+			});
+		}
+	} catch (err) {
+		console.log(err);
+	}
+};
 
 const getBotData = async () => {
-    return await bot.findOne({ _id: "bot" }).then(res => {
-        return res;
-    }).catch(err => {
-        return -1;
-    });
-}
+	try {
+		const res = await bot.findOne({ _id: "bot" });
+		return res;
+	} catch (err) {
+		return -1;
+	}
+};
 
 module.exports = { getBotData, createBotData, bot };

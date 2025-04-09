@@ -1,6 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
-const { downloadMediaMessage } = require("@adiwajshing/baileys");
+const { downloadMediaMessage } = require("baileys");
 const { writeFile } = require('fs/promises');
 
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };

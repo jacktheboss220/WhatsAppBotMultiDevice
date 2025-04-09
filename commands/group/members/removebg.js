@@ -8,7 +8,7 @@ const path = require('path')
 const removebgAPI = REMOVE_BG_KEY
 const { writeFile } = require('fs/promises')
 
-const { downloadContentFromMessage } = require('@adiwajshing/baileys')
+const { downloadContentFromMessage } = require('baileys')
 
 const getRandom = ext => {
   return `${Math.floor(Math.random() * 10000)}${ext}`

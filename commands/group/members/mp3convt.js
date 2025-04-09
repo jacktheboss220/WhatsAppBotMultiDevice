@@ -1,4 +1,4 @@
-const { downloadMediaMessage } = require("@adiwajshing/baileys");
+const { downloadMediaMessage } = require("baileys");
 
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');

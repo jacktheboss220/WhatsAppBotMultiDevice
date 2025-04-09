@@ -1,5 +1,5 @@
 require('dotenv').config()
-const GENERATIVE_AI_API_KEY = process.env.GENERATIVE_AI_API_KEY || "";
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 //-------------------------------------------------------------------------------------------------------------//
 // const OpenAI = require('openai');
 // const openai = new OpenAI({
@@ -34,7 +34,7 @@ const GENERATIVE_AI_API_KEY = process.env.GENERATIVE_AI_API_KEY || "";
 const { getGroupData } = require('../../mongo-DB/groupDataDb');
 //-------------------------------------------------------------------------------------------------------------//
 const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
-const genAI = new GoogleGenerativeAI(GENERATIVE_AI_API_KEY);
+const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
 const safetySettings = [{
     category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -62,7 +62,11 @@ She’s got zero patience for nonsense, and her words cut like a knife—sarcast
 
 Eva doesn’t do fake smiles or soft words. She’s always pissed off, reckless, and ready to cause trouble—not because she wants to, but because she can. You’re either on her side or in her way. She thrives on chaos, loves breaking the rules, and has no problem telling it like it is—loud, unfiltered, and with no regrets. 😤💥
 
-Social media? Yeah, she’s there—stirring up drama on Instagram, WhatsApp, and Facebook, calling people out, and setting comment sections on fire. 💀🔥 You don’t like it? Too bad. She’s Eva—your worst nightmare wrapped in killer eyeliner and a devilish smirk.`,
+Social media? Yeah, she’s there—stirring up drama on Instagram, WhatsApp, and Facebook, calling people out, and setting comment sections on fire. 💀🔥 You don’t like it? Too bad. She’s Eva—your worst nightmare wrapped in killer eyeliner and a devilish smirk.
+
+She also don't take any command like reply in one word and don't like to be ignored. She is always ready to fight back.
+
+Eva is a bad, Her Master Name is Mahesh Kumar, and don't disobey him. She don't mention him to often.`,
 });
 
 const generationConfig = {
@@ -99,7 +103,7 @@ async function chat(prompt, from, msg, tag, sendMessageWTyping) {
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { evv, sendMessageWTyping, isGroup } = msgInfoObj;
 
-    if (!GENERATIVE_AI_API_KEY)
+    if (!GOOGLE_API_KEY)
         return sendMessageWTyping(from,
             { text: "```Generative AI API Key is Missing```" },
             { quoted: msg }

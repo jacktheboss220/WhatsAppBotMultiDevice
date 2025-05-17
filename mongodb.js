@@ -1,8 +1,7 @@
 require("dotenv").config();
-//-------------------------------------------------------------------------------------------------------------//
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri = `${process.env.MONGODB_KEY}`;
-//-------------------------------------------------------------------------------------------------------------//
+
+const uri = process.env.MONGODB_KEY;
 const mdClient = new MongoClient(uri, {
 	serverApi: {
 		version: ServerApiVersion.v1,
@@ -10,28 +9,23 @@ const mdClient = new MongoClient(uri, {
 		deprecationErrors: true,
 	},
 });
-//-------------------------------------------------------------------------------------------------------------/
+
 (async () => {
-	let flag = false;
-	await mdClient
-		.connect()
-		.then(() => {
-			console.log("Connected to Database");
-		})
-		.catch((err) => {
-			console.log(err);
-		});
-	const db = mdClient.db("MyBotDataDB");
-	const collection = await db.collections();
-	collection.forEach((ele) => {
-		if (ele.namespace == "MyBotDataDB.AuthTable") {
-			flag = true;
+	try {
+		await mdClient.connect();
+		console.log("Connected to MongoDB");
+
+		const db = mdClient.db("MyBotDataDB");
+		const collections = await db.listCollections().toArray();
+		const collectionNames = collections.map((col) => col.name);
+
+		if (!collectionNames.includes("AuthTable")) {
+			await db.createCollection("AuthTable");
+			console.log("Created AuthTable collection");
 		}
-	});
-	if (flag == false) {
-		await db.createCollection("AuthTable");
+	} catch (err) {
+		console.error("Error connecting to MongoDB:", err);
 	}
 })();
-//-------------------------------------------------------------------------------------------------------------//
 
 module.exports = mdClient;

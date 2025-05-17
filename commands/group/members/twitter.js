@@ -12,9 +12,9 @@ const client = new TwitterApi(process.env.TWITTER_BEARER_TOKEN);
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { evv, sendMessageWTyping } = msgInfoObj;
 	if (!args[0]) return sendMessageWTyping(from, { text: "Provide Twitter Video URL." }, { quoted: msg });
-	let link = args[0];
+	let tweetUrl = args[0];
 
-	if (!link.startsWith("http"))
+	if (!tweetUrl.startsWith("http"))
 		return sendMessageWTyping(from, { text: "Provide Twitter Video URL." }, { quoted: msg });
 
 	let url = `Direct link for ${evv}\n\n`;

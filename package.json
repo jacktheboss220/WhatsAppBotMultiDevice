@@ -18,12 +18,14 @@
   "author": "mahesh kumar",
   "license": "MIT",
   "dependencies": {
+    "@distube/yt-dlp": "^2.0.1",
     "@distube/ytdl-core": "^4.15.9",
     "@erickwendel/meme-maker": "^3.0.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google/generative-ai": "^0.21.0",
-    "axios": "^1.7.9",
+    "axios": "^1.8.4",
     "baileys": "^6.7.16",
+    "canvas": "^3.1.0",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -50,5 +52,5 @@
     "yt-search": "^2.12.1",
     "ytdl-core": "^4.11.5"
   },
-  "repository": "https://github.com/jacktheboss220/WhatsAppBotMultiDevice.git"
+  "repository": "https://github.com/jacktheboss220/WhatsAppBotMultiDevice-decrypted.git"
 }

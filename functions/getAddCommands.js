@@ -47,13 +47,15 @@ const cmdToText = () => {
 	let adminCommands = [];
 	let publicCommands = [];
 	let ownerCommands = [];
+	let directCommands = [];
 
 	return new Promise(async (resolve, reject) => {
+		await loadCommands(mainPath + "public/", {}, directCommands);
 		await loadCommands(mainPath + "public/", {}, publicCommands);
 		await loadCommands(mainPath + "group/members/", {}, publicCommands);
 		await loadCommands(mainPath + "group/admins/", {}, adminCommands);
 		await loadCommands(mainPath + "owner/", {}, ownerCommands);
-		resolve({ publicCommands, adminCommands, ownerCommands });
+		resolve({ publicCommands, adminCommands, ownerCommands, directCommands });
 	});
 };
 

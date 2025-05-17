@@ -1,39 +1,54 @@
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { botNumberJid, sendMessageWTyping, groupAdmins, senderJid } = msgInfoObj;
+	const { botNumberJid, sendMessageWTyping, groupAdmins, senderJid } = msgInfoObj;
 
 	try {
+		// Check if the message is a reply
 		if (!msg.message.extendedTextMessage) {
-			return sendMessageWTyping(from, { text: `❎ Tag a message of to delete.` }, { quoted: msg });
+			return sendMessageWTyping(from, { text: `❎ Tag a message to delete.` }, { quoted: msg });
 		}
 
-		if (!(msg.message.extendedTextMessage.contextInfo.participant == botNumberJid)) {
-			if (!groupAdmins.includes(senderJid))
-				return sendMessageWTyping(from, { text: `❎ Only admin can delete others message` }, { quoted: msg });
+		// Check if the sender is authorized to delete messages
+		const senderIsAdmin = groupAdmins.includes(senderJid);
+		const botIsAdmin = groupAdmins.includes(botNumberJid);
+		const isBotMessage = msg.message.extendedTextMessage.contextInfo.participant === botNumberJid;
 
-			if (!groupAdmins.includes(botNumberJid))
+		if (!isBotMessage) {
+			if (!senderIsAdmin) {
 				return sendMessageWTyping(
 					from,
-					{ text: `❎ Bot need to be admin in order to delete others message` },
+					{ text: `❎ Only admins can delete others' messages.` },
 					{ quoted: msg }
 				);
+			}
+
+			if (!botIsAdmin) {
+				return sendMessageWTyping(
+					from,
+					{ text: `❎ Bot needs to be admin to delete others' messages.` },
+					{ quoted: msg }
+				);
+			}
 		}
 
-		let options = {
+		// Prepare options for deleting the message
+		const options = {
 			remoteJid: from,
 			fromMe: false,
 			id: msg.message.extendedTextMessage.contextInfo.stanzaId,
 			participant: msg.message.extendedTextMessage.contextInfo.participant,
 		};
 
-		if (msg.message.extendedTextMessage.contextInfo.participant == botNumberJid) {
+		// If the message is from the bot, delete its own message
+		if (isBotMessage) {
 			options.remoteJid = botNumberJid;
 			options.fromMe = true;
 		}
 
-		sock.sendMessage(from, { delete: options });
+		// Send the delete message request
+		await sock.sendMessage(from, { delete: options });
 	} catch (err) {
-		console.log(err);
-		sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+		console.error("Error deleting message:", err);
+		sendMessageWTyping(from, { text: `❎ Error deleting message: ${err.toString()}` }, { quoted: msg });
 	}
 };
 

@@ -11,6 +11,7 @@ const path = require("path");
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 app.set("views", path.join(__dirname, "./public"));
 app.set("view engine", "ejs");
@@ -48,16 +49,17 @@ const wss = new WebSocket.Server({ server });
 
 (async () => {
 	const sock = await startSock("start");
-	sock.ev.on("connection.update", (update) => {
-		const { qr } = update;
-		if (qr) {
-			wss.clients.forEach((client) => {
-				if (client.readyState === WebSocket.OPEN) {
-					client.send(qr);
-				}
-			});
-		}
-	});
+        sock.ev.on("connection.update", (update) => {
+                const { qr, connection } = update;
+                if (qr || connection) {
+                        const message = JSON.stringify({ qr, connection });
+                        wss.clients.forEach((client) => {
+                                if (client.readyState === WebSocket.OPEN) {
+                                        client.send(message);
+                                }
+                        });
+                }
+        });
 
 	app.post("/send", async (req, res) => {
 		const { to, message } = req.body;

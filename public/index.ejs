@@ -1,23 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eva - The Bot</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
-
 <body>
   <h1>Eva - The Bot</h1>
-  <div id="qrcode"></div>
+  <p>Scan the QR code to connect your WhatsApp account.</p>
+  <div id="qrcode" class="qr"></div>
+  <div id="connection" class="connection"></div>
+
+  <h2>Send a Message</h2>
+  <form id="sendForm">
+    <input type="text" id="to" placeholder="Recipient number" required>
+    <input type="text" id="message" placeholder="Your message" required>
+    <button type="submit">Send</button>
+  </form>
+  <div id="status"></div>
+
   <script>
     const socket = new WebSocket('ws://' + window.location.host);
     socket.onmessage = function (event) {
-      const qrCode = event.data;
+      const data = JSON.parse(event.data);
       const qrCodeDiv = document.getElementById('qrcode');
-      qrCodeDiv.innerHTML = `<img src="${qrCode}" alt="QR Code" />`;
+      const connDiv = document.getElementById('connection');
+      if (data.qr) {
+        qrCodeDiv.innerHTML = `<img src="${data.qr}" alt="QR Code" />`;
+      }
+      if (data.connection) {
+        connDiv.textContent = `State: ${data.connection}`;
+        if (data.connection === 'open') {
+          qrCodeDiv.innerHTML = '';
+        }
+      }
     };
+
+    const form = document.getElementById('sendForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const to = document.getElementById('to').value;
+      const message = document.getElementById('message').value;
+      const statusDiv = document.getElementById('status');
+      try {
+        const res = await fetch('/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to, message })
+        });
+        const data = await res.json();
+        statusDiv.textContent = data.message;
+      } catch (err) {
+        statusDiv.textContent = 'Error sending message';
+      }
+    });
   </script>
 </body>
-
 </html>

@@ -15,3 +15,5 @@ baileys_store_multi.json
 # indexMongodb.js
 # mongodb.js
 .fake
+cookie.json
+# logs

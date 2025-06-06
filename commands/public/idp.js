@@ -2,7 +2,7 @@ const axios = require("axios");
 const { getBotData } = require("../../mongo-DB/botDataDb");
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, ownerSend, ig } = msgInfoObj;
+	const { sendMessageWTyping } = msgInfoObj;
 	if (!args[0] || args[0].includes("http"))
 		return sendMessageWTyping(from, { text: `*Provide Username*` }, { quoted: msg });
 	let prof = args[0];
@@ -49,19 +49,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				}
 			})
 			.catch(async (err) => {
-				//     await ig.fetchUser(prof).then(async (res) => {
-				//         await sendMessageWTyping(from,
-				//             {
-				//                 image: { url: res.hd_profile_pic_url_info.url },
-				//                 caption: `Sent by eva`
-				//             },
-				//             { quoted: msg }
-				//         )
-				//         ownerSend(JSON.stringify(res, "", 2, 100));
-				//     }).catch((err) => {
-				//         console.log("Error", err);
 				sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-				//     });
 			});
 	} else {
 		sendMessageWTyping(from, { text: `*No Key is Set*` }, { quoted: msg });

@@ -1,5 +1,3 @@
-const fs = require("fs");
-const { readdir } = require("fs/promises");
 const { stopInterval } = require("./getInterval");
 const { DisconnectReason } = require("baileys");
 

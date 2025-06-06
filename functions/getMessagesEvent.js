@@ -1,1058 +1,279 @@
-function _0x6580() {
-	const _0x4c41b2 = [
-		"2970fugzuo",
-		"join",
-		"Zvwrl",
-		"FXyMb",
-		"[FROM]",
-		"./media/ta",
-		"NRQJy",
-		"selectedDi",
-		"3115645TGgbFD",
-		"startsWith",
-		"contextInf",
-		"QwGik",
-		"u\x20just",
-		"तू\x20अकेला",
-		"u\x20onli",
-		"this\x20group",
-		"k\x20the\x20Owne",
-		"DqgbH",
-		"you\x20just",
-		"singleSele",
-		"stickerMes",
-		"@s.whatsap",
-		"qzJwY",
-		"SVLiZ",
-		"qTjYd",
-		"xZDpj",
-		"uCaFi",
-		"selectedBu",
-		"QiKNU",
-		"35745811@g",
-		"g.webp",
-		"9RXwwZn",
-		"tumse",
-		"slSQM",
-		"vVglE",
-		":groupMeta",
-		"tOTpY",
-		"cVJCX",
-		"MY_NUMBER",
-		"seMessage",
-		"UUU",
-		"EAXfE",
-		"ctReply",
-		"312gdKrMP",
-		"listRespon",
-		"sticker",
-		"isBotOn",
-		"DHjVB",
-		"tu\x20hi",
-		"baileys",
-		"eJnLQ",
-		"tooo",
-		"isChatBotO",
-		"you\x20alone",
-		"PYVBc",
-		"TtFLM",
-		"tumhe",
-		"LtwWL",
-		"help\x20```",
-		"jIPvW",
-		"lGlhS",
-		"mhFxT",
-		"VCroG",
-		"Ixvgm",
-		"BiKet",
-		"तुझको",
-		"lxlJe",
-		"shift",
-		"tXFfP",
-		"FKYfB",
-		"remoteJid",
-		"Groups!```",
-		"Admins",
-		"hdMiJ",
-		"command\x20is",
-		"B/groupDat",
-		"ponseMessa",
-		"HTgNW",
-		"DtNkU",
-		"VxoMP",
-		"AEBFN",
-		"EYGyj",
-		"AcHLK",
-		"user",
-		"Pqkzl",
-		"hfobe",
-		"eaPge",
-		"28149hisBgr",
-		"XxFbO",
-		"sendMessag",
-		"tmmmm",
-		"1901667735",
-		"key",
-		"cmdBlocked",
-		"aUWwc",
-		"group",
-		"videoMessa",
-		"ttonReplyM",
-		"UtBNt",
-		"DUeyW",
-		"rggCU",
-		"kvSEH",
-		"1203630246",
-		"```🤭\x20kya\x20m",
-		"you",
-		"```By\x20defa",
-		"log",
-		"uklXh",
-		"u\x20onlyyy",
-		"cXikt",
-		"ceUpdate",
-		"map",
-		"xWASx",
-		"keys",
-		")\x20in\x20",
-		"zMcGg",
-		"ata",
-		"XuYJU",
-		"subject",
-		"paused",
-		"zyHtp",
-		"tjhse",
-		"You",
-		"dotenv",
-		"kerForward",
-		"Youuu",
-		"then",
-		"PRNSs",
-		"AmUeV",
-		"nViKs",
-		"name",
-		"94405029@g",
-		"slice",
-		"Lyktu",
-		"```",
-		"tujhe",
-		"get",
-		"uuu",
-		"tKUwS",
-		"tmko",
-		"yRewr",
-		"p.net",
-		"stringify",
-		"env",
-		"./getAddCo",
-		"participan",
-		"wId",
-		"meZeR",
-		"xtMessage",
-		"kEiag",
-		"tjh",
-		"you\x20onli",
-		"ho.```",
-		"ogsYu",
-		"CZrGL",
-		"\x20only\x20appl",
-		"gemini",
-		"AupyQ",
-		"SajtW",
-		"split",
-		"ate.\x0a\x0aUse\x20",
-		"composing",
-		"exports",
-		"तुम\x20सिर्फ",
-		"cvrsG",
-		"tu\x20only",
-		"16188056@g",
-		"SALiJ",
-		"qVIdv",
-		"groupMetad",
-		"isBlock",
-		"JJbyU",
-		"तुझसे",
-		"aDb",
-		"u\x20only",
-		"WhAcX",
-		"toLowerCas",
-		"Send",
-		"90@g.us",
-		"तू\x20ही",
-		"[name]",
-		"set",
-		"config",
-		"atlab\x20tum\x20",
-		"mere\x20owner",
-		"WJdyk",
-		"Uuu",
-		"\x20!!Use\x20",
-		"imageMessa",
-		"floor",
-		"FNoeD",
-		"QaYTi",
-		"\x20by\x20",
-		"lZmbO",
-		"data",
-		"readFileSy",
-		"endsWith",
-		"cjNBA",
-		"uUydn",
-		"ns/getStic",
-		"SBndg",
-		"OVxZm",
-		"DJidc",
-		"title",
-		"uJupv",
-		"readMessag",
-		"isAutoStic",
-		"34Vamvqi",
-		"text",
-		"../mongo-D",
-		"ult,\x20bot\x20i",
-		"PREFIX",
-		"slsSA",
-		"mLMrG",
-		"u\x20alone",
-		"egtzt",
-		"fromMe",
-		"dev",
-		"matchedCou",
-		"pushName",
-		"CgVNF",
-		"lKkEm",
-		"wTJjy",
-		"xVTvv",
-		"MODERATORS",
-		"BkvQg",
-		"OtGIV",
-		"EnKRh",
-		"TdxKL",
-		"aXJql",
-		"mmands",
-		"admin\x20nhi\x20",
-		"../functio",
-		"B/membersD",
-		"conversati",
-		"1203630312",
-		"onQJB",
-		"fVJMD",
-		"nFppu",
-		"तुझको\x20ही",
-		"ocked\x20for\x20",
-		"UzoXk",
-		"19959ePrvfZ",
-		"XmXUN",
-		"9183185854",
-		"jEdJN",
-		"splayText",
-		"./getOwner",
-		"zDBfN",
-		"random",
-		"trim",
-		"qOqfi",
-		"तुझ\x20ही",
-		"buttonsRes",
-		"updateOne",
-		"```❎\x20This\x20",
-		"📝:\x20",
-		"match",
-		"तुम\x20ही",
-		"trFdX",
-		"gWzEM",
-		"caption",
-		"tjhko",
-		"joYUo",
-		"ataDb",
-		"includes",
-		"7-16303344",
-		"sage",
-		"r\x20to\x20activ",
-		"templateBu",
-		"AqRXk",
-		"RfDxG",
-		"mBCbH",
-		"Command\x20bl",
-		"तुम्हे",
-		"yRjRi",
-		"lHBGQ",
-		"juHeR",
-		"Directs",
-		"sendPresen",
-		"तुम",
-		"ykHYU",
-		"GyqDB",
-		"tum",
-		"[IN]",
-		"mentionedJ",
-		"NmQYm",
-		"CgQty",
-		"ttonId",
-		"length",
-		"MIZOo",
-		"xjhYG",
-		"\x20group.\x0aAs",
-		"tumhi",
-		"1203633042",
-		"ff\x20in\x20this",
-		"message",
-		"eated",
-		"YOU",
-		"तुम\x20अकेले",
-		"[COMMAND]",
-		"Sticker\x20Cr",
-		"tumse\x20hi",
-		"449958NrndNt",
-		"imNzA",
-		"s\x20turned\x20o",
-		"658336rRULfj",
-		"49nYcHJM",
-		"cjpxT",
-		"307044FYnQeW",
-		"7446008zftyAo",
-		"OlCLu",
-		"jCayC",
-		"tum\x20onli",
-		"3QGaRFr",
-		"eRrjZ",
-		"QNyuv",
-		"@g.us",
-		"tujhe\x20only",
-		"kerOn",
-		"hZIeh",
-		"you\x20only",
-		"./getGroup",
-		"sPFLo",
-		"tujhe\x20hi",
-		"selectedRo",
-		"acRMc",
-		"AAZHG",
-		"youuuu",
-		"eva",
-		"\x20nhi\x20ho.``",
-		".us",
-		"tum\x20hi",
-		"icable\x20in\x20",
-		"extendedTe",
-		"essage",
-	];
-	_0x6580 = function () {
-		return _0x4c41b2;
+require("dotenv").config();
+const { delay } = require("baileys");
+
+const fs = require("fs");
+
+const logOwner = require("./getOwnerSend");
+
+const prefix = process.env.PREFIX;
+const moderatos = [...process.env.MODERATORS?.split(",")];
+const getGroupAdmins = require("./getGroupAdmins");
+
+const { stickerForward, forwardGroup } = require("../functions/getStickerForward");
+const { createMembersData, getMemberData, member } = require("../mongo-DB/membersDataDb");
+const { createGroupData, getGroupData, group } = require("../mongo-DB/groupDataDb");
+const { commandsPublic, commandsMembers, commandsAdmins, commandsOwners } = require("./getAddCommands");
+const myNumber = process.env.MY_NUMBER;
+
+const getCommand = async (sock, msg, cache) => {
+	const startTime = process.hrtime();
+	//-------------------------------------------------------------------------------------------------------------//
+	const sendMessageWTyping = async (jid, option1, option2) => {
+		// await sock.presenceSubscribe(jid);
+		// await delay(500);
+
+		await sock.sendPresenceUpdate("composing", jid);
+		await delay(2000);
+		await sock.sendPresenceUpdate("paused", jid);
+
+		await sock.sendMessage(jid, option1, {
+			...option2,
+			mediaUploadTimeoutMs: 1000 * 60 * 60,
+		});
 	};
-	return _0x6580();
-}
-const _0xc0e935 = _0x1177;
-(function (_0x1c93ed, _0x1db901) {
-	const _0x10d25a = _0x1177,
-		_0x2ff21f = _0x1c93ed();
-	while (!![]) {
-		try {
-			const _0x2d33aa =
-				(parseInt(_0x10d25a(0x1b5)) / (-0xd7f + -0x2 * 0x4f4 + 0x1768)) *
-					(parseInt(_0x10d25a(0x192)) / (-0x1a1 * -0x13 + -0x1 * 0x1387 + -0xb6a)) +
-				(-parseInt(_0x10d25a(0x1fd)) / (0xf63 + 0x7f * -0x40 + -0x20c * -0x8)) *
-					(parseInt(_0x10d25a(0x1f5)) / (-0x1b6d * -0x1 + -0x1 * 0x571 + 0xafc * -0x2)) +
-				-parseInt(_0x10d25a(0x21b)) / (-0x20ff + 0x16e9 + -0xd * -0xc7) +
-				(parseInt(_0x10d25a(0x1f2)) / (-0xe * -0x10d + 0x1 * -0xc3e + 0x272 * -0x1)) *
-					(parseInt(_0x10d25a(0x1f6)) / (-0x383 * -0x8 + -0x58 * -0xe + -0x20e1)) +
-				(parseInt(_0x10d25a(0x1f9)) / (0x229 + -0x74a * -0x3 + -0x1 * 0x17ff)) *
-					(-parseInt(_0x10d25a(0x232)) / (0x4 + 0x1f4a + -0x1f45)) +
-				(-parseInt(_0x10d25a(0x213)) / (-0x1 * 0xbca + -0xd * -0xad + -0x30b * -0x1)) *
-					(-parseInt(_0x10d25a(0x26a)) / (-0x895 + 0x9 * 0x159 + -0x381)) +
-				(parseInt(_0x10d25a(0x1f8)) / (0x1e50 + -0x6d7 + -0x176d)) *
-					(parseInt(_0x10d25a(0x23e)) / (0x12d2 + -0x151e + 0x259 * 0x1));
-			if (_0x2d33aa === _0x1db901) break;
-			else _0x2ff21f["push"](_0x2ff21f["shift"]());
-		} catch (_0x4540e8) {
-			_0x2ff21f["push"](_0x2ff21f["shift"]());
+	//-------------------------------------------------------------------------------------------------------------//
+	const from = msg.key.remoteJid;
+	const content = JSON.stringify(msg.message);
+	const type = Object.keys(msg.message)[0];
+
+	//-------------------------------------------------------------------------------------------------------------//
+	if (type === "stickerMessage" && forwardGroup != "") {
+		stickerForward(sock, msg, from);
+	}
+	//-------------------------------------------------------------------------------------------------------------//
+	let botNumberJid = sock.user.id;
+	botNumberJid = botNumberJid.includes(":") ? botNumberJid.split(":")[0] + "@s.whatsapp.net" : botNumberJid;
+	//-------------------------------------------------------------------------------------------------------------//
+	//--------------------------------------------------BODY-------------------------------------------------------//
+	//-------------------------------------------------------------------------------------------------------------//
+	let body =
+		type === "conversation"
+			? msg.message.conversation
+			: type == "imageMessage" && msg.message.imageMessage.caption
+			? msg.message.imageMessage.caption
+			: type == "videoMessage" && msg.message.videoMessage.caption
+			? msg.message.videoMessage.caption
+			: type == "extendedTextMessage" && msg.message.extendedTextMessage.text
+			? msg.message.extendedTextMessage.text
+			: type == "buttonsResponseMessage"
+			? msg.message.buttonsResponseMessage.selectedDisplayText
+			: type == "templateButtonReplyMessage"
+			? msg.message.templateButtonReplyMessage.selectedDisplayText
+			: type == "listResponseMessage"
+			? msg.message.listResponseMessage.title
+			: "";
+
+	// console.log("Type:", type, "Body:", body);
+	let types = [
+		"conversation",
+		"imageMessage",
+		"videoMessage",
+		"extendedTextMessage",
+		"buttonsResponseMessage",
+		"templateButtonReplyMessage",
+		"listResponseMessage",
+	];
+
+	if (!types.includes(type)) {
+		// console.log("Invalid type or body", "Type:", type);
+		return;
+	}
+	//-------------------------------------------------------------------------------------------------------------//
+	//-------------------------------------------------------------------------------------------------------------//
+	//-------------------------------------------------------------------------------------------------------------//
+	if (body[1] == " ") body = body[0] + body.slice(2);
+	const evv = body.trim().split(/ +/).slice(1).join(" ");
+	const command = body.slice(1).trim().split(/ +/).shift().toLowerCase();
+	const args = body.trim().split(/ +/).slice(1);
+	//-------------------------------------------------------------------------------------------------------------//
+	const isCmd = body.startsWith(prefix);
+	if (!isCmd && type == "stickerMessage") return;
+	//-------------------------------------------------------------------------------------------------------------//
+	const isGroup = from.endsWith("@g.us");
+	const senderJid = isGroup ? msg.key.participant : msg.key.remoteJid;
+	const isOwner = senderJid == myNumber ? true : false;
+
+	if (senderJid == "" || senderJid == null) return;
+	//--------------------------------------------------Count------------------------------------------------------//
+	const updateId = msg.key.fromMe ? botNumberJid : senderJid;
+	const updateName = msg.key.fromMe ? sock.user.name : msg.pushName;
+	if (type == "conversation" || type == "extendedTextMessage") {
+		member.updateOne({ _id: updateId }, { $inc: { totalmsg: 1 } }, { $set: { username: updateName } }); //19-10-2022
+		createMembersData(updateId, updateName);
+	}
+	//-------------------------------------------------------------------------------------------------------------//
+	let groupMetadata = "";
+	if (isGroup && (type == "conversation" || type == "extendedTextMessage")) {
+		groupMetadata = cache.get(from + ":groupMetadata");
+		if (!groupMetadata) {
+			groupMetadata = await sock.groupMetadata(from);
+			const success = cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
+			createGroupData(from, groupMetadata);
+		}
+		group
+			.updateOne(
+				{ _id: from, "members.id": updateId },
+				{
+					$inc: { "members.$.count": 1 },
+					$set: { "members.$.name": updateName },
+				}
+			)
+			.then((r) => {
+				if (r.matchedCount == 0) {
+					group.updateOne(
+						{ _id: from },
+						{
+							$push: {
+								members: { id: updateId, name: updateName, count: 1 },
+							},
+						}
+					);
+				}
+			});
+		group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } }); //19-10-2022
+	}
+	//-------------------------------------------------------------------------------------------------------------//
+	if (msg.message.extendedTextMessage) {
+		if (msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumberJid) {
+			sock.sendMessage(from, { sticker: fs.readFileSync("./media/tag.webp") }, { quoted: msg });
 		}
 	}
-})(_0x6580, 0x24d7 * -0x31 + -0xf7730 + 0x1e7334),
-	require(_0xc0e935(0x13e))[_0xc0e935(0x179)]();
-function _0x1177(_0x587629, _0x429270) {
-	const _0x340c59 = _0x6580();
-	return (
-		(_0x1177 = function (_0xded6f0, _0x32daa5) {
-			_0xded6f0 = _0xded6f0 - (-0x435 + -0x837 + 0x42 * 0x35);
-			let _0x113123 = _0x340c59[_0xded6f0];
-			return _0x113123;
-		}),
-		_0x1177(_0x587629, _0x429270)
-	);
-}
-const { delay } = require(_0xc0e935(0x244)),
-	fs = require("fs"),
-	ownerSend_sock = require(_0xc0e935(0x1ba) + _0xc0e935(0x174)),
-	prefix = process[_0xc0e935(0x152)][_0xc0e935(0x196)],
-	moderatos = [_0xc0e935(0x1b7) + "18", ...process[_0xc0e935(0x152)][_0xc0e935(0x1a3)]?.[_0xc0e935(0x162)](",")],
-	getGroupAdmins = require(_0xc0e935(0x205) + _0xc0e935(0x25b)),
-	{ stickerForward, forwardGroup } = require(_0xc0e935(0x1ab) + _0xc0e935(0x18a) + _0xc0e935(0x13f)),
-	{ createMembersData, getMemberData, member } = require(_0xc0e935(0x194) + _0xc0e935(0x1ac) + _0xc0e935(0x1cb)),
-	{ createGroupData, getGroupData, group } = require(_0xc0e935(0x194) + _0xc0e935(0x25e) + _0xc0e935(0x170)),
-	{ commandsPublic, commandsMembers, commandsAdmins, commandsOwners } = require(_0xc0e935(0x153) + _0xc0e935(0x1a9)),
-	myNumber = process[_0xc0e935(0x152)][_0xc0e935(0x239)],
-	getCommand = async (_0x3c9bd7, _0xdc7c15, _0x5a3770) => {
-		const _0x4bd2fa = _0xc0e935,
-			_0x57617e = {
-				hfobe: function (_0x33338c, _0x5e1fc9, _0x162e1e, _0x1b78ba) {
-					return _0x33338c(_0x5e1fc9, _0x162e1e, _0x1b78ba);
-				},
-				Pqkzl: _0x4bd2fa(0x164),
-				Lyktu: function (_0x58b523, _0x37f825) {
-					return _0x58b523(_0x37f825);
-				},
-				ogsYu: _0x4bd2fa(0x28a),
-				aXJql: function (_0x18130a, _0x19cc6f) {
-					return _0x18130a * _0x19cc6f;
-				},
-				WhAcX: function (_0x497f76, _0x1530bb) {
-					return _0x497f76 * _0x1530bb;
-				},
-				jCayC: function (_0x36b213, _0x506c92) {
-					return _0x36b213 == _0x506c92;
-				},
-				zMcGg: function (_0x3afb39, _0x1490b7) {
-					return _0x3afb39 === _0x1490b7;
-				},
-				juHeR: _0x4bd2fa(0x227) + _0x4bd2fa(0x1ce),
-				uCaFi: function (_0x2b11f6, _0x10750d) {
-					return _0x2b11f6 != _0x10750d;
-				},
-				NRQJy: function (_0x4339bf, _0x4c73cd, _0xf3e3aa, _0x2fca7d) {
-					return _0x4339bf(_0x4c73cd, _0xf3e3aa, _0x2fca7d);
-				},
-				aUWwc: function (_0x1da066, _0x5f3a0a) {
-					return _0x1da066 + _0x5f3a0a;
-				},
-				cjpxT: _0x4bd2fa(0x228) + _0x4bd2fa(0x150),
-				VCroG: _0x4bd2fa(0x1ad) + "on",
-				CgQty: _0x4bd2fa(0x17f) + "ge",
-				AcHLK: function (_0x45f419, _0x29631d) {
-					return _0x45f419 == _0x29631d;
-				},
-				vVglE: _0x4bd2fa(0x273) + "ge",
-				lKkEm: function (_0x2ad8d7, _0x36dcdc) {
-					return _0x2ad8d7 == _0x36dcdc;
-				},
-				JJbyU: _0x4bd2fa(0x211) + _0x4bd2fa(0x157),
-				trFdX: _0x4bd2fa(0x1c0) + _0x4bd2fa(0x25f) + "ge",
-				MIZOo: function (_0x5103fb, _0x117e9f) {
-					return _0x5103fb == _0x117e9f;
-				},
-				OtGIV: _0x4bd2fa(0x1d0) + _0x4bd2fa(0x274) + _0x4bd2fa(0x212),
-				FKYfB: function (_0x438261, _0x40723e) {
-					return _0x438261 == _0x40723e;
-				},
-				PYVBc: _0x4bd2fa(0x23f) + _0x4bd2fa(0x23a),
-				OVxZm: function (_0x253b19, _0x1f6780) {
-					return _0x253b19 == _0x1f6780;
-				},
-				gWzEM: _0x4bd2fa(0x20c),
-				FXyMb: function (_0x5022fe, _0xb26b7a) {
-					return _0x5022fe == _0xb26b7a;
-				},
-				cvrsG: function (_0x5732d6, _0x10c5c0) {
-					return _0x5732d6 + _0x10c5c0;
-				},
-				UtBNt: function (_0x3de935, _0x2929ca) {
-					return _0x3de935 == _0x2929ca;
-				},
-				qzJwY: _0x4bd2fa(0x200),
-				EAXfE: function (_0x2f959a, _0x3d8d37, _0x3ee473) {
-					return _0x2f959a(_0x3d8d37, _0x3ee473);
-				},
-				jEdJN: function (_0x140cd1, _0x1bb586) {
-					return _0x140cd1 == _0x1bb586;
-				},
-				DJidc: _0x4bd2fa(0x236) + _0x4bd2fa(0x185),
-				RfDxG: function (_0x2b72d6, _0x248516) {
-					return _0x2b72d6 + _0x248516;
-				},
-				GyqDB: function (_0x5e8fd1, _0x170cd3) {
-					return _0x5e8fd1 == _0x170cd3;
-				},
-				qOqfi: _0x4bd2fa(0x218) + _0x4bd2fa(0x231),
-				nViKs: function (_0x93be0f, _0x3c4c72) {
-					return _0x93be0f(_0x3c4c72);
-				},
-				UzoXk: function (_0x4e0469, _0x1ee117) {
-					return _0x4e0469 == _0x1ee117;
-				},
-				eJnLQ: _0x4bd2fa(0x1f0) + _0x4bd2fa(0x1ec),
-				SVLiZ: _0x4bd2fa(0x240),
-				uJupv: _0x4bd2fa(0x26e) + _0x4bd2fa(0x1cd) + _0x4bd2fa(0x175),
-				SajtW: _0x4bd2fa(0x1e9) + _0x4bd2fa(0x230) + _0x4bd2fa(0x20e),
-				kvSEH: function (_0x46eb58, _0x685ec8) {
-					return _0x46eb58 == _0x685ec8;
-				},
-				kEiag: function (_0x1fc262, _0x11ae0d) {
-					return _0x1fc262 == _0x11ae0d;
-				},
-				wTJjy: function (_0x425eb1, _0x2c80e3) {
-					return _0x425eb1 == _0x2c80e3;
-				},
-				CZrGL: function (_0x222cc6, _0x6e944b) {
-					return _0x222cc6 == _0x6e944b;
-				},
-				AEBFN: _0x4bd2fa(0x15f),
-				PRNSs: function (_0x11121f, _0x1f0c50) {
-					return _0x11121f == _0x1f0c50;
-				},
-				fVJMD: function (_0x27a153, _0x4db95f) {
-					return _0x27a153 == _0x4db95f;
-				},
-				VxoMP: function (_0xcd5d77, _0x39d9fc) {
-					return _0xcd5d77 != _0x39d9fc;
-				},
-				AqRXk: function (_0x2ccd02, _0x240848) {
-					return _0x2ccd02 == _0x240848;
-				},
-				lxlJe: _0x4bd2fa(0x1ae) + _0x4bd2fa(0x146) + _0x4bd2fa(0x20e),
-				ykHYU: _0x4bd2fa(0x279) + _0x4bd2fa(0x169) + _0x4bd2fa(0x20e),
-				EnKRh: _0x4bd2fa(0x14c),
-				LtwWL: _0x4bd2fa(0x23b),
-				sPFLo: _0x4bd2fa(0x27b),
-				EYGyj: _0x4bd2fa(0x28d),
-				tOTpY: _0x4bd2fa(0x1ed),
-				uklXh: _0x4bd2fa(0x171),
-				DHjVB: _0x4bd2fa(0x221),
-				mhFxT: _0x4bd2fa(0x21f),
-				yRewr: _0x4bd2fa(0x199),
-				SBndg: _0x4bd2fa(0x204),
-				eaPge: _0x4bd2fa(0x15a),
-				DqgbH: _0x4bd2fa(0x225),
-				zyHtp: _0x4bd2fa(0x248),
-				HTgNW: _0x4bd2fa(0x17d),
-				meZeR: _0x4bd2fa(0x140),
-				WJdyk: _0x4bd2fa(0x27f),
-				joYUo: _0x4bd2fa(0x20b),
-				xWASx: _0x4bd2fa(0x1de),
-				lHBGQ: _0x4bd2fa(0x20f),
-				nFppu: _0x4bd2fa(0x24b),
-				QaYTi: _0x4bd2fa(0x14a),
-				XuYJU: _0x4bd2fa(0x168),
-				CgVNF: _0x4bd2fa(0x243),
-				AupyQ: _0x4bd2fa(0x1fc),
-				FNoeD: _0x4bd2fa(0x1e8),
-				BiKet: _0x4bd2fa(0x207),
-				Zvwrl: _0x4bd2fa(0x201),
-				TtFLM: _0x4bd2fa(0x233),
-				slSQM: _0x4bd2fa(0x1f1),
-				DtNkU: _0x4bd2fa(0x1db),
-				qVIdv: _0x4bd2fa(0x1d5),
-				xjhYG: _0x4bd2fa(0x16f),
-				cXikt: _0x4bd2fa(0x254),
-				egtzt: _0x4bd2fa(0x176),
-				onQJB: _0x4bd2fa(0x1c5),
-				QNyuv: _0x4bd2fa(0x1bf),
-				lZmbO: _0x4bd2fa(0x1b2),
-				imNzA: _0x4bd2fa(0x220),
-				mBCbH: _0x4bd2fa(0x1ee),
-				cVJCX: _0x4bd2fa(0x166),
-				BkvQg: _0x4bd2fa(0x14e),
-				slsSA: _0x4bd2fa(0x159),
-				uUydn: _0x4bd2fa(0x28c),
-				eRrjZ: _0x4bd2fa(0x1c9),
-				AAZHG: _0x4bd2fa(0x246),
-				lGlhS: _0x4bd2fa(0x26d),
-				NmQYm: function (_0x5c120b, _0x5be73c) {
-					return _0x5c120b * _0x5be73c;
-				},
-				TdxKL: function (_0x2d24d9, _0x2bfc17) {
-					return _0x2d24d9 != _0x2bfc17;
-				},
-				hdMiJ: function (_0x320cd9, _0x107143) {
-					return _0x320cd9(_0x107143);
-				},
-				SALiJ: _0x4bd2fa(0x1ef),
-				AmUeV: _0x4bd2fa(0x217),
-				jIPvW: _0x4bd2fa(0x177),
-				xVTvv: _0x4bd2fa(0x1df),
-				yRjRi: _0x4bd2fa(0x1d9),
-				DUeyW: function (_0x174b0d, _0x4debad) {
-					return _0x174b0d == _0x4debad;
-				},
-				OlCLu: _0x4bd2fa(0x272),
-				XxFbO: _0x4bd2fa(0x19c),
-				zDBfN:
-					_0x4bd2fa(0x27c) +
-					_0x4bd2fa(0x195) +
-					_0x4bd2fa(0x1f4) +
-					_0x4bd2fa(0x1ea) +
-					_0x4bd2fa(0x1e7) +
-					_0x4bd2fa(0x223) +
-					_0x4bd2fa(0x1cf) +
-					_0x4bd2fa(0x163) +
-					_0x4bd2fa(0x149),
-				tKUwS: function (_0x201919, _0x1a232a, _0x25cbb4, _0x147a7a) {
-					return _0x201919(_0x1a232a, _0x25cbb4, _0x147a7a);
-				},
-				mLMrG: function (_0x168bb0, _0x3bd7bd, _0x158730, _0x565052) {
-					return _0x168bb0(_0x3bd7bd, _0x158730, _0x565052);
-				},
-				QwGik: _0x4bd2fa(0x1c2) + _0x4bd2fa(0x25d) + _0x4bd2fa(0x15e) + _0x4bd2fa(0x210) + _0x4bd2fa(0x25a),
-				Ixvgm: function (_0x37c06c, _0x1d44ad, _0x30477a, _0xc1a9a8) {
-					return _0x37c06c(_0x1d44ad, _0x30477a, _0xc1a9a8);
-				},
-				QiKNU: function (_0x1c2edd, _0x5c2aae, _0x1384c8, _0x21c916) {
-					return _0x1c2edd(_0x5c2aae, _0x1384c8, _0x21c916);
-				},
-				qTjYd: _0x4bd2fa(0x27a) + _0x4bd2fa(0x17a) + _0x4bd2fa(0x1aa) + _0x4bd2fa(0x15b),
-				tXFfP: _0x4bd2fa(0x27a) + _0x4bd2fa(0x17a) + _0x4bd2fa(0x17b) + _0x4bd2fa(0x20d) + "`",
-				XmXUN: function (_0x4a1680, _0x59221f) {
-					return _0x4a1680 + _0x59221f;
-				},
-				cjNBA: function (_0x1f54bc, _0x8ff499) {
-					return _0x1f54bc + _0x8ff499;
-				},
-				rggCU: function (_0x1e933c, _0x53afcc) {
-					return _0x1e933c + _0x53afcc;
-				},
-				hZIeh: _0x4bd2fa(0x149),
-				xZDpj: _0x4bd2fa(0x17e),
-				acRMc: _0x4bd2fa(0x24d),
-			};
-		async function _0x1ae9cd(_0x22468c) {
-			const _0x306227 = _0x4bd2fa;
-			_0x57617e[_0x306227(0x268)](ownerSend_sock, _0x3c9bd7, _0x22468c, _0xdc7c15);
+	//--------------------------------------------------SENDER-----------------------------------------------------//
+	const senderNumber = senderJid.includes(":") ? senderJid.split(":")[0] : senderJid.split("@")[0];
+	const senderData = await getMemberData(senderJid);
+	const groupData = isGroup ? await getGroupData(from) : "";
+	//-------------------------------------------------------------------------------------------------------------//
+	if (isGroup && type == "imageMessage" && groupData?.isAutoStickerOn) {
+		if (msg.message.imageMessage.caption == "") {
+			console.log("Sticker Created");
+			commandsPublic["sticker"](sock, msg, from, args, {
+				senderJid,
+				type,
+				content,
+				isGroup,
+				sendMessageWTyping,
+				evv,
+			});
 		}
-		const _0xbc14df = async (_0x5d2be4, _0x478b01, _0x300f7d) => {
-				const _0x30f550 = _0x4bd2fa;
-				await _0x3c9bd7[_0x30f550(0x1da) + _0x30f550(0x281)](_0x57617e[_0x30f550(0x267)], _0x5d2be4),
-					await _0x57617e[_0x30f550(0x148)](delay, -0x921 + 0x7 * 0x187 + 0x640),
-					await _0x3c9bd7[_0x30f550(0x1da) + _0x30f550(0x281)](_0x57617e[_0x30f550(0x15c)], _0x5d2be4),
-					await _0x3c9bd7[_0x30f550(0x26c) + "e"](_0x5d2be4, _0x478b01, {
-						..._0x300f7d,
-						mediaUploadTimeoutMs: _0x57617e[_0x30f550(0x1a8)](
-							_0x57617e[_0x30f550(0x172)](
-								-0xd74 + -0x19ac + 0x48 * 0x99,
-								-0xbeb + -0xb65 * 0x3 + -0x172b * -0x2
-							),
-							0x20b + -0x210 * -0x4 + -0xa0f
-						),
-					});
-			},
-			_0x139444 = _0xdc7c15[_0x4bd2fa(0x26f)][_0x4bd2fa(0x259)],
-			_0x542bf9 = JSON[_0x4bd2fa(0x151)](_0xdc7c15[_0x4bd2fa(0x1eb)]),
-			_0x1f8b3b = Object[_0x4bd2fa(0x284)](_0xdc7c15[_0x4bd2fa(0x1eb)])[0x47 * -0x2d + 0x21fd + -0x1582];
-		_0x57617e[_0x4bd2fa(0x286)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1d8)]) &&
-			_0x57617e[_0x4bd2fa(0x22d)](forwardGroup, "") &&
-			_0x57617e[_0x4bd2fa(0x219)](stickerForward, _0x3c9bd7, _0xdc7c15, _0x139444);
-		let _0xf8c5f4 = _0x3c9bd7[_0x4bd2fa(0x266)]["id"];
-		_0xf8c5f4 = _0xf8c5f4[_0x4bd2fa(0x1cc)](":")
-			? _0x57617e[_0x4bd2fa(0x271)](
-					_0xf8c5f4[_0x4bd2fa(0x162)](":")[-0x1f7b + 0x5ad + 0x6 * 0x44d],
-					_0x57617e[_0x4bd2fa(0x1f7)]
-			  )
-			: _0xf8c5f4;
-		let _0x1eac3f = _0x57617e[_0x4bd2fa(0x286)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x251)])
-				? _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x1ad) + "on"]
-				: _0x57617e[_0x4bd2fa(0x1fb)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1e2)]) &&
-				  _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x17f) + "ge"][_0x4bd2fa(0x1c8)]
-				? _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x17f) + "ge"][_0x4bd2fa(0x1c8)]
-				: _0x57617e[_0x4bd2fa(0x265)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x235)]) &&
-				  _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x273) + "ge"][_0x4bd2fa(0x1c8)]
-				? _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x273) + "ge"][_0x4bd2fa(0x1c8)]
-				: _0x57617e[_0x4bd2fa(0x1a0)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x16e)]) &&
-				  _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x211) + _0x4bd2fa(0x157)][_0x4bd2fa(0x193)]
-				? _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x211) + _0x4bd2fa(0x157)][_0x4bd2fa(0x193)]
-				: _0x57617e[_0x4bd2fa(0x1fb)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1c6)])
-				? _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x1c0) + _0x4bd2fa(0x25f) + "ge"][
-						_0x4bd2fa(0x21a) + _0x4bd2fa(0x1b9)
-				  ]
-				: _0x57617e[_0x4bd2fa(0x1e5)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1a5)])
-				? _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x1d0) + _0x4bd2fa(0x274) + _0x4bd2fa(0x212)][
-						_0x4bd2fa(0x21a) + _0x4bd2fa(0x1b9)
-				  ]
-				: _0x57617e[_0x4bd2fa(0x258)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x249)])
-				? _0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x23f) + _0x4bd2fa(0x23a)][_0x4bd2fa(0x18e)]
-				: "",
-			_0x4ebc4d = [
-				_0x57617e[_0x4bd2fa(0x251)],
-				_0x57617e[_0x4bd2fa(0x1e2)],
-				_0x57617e[_0x4bd2fa(0x235)],
-				_0x57617e[_0x4bd2fa(0x16e)],
-				_0x57617e[_0x4bd2fa(0x1c6)],
-				_0x57617e[_0x4bd2fa(0x1a5)],
-				_0x57617e[_0x4bd2fa(0x249)],
-			];
-		if (!_0x4ebc4d[_0x4bd2fa(0x1cc)](_0x1f8b3b)) return;
-		if (_0x57617e[_0x4bd2fa(0x1a0)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1c6)])) {
-			if (
-				_0x57617e[_0x4bd2fa(0x18c)](
-					_0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x1c0) + _0x4bd2fa(0x25f) + "ge"][
-						_0x4bd2fa(0x22e) + _0x4bd2fa(0x1e3)
-					],
-					_0x57617e[_0x4bd2fa(0x1c7)]
-				)
-			)
-				_0x1eac3f = _0x1eac3f[_0x4bd2fa(0x21c)](prefix)
-					? _0x1eac3f
-					: _0x57617e[_0x4bd2fa(0x271)](prefix, _0x1eac3f);
-		} else {
-			if (_0x57617e[_0x4bd2fa(0x216)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1a5)]))
-				_0x1eac3f = _0x1eac3f[_0x4bd2fa(0x21c)](prefix)
-					? _0x1eac3f
-					: _0x57617e[_0x4bd2fa(0x271)](prefix, _0x1eac3f);
-			else {
-				if (_0x57617e[_0x4bd2fa(0x1e5)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x249)])) {
-					if (
-						_0x57617e[_0x4bd2fa(0x258)](
-							_0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x23f) + _0x4bd2fa(0x23a)][
-								_0x4bd2fa(0x226) + _0x4bd2fa(0x23d)
-							][_0x4bd2fa(0x208) + _0x4bd2fa(0x155)],
-							_0x57617e[_0x4bd2fa(0x1c7)]
-						)
-					)
-						_0x1eac3f = _0x1eac3f[_0x4bd2fa(0x21c)](prefix)
-							? _0x1eac3f
-							: _0x57617e[_0x4bd2fa(0x271)](prefix, _0x1eac3f);
-				}
-			}
-		}
-		if (_0x57617e[_0x4bd2fa(0x265)](_0x1eac3f[-0x50f * 0x1 + -0x19aa + 0x39 * 0x8a], "\x20"))
-			_0x1eac3f = _0x57617e[_0x4bd2fa(0x167)](
-				_0x1eac3f[-0x1e36 * -0x1 + 0x18 * -0x146 + 0x5a],
-				_0x1eac3f[_0x4bd2fa(0x147)](0x19 * -0xbf + -0x215f + -0x456 * -0xc)
-			);
-		const _0x4efc7f = _0x1eac3f[_0x4bd2fa(0x1bd)]()
-				[_0x4bd2fa(0x162)](/ +/)
-				[_0x4bd2fa(0x147)](-0x267e * 0x1 + -0xce * -0x10 + 0x199f)
-				[_0x4bd2fa(0x214)]("\x20"),
-			_0x136824 = _0x1eac3f[_0x4bd2fa(0x147)](0x1c8d + 0x5de + -0x2 * 0x1135)
-				[_0x4bd2fa(0x1bd)]()
-				[_0x4bd2fa(0x162)](/ +/)
-				[_0x4bd2fa(0x256)]()
-				[_0x4bd2fa(0x173) + "e"](),
-			_0x470686 = _0x1eac3f[_0x4bd2fa(0x1bd)]()
-				[_0x4bd2fa(0x162)](/ +/)
-				[_0x4bd2fa(0x147)](0x1f01 + -0x22d6 + -0x2 * -0x1eb),
-			_0x4b3364 = _0x1eac3f[_0x4bd2fa(0x21c)](prefix);
-		if (!_0x4b3364 && _0x57617e[_0x4bd2fa(0x275)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1d8)])) return;
-		const _0x312824 = _0x139444[_0x4bd2fa(0x187)](_0x57617e[_0x4bd2fa(0x229)]),
-			_0x2e6f5f = _0x312824
-				? _0xdc7c15[_0x4bd2fa(0x26f)][_0x4bd2fa(0x154) + "t"]
-				: _0xdc7c15[_0x4bd2fa(0x26f)][_0x4bd2fa(0x259)];
-		if (_0x57617e[_0x4bd2fa(0x1fb)](_0x2e6f5f, "") || _0x57617e[_0x4bd2fa(0x216)](_0x2e6f5f, null)) return;
-		const _0x33a04d = _0xdc7c15[_0x4bd2fa(0x26f)][_0x4bd2fa(0x19b)] ? _0xf8c5f4 : _0x2e6f5f,
-			_0x1b3c47 = _0xdc7c15[_0x4bd2fa(0x26f)][_0x4bd2fa(0x19b)]
-				? _0x3c9bd7[_0x4bd2fa(0x266)][_0x4bd2fa(0x145)]
-				: _0xdc7c15[_0x4bd2fa(0x19e)];
-		(_0x57617e[_0x4bd2fa(0x1fb)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x251)]) ||
-			_0x57617e[_0x4bd2fa(0x1fb)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x16e)])) &&
-			(member[_0x4bd2fa(0x1c1)](
-				{ _id: _0x33a04d },
-				{ $inc: { totalmsg: 0x1 } },
-				{ $set: { username: _0x1b3c47 } }
-			),
-			_0x57617e[_0x4bd2fa(0x23c)](createMembersData, _0x33a04d, _0x1b3c47));
-		let _0x5397a7 = "";
-		if (
-			_0x312824 &&
-			(_0x57617e[_0x4bd2fa(0x18c)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x251)]) ||
-				_0x57617e[_0x4bd2fa(0x1b8)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x16e)]))
-		) {
-			_0x5397a7 = _0x5a3770[_0x4bd2fa(0x14b)](
-				_0x57617e[_0x4bd2fa(0x167)](_0x139444, _0x57617e[_0x4bd2fa(0x18d)])
-			);
-			if (!_0x5397a7) {
-				_0x5397a7 = await _0x3c9bd7[_0x4bd2fa(0x16c) + _0x4bd2fa(0x287)](_0x139444);
-				const _0x57f776 = _0x5a3770[_0x4bd2fa(0x178)](
-					_0x57617e[_0x4bd2fa(0x1d2)](_0x139444, _0x57617e[_0x4bd2fa(0x18d)]),
-					_0x5397a7,
-					_0x57617e[_0x4bd2fa(0x1a8)](
-						0x8f9 * 0x1 + 0x3b * 0x4d + 0x1c4 * -0xf,
-						0x1d0d + -0x1 * 0x43 + -0xe47 * 0x2
-					)
-				);
-				_0x57617e[_0x4bd2fa(0x23c)](createGroupData, _0x139444, _0x5397a7);
-			}
-			group[_0x4bd2fa(0x1c1)](
-				{ _id: _0x139444, "members.id": _0x33a04d },
-				{ $inc: { "members.$.count": 0x1 }, $set: { "members.$.name": _0x1b3c47 } }
-			)[_0x4bd2fa(0x141)]((_0x40b95f) => {
-				const _0x2eebff = _0x4bd2fa;
-				_0x57617e[_0x2eebff(0x1fb)](
-					_0x40b95f[_0x2eebff(0x19d) + "nt"],
-					0x1 * 0x16f2 + 0x13a * 0x1c + -0x394a * 0x1
-				) &&
-					group[_0x2eebff(0x1c1)](
-						{ _id: _0x139444 },
-						{ $push: { members: { id: _0x33a04d, name: _0x1b3c47, count: 0x1 } } }
-					);
-			}),
-				group[_0x4bd2fa(0x1c1)]({ _id: _0x139444 }, { $inc: { totalMsgCount: 0x1 } });
-		}
-		_0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x211) + _0x4bd2fa(0x157)] &&
-			_0x57617e[_0x4bd2fa(0x1dd)](
-				_0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x211) + _0x4bd2fa(0x157)][_0x4bd2fa(0x21d) + "o"]?.[
-					_0x4bd2fa(0x1e0) + "id"
-				],
-				_0xf8c5f4
-			) &&
-			_0x3c9bd7[_0x4bd2fa(0x26c) + "e"](
-				_0x139444,
-				{ sticker: fs[_0x4bd2fa(0x186) + "nc"](_0x57617e[_0x4bd2fa(0x1be)]) },
-				{ quoted: _0xdc7c15 }
-			);
-		const _0x198157 = _0x2e6f5f[_0x4bd2fa(0x1cc)](":")
-				? _0x2e6f5f[_0x4bd2fa(0x162)](":")[-0x1ec1 + -0xa * 0x328 + 0x3e51 * 0x1]
-				: _0x2e6f5f[_0x4bd2fa(0x162)]("@")[0x254d + 0x13a7 + -0x38f4],
-			_0x53198f = await _0x57617e[_0x4bd2fa(0x144)](getMemberData, _0x2e6f5f),
-			_0x22ced9 = _0x312824 ? await _0x57617e[_0x4bd2fa(0x144)](getGroupData, _0x139444) : "";
-		_0x312824 &&
-			_0x57617e[_0x4bd2fa(0x1b4)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x1e2)]) &&
-			_0x22ced9?.[_0x4bd2fa(0x191) + _0x4bd2fa(0x202)] &&
-			_0x57617e[_0x4bd2fa(0x258)](_0xdc7c15[_0x4bd2fa(0x1eb)][_0x4bd2fa(0x17f) + "ge"][_0x4bd2fa(0x1c8)], "") &&
-			(console[_0x4bd2fa(0x27d)](_0x57617e[_0x4bd2fa(0x245)]),
-			commandsPublic[_0x57617e[_0x4bd2fa(0x22a)]](_0x3c9bd7, _0xdc7c15, _0x139444, _0x470686, {
-				senderJid: _0x2e6f5f,
-				type: _0x1f8b3b,
-				content: _0x542bf9,
-				isGroup: _0x312824,
-				sendMessageWTyping: _0xbc14df,
-				evv: _0x4efc7f,
-			}));
-		_0x312824 &&
-			_0x57617e[_0x4bd2fa(0x1b4)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x235)]) &&
-			_0x57617e[_0x4bd2fa(0x258)](_0x139444, _0x57617e[_0x4bd2fa(0x18f)]) &&
-			(await _0x3c9bd7[_0x4bd2fa(0x26c) + "e"](_0x57617e[_0x4bd2fa(0x161)], {
-				forward: _0xdc7c15,
-				contextInfo: { forwardingScore: 0x1, isForwarded: ![] },
-			}));
-		if (_0x53198f?.[_0x4bd2fa(0x16d)]) return;
-		if (
-			_0x57617e[_0x4bd2fa(0x278)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x251)]) ||
-			_0x57617e[_0x4bd2fa(0x158)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x16e)])
-		) {
-			if (
-				_0x57617e[_0x4bd2fa(0x1a1)](
-					_0x1eac3f[_0x4bd2fa(0x162)]("\x20")[-0x1 * 0x1d75 + 0x269 * -0x10 + 0x1 * 0x4405][
-						_0x4bd2fa(0x173) + "e"
-					](),
-					_0x57617e[_0x4bd2fa(0x1c7)]
-				) ||
-				_0x57617e[_0x4bd2fa(0x15d)](
-					_0x1eac3f[_0x4bd2fa(0x162)]("\x20")[0x3ce + 0x1cc + -0x59a][_0x4bd2fa(0x173) + "e"](),
-					_0x57617e[_0x4bd2fa(0x263)]
-				)
-			) {
-				const _0x1d92c8 = _0x22ced9 ? _0x22ced9[_0x4bd2fa(0x247) + "n"] : ![];
-				_0x1d92c8 &&
-					commandsPublic[_0x57617e[_0x4bd2fa(0x1c7)]](_0x3c9bd7, _0xdc7c15, _0x139444, _0x470686, {
-						evv: _0x4efc7f,
-						sendMessageWTyping: _0xbc14df,
-						isGroup: _0x312824,
-					});
-			}
-		}
-		if (
-			_0x312824 &&
-			(_0x57617e[_0x4bd2fa(0x142)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x251)]) ||
-				_0x57617e[_0x4bd2fa(0x1b0)](_0x1f8b3b, _0x57617e[_0x4bd2fa(0x16e)])) &&
-			_0x57617e[_0x4bd2fa(0x22d)](_0x2e6f5f, _0xf8c5f4) &&
-			_0x57617e[_0x4bd2fa(0x262)](_0x2e6f5f, "") &&
-			(_0x57617e[_0x4bd2fa(0x1d1)](_0x139444, _0x57617e[_0x4bd2fa(0x255)]) ||
-				_0x57617e[_0x4bd2fa(0x1fb)](_0x139444, _0x57617e[_0x4bd2fa(0x1dc)]))
-		) {
-			let _0x261e3e = [
-					"u",
-					"uu",
-					_0x57617e[_0x4bd2fa(0x1a6)],
-					"U",
-					"UU",
-					_0x57617e[_0x4bd2fa(0x24c)],
-					_0x57617e[_0x4bd2fa(0x206)],
-					_0x57617e[_0x4bd2fa(0x264)],
-					_0x57617e[_0x4bd2fa(0x237)],
-					_0x57617e[_0x4bd2fa(0x27e)],
-					_0x57617e[_0x4bd2fa(0x242)],
-					_0x57617e[_0x4bd2fa(0x250)],
-					_0x57617e[_0x4bd2fa(0x14f)],
-					_0x57617e[_0x4bd2fa(0x18b)],
-					_0x57617e[_0x4bd2fa(0x269)],
-					_0x57617e[_0x4bd2fa(0x224)],
-					_0x57617e[_0x4bd2fa(0x28b)],
-					_0x57617e[_0x4bd2fa(0x260)],
-					"uu",
-					_0x57617e[_0x4bd2fa(0x156)],
-					_0x57617e[_0x4bd2fa(0x17c)],
-					_0x57617e[_0x4bd2fa(0x1ca)],
-					"tu",
-					_0x57617e[_0x4bd2fa(0x283)],
-					_0x57617e[_0x4bd2fa(0x1d7)],
-					_0x57617e[_0x4bd2fa(0x1b1)],
-					_0x57617e[_0x4bd2fa(0x182)],
-					_0x57617e[_0x4bd2fa(0x288)],
-					_0x57617e[_0x4bd2fa(0x19f)],
-					_0x57617e[_0x4bd2fa(0x160)],
-					_0x57617e[_0x4bd2fa(0x181)],
-					_0x57617e[_0x4bd2fa(0x253)],
-					_0x57617e[_0x4bd2fa(0x215)],
-					_0x57617e[_0x4bd2fa(0x24a)],
-					_0x57617e[_0x4bd2fa(0x234)],
-					"यू",
-					"तू",
-					_0x57617e[_0x4bd2fa(0x261)],
-					_0x57617e[_0x4bd2fa(0x16b)],
-					_0x57617e[_0x4bd2fa(0x1e6)],
-					_0x57617e[_0x4bd2fa(0x280)],
-					_0x57617e[_0x4bd2fa(0x19a)],
-					_0x57617e[_0x4bd2fa(0x1af)],
-					_0x57617e[_0x4bd2fa(0x1ff)],
-					_0x57617e[_0x4bd2fa(0x184)],
-					_0x57617e[_0x4bd2fa(0x1f3)],
-					_0x57617e[_0x4bd2fa(0x1d3)],
-					_0x57617e[_0x4bd2fa(0x238)],
-					"tu",
-					"tm",
-					_0x57617e[_0x4bd2fa(0x1a4)],
-					_0x57617e[_0x4bd2fa(0x197)],
-					_0x57617e[_0x4bd2fa(0x189)],
-					_0x57617e[_0x4bd2fa(0x1fe)],
-					"to",
-					_0x57617e[_0x4bd2fa(0x20a)],
-					_0x57617e[_0x4bd2fa(0x24f)],
-				][_0x4bd2fa(0x282)]((_0x1cd9e2) => _0x1cd9e2[_0x4bd2fa(0x173) + "e"]()),
-				_0x320d1b = Math[_0x4bd2fa(0x180)](
-					_0x57617e[_0x4bd2fa(0x1e1)](Math[_0x4bd2fa(0x1bc)](), _0x261e3e[_0x4bd2fa(0x1e4)])
-				);
-			(_0x261e3e[_0x4bd2fa(0x1cc)](_0x1eac3f[_0x4bd2fa(0x173) + "e"]()) ||
-				_0x57617e[_0x4bd2fa(0x1a7)](_0x1eac3f[_0x4bd2fa(0x1c4)](/^(u+|[!@#$%^&*()_+.,?\\/]*u+)/i), null)) &&
-				_0x3c9bd7[_0x4bd2fa(0x26c) + "e"](_0x139444, { text: _0x261e3e[_0x320d1b] }, { quoted: _0xdc7c15 });
-		}
-		if (!_0x4b3364) return;
-		await _0x3c9bd7[_0x4bd2fa(0x190) + "es"]([_0xdc7c15[_0x4bd2fa(0x26f)]]);
-		const _0x29b39f = _0x312824
-				? _0x57617e[_0x4bd2fa(0x25c)](getGroupAdmins, _0x5397a7[_0x4bd2fa(0x154) + "ts"])
-				: "",
-			_0x3c5cca = _0x29b39f[_0x4bd2fa(0x1cc)](_0x2e6f5f) || ![],
-			_0x3f53f0 = {
-				prefix: prefix,
-				type: _0x1f8b3b,
-				content: _0x542bf9,
-				evv: _0x4efc7f,
-				command: _0x136824,
-				isGroup: _0x312824,
-				senderJid: _0x2e6f5f,
-				groupMetadata: _0x5397a7,
-				groupAdmins: _0x29b39f,
-				botNumberJid: _0xf8c5f4,
-				sendMessageWTyping: _0xbc14df,
-				ownerSend: _0x1ae9cd,
-				updateName: _0x1b3c47,
-				updateId: _0x33a04d,
-			};
-		console[_0x4bd2fa(0x27d)](
-			_0x57617e[_0x4bd2fa(0x16a)],
-			_0x136824,
-			_0x57617e[_0x4bd2fa(0x143)],
-			_0x198157,
-			_0x57617e[_0x4bd2fa(0x24e)],
-			_0xdc7c15[_0x4bd2fa(0x19e)],
-			_0x57617e[_0x4bd2fa(0x1a2)],
-			_0x312824 ? _0x5397a7[_0x4bd2fa(0x289)] : _0x57617e[_0x4bd2fa(0x1d6)]
-		),
-			_0x57617e[_0x4bd2fa(0x25c)](
-				_0x1ae9cd,
-				_0x4bd2fa(0x1c3) +
-					prefix +
-					_0x136824 +
-					_0x4bd2fa(0x183) +
-					_0xdc7c15[_0x4bd2fa(0x19e)] +
-					"(+" +
-					_0x198157 +
-					_0x4bd2fa(0x285) +
-					(_0x312824 ? _0x5397a7[_0x4bd2fa(0x289)] : "DM")
-			);
-		if (_0x312824) {
-			let _0x52d8e4 = _0x22ced9 ? await _0x22ced9[_0x4bd2fa(0x241)] : ![];
-			if (
-				_0x57617e[_0x4bd2fa(0x276)](_0x52d8e4, ![]) &&
-				!(
-					_0x136824[_0x4bd2fa(0x21c)](_0x57617e[_0x4bd2fa(0x1fa)]) ||
-					_0x136824[_0x4bd2fa(0x21c)](_0x57617e[_0x4bd2fa(0x26b)])
-				)
-			)
-				return _0x57617e[_0x4bd2fa(0x23c)](_0xbc14df, _0x139444, {
-					text: _0x57617e[_0x4bd2fa(0x271)](
-						_0x57617e[_0x4bd2fa(0x271)](_0x57617e[_0x4bd2fa(0x1bb)], prefix),
-						_0x57617e[_0x4bd2fa(0x26b)]
-					),
+	}
+	//---------------------------------------------IS-BLOCK--------------------------------------------------------//
+	if (senderData?.isBlock) return;
+	//-------------------------------------------------ChatBot-----------------------------------------------------//
+	if (type == "conversation" || type == "extendedTextMessage") {
+		if (body.split(" ")[0].toLowerCase() == "eva" || body.split(" ")[0].toLowerCase() == "gemini") {
+			const isChatBotOn = groupData ? groupData.isChatBotOn : false;
+			if (isChatBotOn) {
+				commandsPublic["eva"](sock, msg, from, args, {
+					evv,
+					sendMessageWTyping,
+					isGroup,
 				});
-			let _0xf825e4 = await _0x22ced9?.[_0x4bd2fa(0x270)];
-			if (_0x57617e[_0x4bd2fa(0x262)](_0x136824, "")) {
-				if (_0xf825e4[_0x4bd2fa(0x1cc)](_0x136824))
-					return _0x57617e[_0x4bd2fa(0x14d)](
-						_0xbc14df,
-						_0x139444,
-						{ text: _0x4bd2fa(0x1d4) + _0x4bd2fa(0x1b3) + _0x4bd2fa(0x222) + "." },
-						{ quoted: _0xdc7c15 }
-					);
 			}
 		}
-		if (commandsPublic[_0x136824])
-			return commandsPublic[_0x136824](_0x3c9bd7, _0xdc7c15, _0x139444, _0x470686, _0x3f53f0);
-		else {
-			if (commandsMembers[_0x136824])
-				return _0x312824 || _0xdc7c15[_0x4bd2fa(0x26f)][_0x4bd2fa(0x19b)]
-					? commandsMembers[_0x136824](_0x3c9bd7, _0xdc7c15, _0x139444, _0x470686, _0x3f53f0)
-					: _0x57617e[_0x4bd2fa(0x198)](
-							_0xbc14df,
-							_0x139444,
-							{ text: _0x57617e[_0x4bd2fa(0x21e)] },
-							{ quoted: _0xdc7c15 }
-					  );
-			else {
-				if (commandsAdmins[_0x136824]) {
-					if (!_0x312824)
-						return _0x57617e[_0x4bd2fa(0x252)](
-							_0xbc14df,
-							_0x139444,
-							{ text: _0x57617e[_0x4bd2fa(0x21e)] },
-							{ quoted: _0xdc7c15 }
-						);
-					else
-						return _0x3c5cca || moderatos[_0x4bd2fa(0x1cc)](_0x198157)
-							? commandsAdmins[_0x136824](_0x3c9bd7, _0xdc7c15, _0x139444, _0x470686, _0x3f53f0)
-							: _0x57617e[_0x4bd2fa(0x22f)](
-									_0xbc14df,
-									_0x139444,
-									{ text: _0x57617e[_0x4bd2fa(0x22b)] },
-									{ quoted: _0xdc7c15 }
-							  );
-				} else
-					return commandsOwners[_0x136824]
-						? moderatos[_0x4bd2fa(0x1cc)](_0x198157) || _0x57617e[_0x4bd2fa(0x1d1)](myNumber, _0x2e6f5f)
-							? commandsOwners[_0x136824](_0x3c9bd7, _0xdc7c15, _0x139444, _0x470686, _0x3f53f0)
-							: _0x57617e[_0x4bd2fa(0x252)](
-									_0xbc14df,
-									_0x139444,
-									{ text: _0x57617e[_0x4bd2fa(0x257)] },
-									{ quoted: _0xdc7c15 }
-							  )
-						: _0x57617e[_0x4bd2fa(0x198)](
-								_0xbc14df,
-								_0x139444,
-								{
-									text: _0x57617e[_0x4bd2fa(0x271)](
-										_0x57617e[_0x4bd2fa(0x1b6)](
-											_0x57617e[_0x4bd2fa(0x188)](
-												_0x57617e[_0x4bd2fa(0x277)](
-													_0x57617e[_0x4bd2fa(0x203)],
-													_0xdc7c15[_0x4bd2fa(0x19e)]
-												),
-												_0x57617e[_0x4bd2fa(0x22c)]
-											),
-											prefix
-										),
-										_0x57617e[_0x4bd2fa(0x209)]
-									),
-								},
-								{ quoted: _0xdc7c15 }
-						  );
-			}
-		}
+	}
+	//---------------------------------------------------NO-CMD----------------------------------------------------//
+	if (!isCmd) return;
+	//-------------------------------------------------READ-SEEN---------------------------------------------------//
+	await sock.readMessages([msg.key]);
+	//------------------------------------------------GROUP-DATA---------------------------------------------------//
+	const groupAdmins = isGroup ? getGroupAdmins(groupMetadata.participants) : "";
+	const isGroupAdmin = groupAdmins.includes(senderJid) || false;
+	// const groupData = isGroup ? await getGroupData(from) : "";
+	//-------------------------------------------------------------------------------------------------------------//
+	const msgInfoObj = {
+		prefix,
+		type,
+		content,
+		evv,
+		command,
+		isGroup,
+		senderJid,
+		groupMetadata,
+		groupAdmins,
+		botNumberJid,
+		sendMessageWTyping,
+		logOwner,
+		updateName,
+		updateId,
+		isOwner,
+		startTime,
 	};
-module[_0xc0e935(0x165)] = getCommand;
+	//-------------------------------------------------------------------------------------------------------------//
+	console.log(
+		"[COMMAND]",
+		command,
+		"[FROM]",
+		senderNumber,
+		"[name]",
+		msg.pushName,
+		"[IN]",
+		isGroup ? groupMetadata.subject : "Directs"
+	);
+	logOwner(
+		sock,
+		`📝: ${prefix}${command} by ${msg.pushName}(+${senderNumber}) in ${isGroup ? groupMetadata.subject : "DM"}`,
+		msg
+	);
+	//-------------------------------------------------BLOCK-CMDs--------------------------------------------------//
+	if (isGroup) {
+		let resBotOn = groupData ? await groupData.isBotOn : false;
+
+		if (resBotOn == false && !(command.startsWith("group") || command.startsWith("dev"))) {
+			return sendMessageWTyping(from, {
+				text:
+					"```By default, bot is turned off in this group.\nAsk the Owner to activate.\n\nUse ```" +
+					prefix +
+					"dev",
+			});
+		}
+		let blockCommandsInDB = await groupData?.cmdBlocked;
+		if (command != "") {
+			if (blockCommandsInDB.includes(command)) {
+				return sendMessageWTyping(from, { text: `Command blocked for this group.` }, { quoted: msg });
+			}
+		}
+	}
+	//-------------------------------------------------------------------------------------------------------------//
+	//---------------------------------------------------COMMANDS--------------------------------------------------//
+	//-------------------------------------------------------------------------------------------------------------//
+
+	if (commandsPublic[command]) {
+		return commandsPublic[command](sock, msg, from, args, msgInfoObj);
+	} else if (commandsMembers[command]) {
+		if (isGroup || msg.key.fromMe) {
+			return commandsMembers[command](sock, msg, from, args, msgInfoObj);
+		} else {
+			return sendMessageWTyping(
+				from,
+				{ text: "```❎ This command is only applicable in Groups!```" },
+				{ quoted: msg }
+			);
+		}
+	} else if (commandsAdmins[command]) {
+		if (!isGroup) {
+			return sendMessageWTyping(
+				from,
+				{ text: "```❎ This command is only applicable in Groups!```" },
+				{ quoted: msg }
+			);
+		} else if (isGroupAdmin || moderatos.includes(senderNumber)) {
+			return commandsAdmins[command](sock, msg, from, args, msgInfoObj);
+		} else {
+			return sendMessageWTyping(from, { text: "```🤭 kya matlab tum admin nhi ho.```" }, { quoted: msg });
+		}
+	} else if (commandsOwners[command]) {
+		if (moderatos.includes(senderNumber) || myNumber == senderJid) {
+			return commandsOwners[command](sock, msg, from, args, msgInfoObj);
+		} else {
+			return sendMessageWTyping(from, { text: "```🤭 kya matlab tum mere owner nhi ho.```" }, { quoted: msg });
+		}
+	} else {
+		return sendMessageWTyping(
+			from,
+			{ text: "```" + msg.pushName + " !!Use " + prefix + "help ```" },
+			{ quoted: msg }
+		);
+	}
+};
+
+module.exports = getCommand;

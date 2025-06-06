@@ -2,6 +2,8 @@ require("dotenv").config();
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 //-------------------------------------------------------------------------------------------------------------//
 const { getGroupData } = require("../../mongo-DB/groupDataDb");
+const { getMemberData } = require("../../mongo-DB/membersDataDb");
+
 //-------------------------------------------------------------------------------------------------------------//
 const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
@@ -35,58 +37,68 @@ const generationConfig = {
 	topP: 0.95,
 	topK: 40,
 	maxOutputTokens: 8192,
-	// responseMimeType: "text/plain",
 };
 
-async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSender) {
-	let { sendMessageWTyping, command, updateName, updateId } = msgInfoObj;
+async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID) {
+	let { sendMessageWTyping, command, updateName, updateId, senderJid, groupMetadata, groupAdmins, isGroup } =
+		msgInfoObj;
+
+	let memberData = await getMemberData(senderJid);
+	let replyInfo = "";
+	let systemInstruction;
+
+	if (tagMessage && tagMessageSenderJID) {
+		const tagMessageSender = await getMemberData(tagMessageSenderJID);
+		const replySenderName = tagMessageSender?.username || tagMessageSenderJID;
+		const replyContent = JSON.stringify(tagMessage);
+		replyInfo = `\n\n📩 Replied Message to:\n- Sender Name: ${replySenderName}\n- Content: ${replyContent}`;
+	}
 
 	if (command == "gemini") {
+		systemInstruction = `
+		You're chatting with Eva. Her master is Mahesh Kumar. Eva knows everything about the group and user.
+
+		🧑‍💬 Sender Info:
+		- Name: ${updateName}
+		- ID: ${updateId}
+		- WhatsApp JID: ${senderJid}
+		- Is Group Chat: ${isGroup}
+		- Member Data: ${JSON.stringify(memberData)}
+
+		👥 Group Info (if group):
+		- Group ID: ${data?._id}
+		- Group Name: ${data?.grpName}
+		- Group Description: ${data?.desc}
+		- Admins: ${JSON.stringify(groupAdmins)}
+		- Members: ${JSON.stringify(data?.members)}
+		- Commands Blocked: ${JSON.stringify(data?.cmdBlocked)}
+		- Welcome Message: ${JSON.stringify(data?.welcome)}
+		- Total Messages: ${JSON.stringify(data?.totalMsgCount)}
+		- Warnings: ${JSON.stringify(data?.memberWarnCount)}
+
+		🔁 Message Context:
+		- User Message: ${JSON.stringify(msgInfoObj.content)}
+		- Full Raw Message: ${JSON.stringify(msgInfoObj.evv)}
+		- Command Used: ${JSON.stringify(command)}
+		${replyInfo}
+
+		Eva Replies in WhatsApp format only. No markdown, no backticks.`;
+
 		model = genAI.getGenerativeModel({
 			model: "gemini-2.0-flash",
-			systemInstruction: `
-			Current Message Sent by: ${updateName} (${updateId})\n
-            Content in current message: ${JSON.stringify(msgInfoObj.content)},
-            Complete Message sent by sender: ${JSON.stringify(msgInfoObj.evv)},
-            Command Used: ${JSON.stringify(msgInfoObj.command)},
-            Is this group or DM: ${JSON.stringify(msgInfoObj.isGroup)},
-            Command Used by: ${JSON.stringify(msgInfoObj.senderJid)},
-            Group Metadata by Whatsapp: ${JSON.stringify(msgInfoObj.groupMetadata)},
-            Admins for this group: ${JSON.stringify(msgInfoObj.groupAdmins)},
-            ID for the group: ${JSON.stringify(data._id)},
-            Group Name: ${JSON.stringify(data.grpName)},
-            Group Description: ${JSON.stringify(data.desc)},
-            Commands Blocked for this group: ${JSON.stringify(data.cmdBlocked)},
-            Welcome: ${JSON.stringify(data.welcome)},
-            Total Message Count: ${JSON.stringify(data.totalMsgCount)},
-            Member Warn Count: ${JSON.stringify(data.memberWarnCount)},
-            Members: ${JSON.stringify(data.members)},
-            How to response: IN WHATSAPP FORMAT ONLY
-            `,
+			systemInstruction,
 		});
 	}
 
 	const chatSession = model.startChat({
 		generationConfig,
-		history: tagMessage
-			? [
-					{
-						role: "user",
-						content: `
-						Current Message Sent by: ${updateName} (${updateId})\n
-						Previous Message Sent by: ${tagMessageSender} \n
-						Person Tagged in Previous Message : ${taggedMember} \n
-						Previous Message: ${JSON.stringify(tagMessage)},
-						`,
-					},
-			  ]
-			: [],
 	});
 
 	try {
 		const result = await chatSession.sendMessage(prompt);
 		const text = result.response.text();
-		if (text == "" || text == null) {
+
+		if (!text?.trim()) {
 			return sendMessageWTyping(
 				from,
 				{ text: `Sorry, I didn't understand that. Can you please rephrase your question?` },
@@ -100,10 +112,7 @@ async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessag
 		sendMessageWTyping(
 			from,
 			{
-				text:
-					err?.response?.candidates[0]?.content?.parts[0]?.text ||
-					err?.response?.error?.message ||
-					err.toString(),
+				text: `An error occurred while processing your request. Please try again later.`,
 			},
 			{ quoted: msg }
 		);
@@ -119,12 +128,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	if (!args[0]) return sendMessageWTyping(from, { text: `Enter some text` });
 
-	let taggedMember, tagMessage, tagMessageSender;
+	let taggedMember, tagMessage, tagMessageSenderJID;
 	if (msg.message.extendedTextMessage) {
 		tagMessage = msg.message.extendedTextMessage.contextInfo.quotedMessage;
-		tagMessageSender = msg.message.extendedTextMessage.contextInfo.participant;
+		tagMessageSenderJID = msg.message.extendedTextMessage.contextInfo.participant;
 		if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-			taggedMember = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+			taggedMember = msg.message.extendedTextMessage.contextInfo.mentionedJid;
 		}
 	}
 
@@ -138,10 +147,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				{ quoted: msg }
 			);
 		} else {
-			chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSender);
+			chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID);
 		}
 	} else {
-		chat(prompt, from, msg, taggedMember, msgInfoObj, {}, tagMessage, tagMessageSender);
+		if (msgInfoObj.isOwner) {
+			chat(prompt, from, msg, taggedMember, msgInfoObj, null, tagMessage, tagMessageSenderJID);
+		} else {
+			return sendMessageWTyping(
+				from,
+				{ text: `Chat Bot is only available for groups. Use dev` },
+				{ quoted: msg }
+			);
+		}
 	}
 };
 

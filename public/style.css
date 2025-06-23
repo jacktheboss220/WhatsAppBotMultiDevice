@@ -1,0 +1,28 @@
+body {
+	font-family: Arial, sans-serif;
+	max-width: 600px;
+	margin: 2rem auto;
+	text-align: center;
+}
+
+.qr img {
+	width: 200px;
+	height: 200px;
+}
+
+form {
+	margin-top: 1rem;
+}
+
+input {
+	margin: 0.2rem;
+	padding: 0.5rem;
+}
+
+button {
+	padding: 0.5rem 1rem;
+}
+#status {
+	margin-top: 0.5rem;
+	font-weight: bold;
+}

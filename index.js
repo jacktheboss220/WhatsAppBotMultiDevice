@@ -11,6 +11,7 @@ const path = require("path");
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 app.set("views", path.join(__dirname, "./public"));
 app.set("view engine", "ejs");
@@ -49,27 +50,52 @@ const wss = new WebSocket.Server({ server });
 (async () => {
 	const sock = await startSock("start");
 	sock.ev.on("connection.update", (update) => {
-		const { qr } = update;
+		const { qr, isOnline } = update;
 		if (qr) {
 			wss.clients.forEach((client) => {
 				if (client.readyState === WebSocket.OPEN) {
-					client.send(qr);
+					client.send(JSON.stringify({ type: "qr", qr }));
+				}
+			});
+		} else if (isOnline) {
+			wss.clients.forEach((client) => {
+				if (client.readyState === WebSocket.OPEN) {
+					client.send(JSON.stringify({ type: "status", status: "connected" }));
 				}
 			});
 		}
 	});
 
-	app.post("/send", async (req, res) => {
-		const { to, message } = req.body;
-		if (!to || !message) {
-			return res.status(400).send({ message: "Invalid request" });
-		}
-		await sock.sendMessage(to + "@s.whatsapp.net", { text: message }).then((response) => {
-			console.log("Message sent to", to, ":", message);
+	wss.on("connection", (ws) => {
+		ws.on("message", async (message) => {
+			try {
+				const { to, message: text } = JSON.parse(message);
+				if (!to || !text) {
+					ws.send(JSON.stringify({ type: "error", error: "Invalid request" }));
+					return;
+				}
+				await sock.sendMessage(to + "@s.whatsapp.net", { text }).then(() => {
+					console.log("Message sent to", to, ":", text);
+					ws.send(JSON.stringify({ type: "success", success: "Message sent" }));
+				});
+			} catch (err) {
+				console.error("Error handling WebSocket message:", err);
+				ws.send(JSON.stringify({ type: "error", error: "Failed to send message" }));
+			}
 		});
-		return res.send({ message: "Message sent" });
 	});
 })();
+
+app.post("/send", async (req, res) => {
+	const { to, message } = req.body;
+	if (!to || !message) {
+		return res.status(400).send({ message: "Invalid request" });
+	}
+	await sock.sendMessage(to + "@s.whatsapp.net", { text: message }).then((response) => {
+		console.log("Message sent to", to, ":", message);
+	});
+	return res.send({ message: "Message sent" });
+});
 
 process.on("unhandledRejection", (reason, p) => {
 	console.error("Unhandled Rejection at: ", p, "reason:", reason);

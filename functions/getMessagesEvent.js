@@ -22,9 +22,9 @@ const getCommand = async (sock, msg, cache) => {
 		// await sock.presenceSubscribe(jid);
 		// await delay(500);
 
-		await sock.sendPresenceUpdate("composing", jid);
-		await delay(2000);
-		await sock.sendPresenceUpdate("paused", jid);
+		// await sock?.sendPresenceUpdate("composing", jid);
+		// await delay(2000);
+		// await sock?.sendPresenceUpdate("paused", jid);
 
 		await sock.sendMessage(jid, option1, {
 			...option2,
@@ -103,13 +103,15 @@ const getCommand = async (sock, msg, cache) => {
 	}
 	//-------------------------------------------------------------------------------------------------------------//
 	let groupMetadata = "";
-	if (isGroup && (type == "conversation" || type == "extendedTextMessage")) {
+	if (isGroup) {
 		groupMetadata = cache.get(from + ":groupMetadata");
 		if (!groupMetadata) {
 			groupMetadata = await sock.groupMetadata(from);
 			const success = cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
 			createGroupData(from, groupMetadata);
 		}
+	}
+	if (isGroup && (type == "conversation" || type == "extendedTextMessage")) {
 		group
 			.updateOne(
 				{ _id: from, "members.id": updateId },
@@ -177,7 +179,7 @@ const getCommand = async (sock, msg, cache) => {
 	await sock.readMessages([msg.key]);
 	//------------------------------------------------GROUP-DATA---------------------------------------------------//
 	const groupAdmins = isGroup ? getGroupAdmins(groupMetadata.participants) : "";
-	const isGroupAdmin = groupAdmins.includes(senderJid) || false;
+	const isGroupAdmin = groupAdmins?.includes(senderJid) || false;
 	// const groupData = isGroup ? await getGroupData(from) : "";
 	//-------------------------------------------------------------------------------------------------------------//
 	const msgInfoObj = {

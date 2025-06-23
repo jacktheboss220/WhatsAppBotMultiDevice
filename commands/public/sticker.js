@@ -1,9 +1,10 @@
 const { downloadMediaMessage } = require("baileys");
 const WSF = require("wa-sticker-formatter");
-// const { path } = require("@ffmpeg-installer/ffmpeg");
-const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+
 const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("ffmpeg-static");
 ffmpeg.setFfmpegPath(ffmpegPath);
+
 const { getMemberData, member } = require("../../mongo-DB/membersDataDb");
 const { writeFile } = require("fs/promises");
 const fs = require("fs");

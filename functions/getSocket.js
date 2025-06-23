@@ -1,22 +1,18 @@
+const NodeCache = require("node-cache");
+
 const {
 	default: makeWASocket,
 	fetchLatestBaileysVersion,
 	useMultiFileAuthState,
-	makeInMemoryStore,
 	makeCacheableSignalKeyStore,
-	isJidBroadcast,
 } = require("baileys");
-
-const { startInterval } = require("./getInterval");
 
 const { fetchAuth, updateLogin } = require("./getAuthDB");
 
 const P = require("pino");
 const logger = P({ level: "silent" });
 
-const store = makeInMemoryStore({ logger });
-store?.readFromFile("./baileys_store_multi.json");
-startInterval(store);
+const msgRetryCounterCache = new NodeCache();
 
 const socket = async () => {
 	const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -36,17 +32,12 @@ const socket = async () => {
 			creds: state.creds,
 			keys: makeCacheableSignalKeyStore(state.keys, logger),
 		},
-		shouldSyncHistoryMessage: (msg) => false,
+		msgRetryCounterCache,
 		generateHighQualityLinkPreview: true,
-		shouldIgnoreJid: (jid) => isJidBroadcast(jid),
-		// getMessage,
+		getMessage,
 	});
-	store?.bind(sock.ev);
+
 	async function getMessage(key) {
-		if (store) {
-			const msg = await store.loadMessage(key.remoteJid, key.id);
-			return msg?.message || undefined;
-		}
 		return proto.Message.fromObject({});
 	}
 

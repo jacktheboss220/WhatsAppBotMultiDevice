@@ -1,23 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Eva - The Bot</title>
+		<link rel="stylesheet" href="/style.css" />
+		<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+	</head>
+	<body>
+		<h1>Eva - The Bot</h1>
+		<div id="qrcode" class="qr"></div>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eva - The Bot</title>
-</head>
+		<h2>Send a Message</h2>
+		<form id="sendForm">
+			<input type="text" id="to" placeholder="Recipient number" required />
+			<input type="text" id="message" placeholder="Your message" required />
+			<button type="submit">Send</button>
+		</form>
+		<div id="status"></div>
 
-<body>
-  <h1>Eva - The Bot</h1>
-  <div id="qrcode"></div>
-  <script>
-    const socket = new WebSocket('ws://' + window.location.host);
-    socket.onmessage = function (event) {
-      const qrCode = event.data;
-      const qrCodeDiv = document.getElementById('qrcode');
-      qrCodeDiv.innerHTML = `<img src="${qrCode}" alt="QR Code" />`;
-    };
-  </script>
-</body>
+		<script>
+			const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + window.location.host);
 
+			socket.onmessage = function (event) {
+				const qrCodeDiv = document.getElementById("qrcode");
+				const qrString = event.data;
+
+				try {
+					const parsedData = JSON.parse(qrString);
+					if (parsedData.type === "qr") {
+						QRCode.toDataURL(parsedData.qr, function (err, url) {
+							if (err) {
+								console.error("QR Code generation failed", err);
+								return;
+							}
+							qrCodeDiv.innerHTML = `<img src="${url}" alt="QR Code" />`;
+						});
+					} else if (parsedData.type === "status" && parsedData.status === "connected") {
+						qrCodeDiv.innerHTML = "<p>Connected to WhatsApp!</p>";
+					} else if (parsedData.type === "success") {
+						qrCodeDiv.innerHTML = parsedData.success;
+					}
+				} catch (err) {
+					console.error("Error parsing WebSocket message:", err);
+				}
+			};
+
+			const form = document.getElementById("sendForm");
+			form.addEventListener("submit", (e) => {
+				e.preventDefault();
+				const to = document.getElementById("to").value;
+				const message = document.getElementById("message").value;
+				const statusDiv = document.getElementById("status");
+
+				if (socket.readyState === WebSocket.OPEN) {
+					socket.send(JSON.stringify({ to, message }));
+					statusDiv.textContent = "Message sent!";
+				} else {
+					statusDiv.textContent = "WebSocket connection not open.";
+				}
+			});
+		</script>
+	</body>
 </html>

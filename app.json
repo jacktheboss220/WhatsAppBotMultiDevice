@@ -30,52 +30,80 @@
       "description": "Your WhatsApp Number to use as bot moderators. Include country code. Example: +919876543210",
       "required": true
     },
-    "BOT_NUMBER": {
-      "description": "Your WhatsApp Bot Number to use as bot",
-      "required": true
-    },
     "REMOVE_BG_KEY": {
-      "description": "Remove.bg API key",
-      "required": false
-    },
-    "DEEPAI_KEY": {
-      "description": "Deepai.org API key",
+      "description": "Remove.bg API key for background removal feature",
       "required": false
     },
     "TRUECALLER_ID": {
-      "description": "Truecaller API ID",
+      "description": "Truecaller API ID for phone number lookup",
       "required": false
     },
     "GOOGLE_API_KEY": {
-      "description": "Google API Key",
+      "description": "Google API Key for search and image search features",
       "required": false
     },
     "SEARCH_ENGINE_KEY": {
-      "description": "Google Search Engine Key",
+      "description": "Google Custom Search Engine Key",
       "required": false
     },
     "OPENAI_API_KEY": {
-      "description": "OpenAI API Key",
+      "description": "OpenAI API Key for AI image generation",
       "required": false
     },
     "GENIUS_ACCESS_SECRET": {
-      "description": "Genius Access Secret",
+      "description": "Genius API Secret for lyrics functionality",
       "required": false
     },
-    "HOST_URL": {
-      "description": "Host URL",
-      "required": false
-    },
-    "HEROKU_API_TOKEN": {
-      "description": "Heroku API Token",
-      "required": false
-    },
-    "HEROKU_APP_NAME": {
-      "description": "Heroku App Name",
+    "PIN_KEY": {
+      "description": "Pinterest API Key for Pinterest downloader",
       "required": false
     },
     "TWITTER_BEARER_TOKEN": {
-      "description": "Twitter Bearer Token",
+      "description": "Twitter Bearer Token for Twitter features",
+      "required": false
+    },
+    "HEROKU_API_TOKEN": {
+      "description": "Heroku API Token for bot management",
+      "required": false
+    },
+    "HEROKU_APP_NAME": {
+      "description": "Heroku App Name for deployment",
+      "required": false
+    },
+    "YOUTUBE_DELAY_BETWEEN_REQUESTS": {
+      "description": "Delay between YouTube requests in milliseconds (default: 1000)",
+      "required": false
+    },
+    "YOUTUBE_MAX_RETRIES": {
+      "description": "Maximum retry attempts for YouTube downloads (default: 3)",
+      "required": false
+    },
+    "YOUTUBE_RETRY_DELAY": {
+      "description": "Delay between retry attempts in milliseconds (default: 2000)",
+      "required": false
+    },
+    "MAX_AUDIO_SIZE_MB": {
+      "description": "Maximum audio file size in MB (default: 50)",
+      "required": false
+    },
+    "MAX_VIDEO_SIZE_MB": {
+      "description": "Maximum video file size in MB (default: 50)",
+      "required": false
+    },
+    "DOWNLOAD_TIMEOUT_SECONDS": {
+      "description": "Download timeout in seconds (default: 600)",
+      "required": false
+    },
+    "YOUTUBE_DEBUG": {
+      "description": "Enable YouTube debug mode (true/false, default: false)",
+      "required": false
+    },
+    "ENABLE_USER_AGENT_ROTATION": {
+      "description": "Enable user agent rotation (true/false, default: true)",
+      "required": false
+    },
+    "FORCE_DISABLE_YTDLP": {
+      "description": "Force disable yt-dlp (true/false, default: false)",
       "required": false
     }
   },

@@ -1,5 +1,6 @@
 const { downloadMediaMessage } = require("baileys");
 const WSF = require("wa-sticker-formatter");
+const memoryManager = require("../../functions/memoryUtils");
 
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
@@ -9,7 +10,7 @@ const { getMemberData, member } = require("../../mongo-DB/membersDataDb");
 const { writeFile } = require("fs/promises");
 const fs = require("fs");
 
-const getRandom = (ext = "") => `${Math.floor(Math.random() * 10000)}${ext}`;
+const getRandom = (ext = "") => memoryManager.generateTempFileName(ext);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { senderJid, type, content, isGroup, sendMessageWTyping, evv } = msgInfoObj;
@@ -79,9 +80,35 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		if (msg.message?.videoMessage?.seconds > 11) {
 			return sendMessageWTyping(from, { text: "Send less than 11 seconds." }, { quoted: msg });
 		}
-		const buffer = await downloadMediaMessage(msg, "buffer", {});
-		await writeFile(media, buffer);
-		await buildSticker(media);
+
+		try {
+			const buffer = await downloadMediaMessage(msg, "buffer", {});
+			if (!buffer || buffer.length === 0) {
+				return sendMessageWTyping(
+					from,
+					{ text: "❎ Failed to download media. Please try again." },
+					{ quoted: msg }
+				);
+			}
+
+			await writeFile(media, buffer);
+
+			// Verify file was written successfully
+			if (!fs.existsSync(media)) {
+				return sendMessageWTyping(
+					from,
+					{ text: "❎ Failed to save media file. Please try again." },
+					{ quoted: msg }
+				);
+			}
+
+			await buildSticker(media);
+		} catch (error) {
+			console.error("Media download error:", error);
+			// Clean up any partial file
+			memoryManager.safeUnlink(media);
+			return sendMessageWTyping(from, { text: "❎ Failed to process media. Please try again." }, { quoted: msg });
+		}
 	} else {
 		sendMessageWTyping(from, { text: `❎ *Error reply to image or video only*` }, { quoted: msg });
 		console.error("Error not replied");
@@ -89,28 +116,57 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	async function buildSticker(media) {
 		const ran = getRandom(".webp");
+
 		try {
-			const file = ffmpeg(`./${media}`)
-				.input(media)
-				.on("error", (err) => fs.unlinkSync(media))
+			// Verify input file exists before processing
+			if (!fs.existsSync(media)) {
+				throw new Error("Input media file not found");
+			}
+
+			const file = ffmpeg(media)
+				.on("error", (err) => {
+					console.error("FFmpeg error:", err);
+					memoryManager.safeUnlink(media);
+					memoryManager.safeUnlink(ran);
+					sendMessageWTyping(from, { text: "❎ Error converting media to sticker." }, { quoted: msg });
+				})
 				.addOutputOptions(outputOptions)
 				.toFormat("webp")
 				.save(ran);
-			file.on("end", () => {
-				WSF.setMetadata(packName, authorName, ran).then(() => {
-					sock.sendMessage(from, { sticker: fs.readFileSync(ran) }, { quoted: msg }).then(() => {
-						try {
-							fs.unlinkSync(media);
-							fs.unlinkSync(ran);
-						} catch (err) {
-							console.error("Error deleting files:", err);
+
+			file.on("end", async () => {
+				try {
+					// Verify output file was created
+					if (!fs.existsSync(ran)) {
+						throw new Error("Output sticker file not created");
+					}
+
+					const stickerBuffer = await WSF.setMetadata(packName, authorName, ran);
+					await sock.sendMessage(from, { sticker: stickerBuffer }, { quoted: msg });
+				} catch (wsError) {
+					console.error("Sticker creation error:", wsError);
+					// Fallback to file reading if buffer method fails
+					try {
+						if (fs.existsSync(ran)) {
+							await sock.sendMessage(from, { sticker: fs.readFileSync(ran) }, { quoted: msg });
+						} else {
+							throw new Error("No sticker file to send");
 						}
-					});
-				});
+					} catch (fallbackError) {
+						console.error("Fallback error:", fallbackError);
+						sendMessageWTyping(from, { text: "❎ Failed to create sticker." }, { quoted: msg });
+					}
+				} finally {
+					// Ensure cleanup happens
+					memoryManager.safeUnlink(media);
+					memoryManager.safeUnlink(ran);
+				}
 			});
 		} catch (err) {
-			sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-			console.error(err);
+			console.error("buildSticker error:", err);
+			sendMessageWTyping(from, { text: `❎ Error: ${err.message}` }, { quoted: msg });
+			memoryManager.safeUnlink(media);
+			memoryManager.safeUnlink(ran);
 		}
 	}
 };

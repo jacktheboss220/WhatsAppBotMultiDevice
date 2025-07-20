@@ -12,14 +12,16 @@
     "python": "3.9.x"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node --max-old-space-size=512 index.js",
+    "start:dev": "node --inspect --max-old-space-size=512 index.js",
+    "start:production": "node --max-old-space-size=1024 --optimize-for-size index.js"
   },
   "keywords": [],
   "author": "mahesh kumar",
   "license": "MIT",
   "dependencies": {
     "@distube/yt-dlp": "^2.0.1",
-    "@distube/ytdl-core": "^4.15.9",
+    "@distube/ytdl-core": "^4.16.12",
     "@erickwendel/meme-maker": "^3.0.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google/generative-ai": "^0.21.0",
@@ -47,7 +49,7 @@
     "twitter-api-v2": "^1.22.0",
     "urban-dictionary": "github:jacktheboss220/urban-dictionary",
     "wa-sticker-formatter": "^3.6.0",
-    "youtube-dl-exec": "^3.0.13",
+    "youtube-dl-exec": "^3.0.22",
     "yt-search": "^2.12.1",
     "ytdl-core": "^4.11.5"
   },

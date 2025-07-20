@@ -17,3 +17,4 @@ baileys_store_multi.json
 .fake
 cookie.json
 # logs
+temp/

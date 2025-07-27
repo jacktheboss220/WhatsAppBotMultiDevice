@@ -11,7 +11,7 @@ const {
 const { fetchAuth, updateLogin } = require("./getAuthDB");
 
 const P = require("pino");
-const logger = P({ level: "silent" });
+const logger = P({ level: "silent" }); // Set to "error" to allow essential logs but suppress debug spam
 
 // Optimized caches with memory management
 const msgRetryCounterCache = new NodeCache({
@@ -54,10 +54,13 @@ const socket = async () => {
 		state.creds = creds;
 	}
 
+	// Track when the socket was created to prevent immediate message processing
+	const socketStartTime = Date.now();
+
 	const sock = makeWASocket({
 		version,
 		logger,
-		printQRInTerminal: true,
+		// printQRInTerminal: true, // Removed deprecated option
 		auth: {
 			creds: state.creds,
 			keys: makeCacheableSignalKeyStore(state.keys, logger),
@@ -85,6 +88,11 @@ const socket = async () => {
 		shouldIgnoreSignalKeyStore: false,
 		// Better handling of message sending failures
 		uploadTimeoutMs: 30000,
+		// Prevent immediate message processing during startup
+		fireInitQueries: false,
+		// Reduce sync conflicts that can cause empty messages
+		syncFullHistory: false,
+		shouldSyncHistoryMessage: () => false,
 	});
 
 	async function getMessage(key) {
@@ -104,34 +112,31 @@ const socket = async () => {
 
 			// Log the failed getMessage attempt with more context
 			logger.debug(
-				"getMessage called for key:",
-				{
-					remoteJid: key.remoteJid,
-					id: key.id,
-					fromMe: key.fromMe,
-					participant: key.participant,
-				},
-				"but message not found in cache"
+				"getMessage called for key:" +
+					` ${key.id} in ${key.remoteJid} with fromMe: ${key.fromMe}` +
+					" but message not found in cache"
 			);
 
-			// Return a more complete empty message object to prevent session issues
-			return proto.Message.fromObject({
-				conversation: "",
-				messageContextInfo: {
-					deviceListMetadata: {},
-					deviceListMetadataVersion: 2,
-				},
-			});
+			// Return undefined instead of empty message to prevent sending empty messages
+			// This is safer than returning an empty message object
+			return undefined;
 		} catch (error) {
 			logger.error("Error in getMessage function:", error);
-			// Return basic empty message on error
-			return proto.Message.fromObject({});
+			// Return undefined on error instead of empty message
+			return undefined;
 		}
 	}
 
 	// Cache incoming messages for getMessage function with size limit
 	sock.ev.on("messages.upsert", (m) => {
 		try {
+			// Add startup delay to prevent processing old messages immediately after restart
+			const timeSinceStart = Date.now() - socketStartTime;
+			if (timeSinceStart < 5000) { // Wait 5 seconds after socket creation
+				console.log("⏳ Skipping message during startup period");
+				return;
+			}
+
 			for (const msg of m.messages) {
 				if (msg.message) {
 					const cacheKey = `${msg.key.remoteJid}:${msg.key.id}`;
@@ -170,6 +175,9 @@ const socket = async () => {
 			}
 		}
 	});
+
+	// Add startup time to socket for other functions to use
+	sock.startupTime = socketStartTime;
 
 	return sock;
 };

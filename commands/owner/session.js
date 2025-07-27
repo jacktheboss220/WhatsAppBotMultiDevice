@@ -1,9 +1,9 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const { resetAuthentication, cleanupStaleSessions } = require("../../functions/sessionCleanup");
+const { resetAuthentication, cleanupStaleSessions, emergencyCleanup } = require("../../functions/systemCleanup");
 const fs = require("fs");
 const path = require("path");
-const myNumber = process.env.MY_NUMBER + '@s.whatsapp.net';
+const myNumber = process.env.MY_NUMBER + "@s.whatsapp.net";
 
 const handler = async (sock, msg, from, args, { sendMessageWTyping, isOwner, senderJid }) => {
 	if (senderJid !== myNumber) {
@@ -35,7 +35,6 @@ const handler = async (sock, msg, from, args, { sendMessageWTyping, isOwner, sen
 		setTimeout(() => {
 			process.exit(0);
 		}, 2000);
-		
 	} else if (action === "conflict") {
 		await sendMessageWTyping(
 			from,
@@ -49,17 +48,16 @@ const handler = async (sock, msg, from, args, { sendMessageWTyping, isOwner, sen
 		setTimeout(async () => {
 			try {
 				const authDir = path.join(__dirname, "..", "..", "baileys_auth_info");
-				
+
 				if (fs.existsSync(authDir)) {
 					const files = fs.readdirSync(authDir);
-					
+
 					// Remove specific conflict-causing files
-					const conflictFiles = files.filter(file => 
-						file.startsWith("sender-key-") || 
-						file.startsWith("pre-key-")
+					const conflictFiles = files.filter(
+						(file) => file.startsWith("sender-key-") || file.startsWith("pre-key-")
 					);
-					
-					conflictFiles.forEach(file => {
+
+					conflictFiles.forEach((file) => {
 						try {
 							fs.unlinkSync(path.join(authDir, file));
 							console.log(`Removed conflict file: ${file}`);
@@ -67,7 +65,7 @@ const handler = async (sock, msg, from, args, { sendMessageWTyping, isOwner, sen
 							console.error(`Failed to remove ${file}:`, err.message);
 						}
 					});
-					
+
 					console.log(`🧹 Removed ${conflictFiles.length} potential conflict files`);
 				}
 
@@ -79,7 +77,6 @@ const handler = async (sock, msg, from, args, { sendMessageWTyping, isOwner, sen
 				process.exit(1);
 			}
 		}, 3000);
-
 	} else if (action === "clean") {
 		await sendMessageWTyping(
 			from,

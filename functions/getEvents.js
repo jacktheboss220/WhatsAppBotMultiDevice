@@ -10,9 +10,20 @@ const events = async (sock, startSock, cache) => {
 				const upsert = event["messages.upsert"];
 				if (upsert.type === "notify") {
 					for (const msg of upsert.messages) {
-						if (!msg.message) continue;
+						if (!msg || !msg.message || !msg.key || !msg.key.remoteJid) {
+							continue;
+						}
 
-						// Process message in a try-catch to prevent one bad message from breaking everything
+						const messageContent = JSON.stringify(msg.message);
+						if (messageContent === "{}" || messageContent === "null" || messageContent === "undefined") {
+							continue;
+						}
+
+						const isFromBot = msg.key.fromMe || (sock.user && msg.key.participant === sock.user.id);
+						if (isFromBot && upsert.type === "notify") {
+							continue;
+						}
+
 						try {
 							await getCommand(sock, msg, cache);
 						} catch (msgError) {

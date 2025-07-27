@@ -1,5 +1,5 @@
 const NodeCache = require("node-cache");
-const { cleanupStaleSessions } = require("./functions/sessionCleanup");
+const { performFullCleanup, emergencyCleanup } = require("./functions/systemCleanup");
 
 // Optimized cache with TTL and memory management
 const cache = new NodeCache({
@@ -22,7 +22,7 @@ setInterval(() => {
 
 // Cleanup sessions more frequently during session issues
 setInterval(() => {
-	cleanupStaleSessions();
+	performFullCleanup();
 }, 300000); // Every 5 minutes instead of 10
 
 const socket = require("./functions/getSocket");
@@ -36,16 +36,16 @@ const MIN_CONNECTION_INTERVAL = 10000; // 10 seconds minimum between attempts
 const startSock = async (reason = "initial") => {
 	try {
 		const now = Date.now();
-		
+
 		// Prevent too frequent reconnection attempts
 		if (now - lastConnectionTime < MIN_CONNECTION_INTERVAL) {
 			console.log("⏳ Connection attempt too soon, waiting...");
 			return null;
 		}
-		
+
 		if (connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
-			console.log("❌ Max connection attempts reached. Cleaning up and resetting...");
-			cleanupStaleSessions();
+			console.log("❌ Max connection attempts reached. Performing emergency cleanup and resetting...");
+			await emergencyCleanup();
 			connectionAttempts = 0; // Reset after cleanup
 			// Wait longer before allowing reconnection
 			setTimeout(() => {
@@ -58,6 +58,9 @@ const startSock = async (reason = "initial") => {
 		lastConnectionTime = now;
 		console.log(`🔄 Starting socket connection (attempt ${connectionAttempts}): ${reason}`);
 
+		// Perform comprehensive cleanup to prevent stale references
+		await performFullCleanup();
+
 		const sock = await socket();
 		if (sock) {
 			events(sock, startSock, cache);
@@ -69,14 +72,15 @@ const startSock = async (reason = "initial") => {
 		console.error("❌ Error starting socket:", error.message);
 
 		// Enhanced session error detection and handling
-		if (error.message.includes("session") || 
-			error.message.includes("prekey") || 
+		if (
+			error.message.includes("session") ||
+			error.message.includes("prekey") ||
 			error.message.includes("stale") ||
-			error.message.includes("unauthorized")) {
-			
-			console.log("🧹 Session-related error detected, performing cleanup...");
-			cleanupStaleSessions();
-			
+			error.message.includes("unauthorized")
+		) {
+			console.log("🧹 Session-related error detected, performing comprehensive cleanup...");
+			await performFullCleanup();
+
 			// Reset connection attempts for session issues
 			connectionAttempts = Math.max(0, connectionAttempts - 1);
 		}

@@ -1,9 +1,8 @@
 require("dotenv").config();
-const { delay } = require("baileys");
-
 const fs = require("fs");
 
 const logOwner = require("./getOwnerSend");
+const { validateMessageObject, sanitizeMessageContent } = require("./systemCleanup");
 
 const prefix = process.env.PREFIX;
 const moderatos = [...process.env.MODERATORS?.split(",")];
@@ -19,31 +18,75 @@ const getCommand = async (sock, msg, cache) => {
 	const startTime = process.hrtime();
 
 	try {
-		// Ensure socket is ready and connected
 		if (!sock || !sock.user) {
 			console.log("⚠️ Socket not ready, skipping message processing");
 			return;
 		}
 
-		// Basic message validation
-		if (!msg || !msg.key || !msg.message) {
-			console.log("⚠️ Invalid message structure, skipping");
+		if (sock.startupTime) {
+			const timeSinceStart = Date.now() - sock.startupTime;
+			if (timeSinceStart < 1000) {
+				console.log("⏳ Skipping message processing during startup period");
+				return;
+			}
+		}
+
+		if (!validateMessageObject(msg)) {
+			console.log("⚠️ Invalid message object detected, skipping - Keys:", Object.keys(msg.message || {}));
+			return;
+		}
+
+		const messageKeys = Object.keys(msg.message);
+		if (messageKeys.length === 0) {
+			console.log("⚠️ Empty message object, skipping");
+			return;
+		}
+
+		if (msg.key.fromMe && !msg.key.remoteJid) {
+			console.log("⚠️ Skipping malformed bot message");
 			return;
 		}
 
 		//-------------------------------------------------------------------------------------------------------------//
 		const sendMessageWTyping = async (jid, option1, option2) => {
-			// await sock.presenceSubscribe(jid);
-			// await delay(500);
+			try {
+				// Validate inputs to prevent sending empty messages
+				if (!jid || !option1) {
+					console.log("⚠️ Attempted to send message with missing jid or content");
+					return;
+				}
 
-			// await sock?.sendPresenceUpdate("composing", jid);
-			// await delay(2000);
-			// await sock?.sendPresenceUpdate("paused", jid);
+				// Check if the message content is empty
+				if (option1.text !== undefined) {
+					const sanitized = sanitizeMessageContent(option1.text);
+					if (!sanitized) {
+						console.log("⚠️ Attempted to send empty text message, skipping");
+						return;
+					}
+					option1.text = sanitized;
+				}
 
-			await sock.sendMessage(jid, option1, {
-				...option2,
-				mediaUploadTimeoutMs: 1000 * 60 * 60,
-			});
+				// Ensure socket is ready before sending
+				if (!sock || !sock.user) {
+					console.log("⚠️ Socket not ready for sending message");
+					return;
+				}
+
+				// await sock.presenceSubscribe(jid);
+				// await delay(500);
+
+				// await sock?.sendPresenceUpdate("composing", jid);
+				// await delay(2000);
+				// await sock?.sendPresenceUpdate("paused", jid);
+
+				await sock.sendMessage(jid, option1, {
+					...option2,
+					mediaUploadTimeoutMs: 1000 * 60 * 60,
+				});
+			} catch (error) {
+				console.error("❌ Error in sendMessageWTyping:", error);
+				// Don't throw error to prevent breaking the flow
+			}
 		};
 		//-------------------------------------------------------------------------------------------------------------//
 		const from = msg.key.remoteJid;
@@ -77,6 +120,14 @@ const getCommand = async (sock, msg, cache) => {
 				? msg.message.listResponseMessage.title
 				: "";
 
+		// Additional safety check for body
+		if (body === null || body === undefined) {
+			body = "";
+		}
+
+		// Ensure body is a string
+		body = String(body).trim();
+
 		let types = [
 			"conversation",
 			"imageMessage",
@@ -105,7 +156,13 @@ const getCommand = async (sock, msg, cache) => {
 		const senderJid = isGroup ? msg.key.participant : msg.key.remoteJid;
 		const isOwner = senderJid == myNumber ? true : false;
 
-		if (senderJid == "" || senderJid == null) return;
+		if (!senderJid || senderJid === "" || senderJid === null || senderJid === undefined) {
+			return;
+		}
+
+		if (!senderJid.includes("@")) {
+			return;
+		}
 		//--------------------------------------------------Count------------------------------------------------------//
 		const updateId = msg.key.fromMe ? botNumberJid : senderJid;
 		const updateName = msg.key.fromMe ? sock.user.name : msg.pushName;
@@ -154,7 +211,6 @@ const getCommand = async (sock, msg, cache) => {
 		}
 		//--------------------------------------------------SENDER-----------------------------------------------------//
 		const senderNumber = senderJid.includes(":") ? senderJid.split(":")[0] : senderJid.split("@")[0];
-		// Ensure sender data exists in database before fetching
 		if (senderJid !== updateId) {
 			await createMembersData(senderJid, msg.pushName);
 		}

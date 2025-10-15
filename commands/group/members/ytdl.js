@@ -21,6 +21,7 @@ const ffmpeg = require("ffmpeg-static");
 const youtubedl = require("youtube-dl-exec");
 // Global constants
 const ytdl = require("@distube/ytdl-core");
+const path = require("path");
 
 // Create multiple agents with different configurations to avoid bot detection
 const agents = [ytdl.createAgent(), ytdl.createAgent(), ytdl.createAgent()];
@@ -137,7 +138,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				);
 			} catch (ytdlInfoError) {
 				console.error("ytdl-core info also failed:", ytdlInfoError);
-				
+
 				if (isYtdlCoreParsingError(ytdlInfoError)) {
 					throw new Error("YouTube changed their format. Please try again later or contact support.");
 				} else if (isBotDetectionError(ytdlInfoError)) {
@@ -173,7 +174,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		if (useYtdlp) {
 			try {
 				console.log("Attempting to use yt-dlp for download...");
-
 				// Use yt-dlp to download both audio and video separately
 				const audioFile = getRandom("_audio.m4a");
 				const videoFile = getRandom("_video.mp4");
@@ -192,6 +192,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					3,
 					2000
 				);
+				console.log("Audio download complete, checking file:", audioFile);
+				if (!fs.existsSync(audioFile)) {
+					await sendMessageWTyping(from, { text: "❌ Audio file was not created." }, { quoted: msg });
+					console.error("Audio file not found:", audioFile);
+					return;
+				}
+				const audioStats = fs.statSync(audioFile);
+				if (audioStats.size === 0) {
+					await sendMessageWTyping(from, { text: "❌ Audio file is empty." }, { quoted: msg });
+					console.error("Audio file is empty:", audioFile);
+					return;
+				}
 
 				// Download video with retry logic
 				await retryWithBackoff(
@@ -207,8 +219,21 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					3,
 					2000
 				);
+				console.log("Video download complete, checking file:", videoFile);
+				if (!fs.existsSync(videoFile)) {
+					await sendMessageWTyping(from, { text: "❌ Video file was not created." }, { quoted: msg });
+					console.error("Video file not found:", videoFile);
+					return;
+				}
+				const videoStats = fs.statSync(videoFile);
+				if (videoStats.size === 0) {
+					await sendMessageWTyping(from, { text: "❌ Video file is empty." }, { quoted: msg });
+					console.error("Video file is empty:", videoFile);
+					return;
+				}
 
 				// Merge using ffmpeg
+				console.log("Merging audio and video with ffmpeg...");
 				const mergeProcess = cp.spawn(
 					ffmpeg,
 					[
@@ -232,15 +257,86 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						// Cleanup temp files
 						memoryManager.safeUnlink(audioFile);
 						memoryManager.safeUnlink(videoFile);
-
+						console.log("ffmpeg merge process closed with code:", code);
 						if (code === 0) {
 							resolve();
 						} else {
 							reject(new Error(`FFmpeg merge failed with code ${code}`));
 						}
 					});
-					mergeProcess.on("error", reject);
+					mergeProcess.on("error", (err) => {
+						console.error("ffmpeg merge process error:", err);
+						reject(err);
+					});
 				});
+				console.log("ffmpeg merge complete, checking output file:", fileDown);
+				if (!fs.existsSync(fileDown)) {
+					await sendMessageWTyping(from, { text: "❌ Merged video file was not created." }, { quoted: msg });
+					return;
+				}
+				const mergedStats = fs.statSync(fileDown);
+				if (mergedStats.size === 0) {
+					await sendMessageWTyping(from, { text: "❌ Merged video file is empty." }, { quoted: msg });
+					return;
+				}
+				if (!isValidVideoFile(fileDown)) {
+					await sendMessageWTyping(
+						from,
+						{ text: "❌ Video file is not valid or not supported." },
+						{ quoted: msg }
+					);
+					return;
+				}
+				const fileSizeMB = mergedStats.size / (1024 * 1024);
+				if (fileSizeMB > 60) {
+					await sendMessageWTyping(
+						from,
+						{
+							text: `❌ Video is too large to send on WhatsApp (${fileSizeMB.toFixed(
+								2
+							)}MB). Limit is 60MB.`,
+						},
+						{ quoted: msg }
+					);
+					memoryManager.safeUnlink(fileDown);
+					return;
+				}
+				// Normalize file path for WhatsApp library
+				const normalizedFileDown = fileDown.split(path.sep).join("/");
+				try {
+					await sendMessageWTyping(
+						from,
+						{
+							video: normalizedFileDown,
+							caption: `🎥 *${title}*\n📊 Size: ${fileSizeMB.toFixed(2)}MB`,
+							mimetype: "video/mp4",
+						},
+						{ quoted: msg }
+					);
+				} catch (sendPathError) {
+					try {
+						const videoBuffer = await readFileEfficiently(fileDown);
+						await sendMessageWTyping(
+							from,
+							{
+								video: videoBuffer,
+								caption: `🎥 *${title}*\n📊 Size: ${fileSizeMB.toFixed(2)}MB`,
+								mimetype: "video/mp4",
+							},
+							{ quoted: msg }
+						);
+					} catch (sendBufferError) {
+						await sendMessageWTyping(
+							from,
+							{
+								text: `❌ Failed to send video: ${sendBufferError.message}`,
+							},
+							{ quoted: msg }
+						);
+					}
+				} finally {
+					memoryManager.safeUnlink(fileDown);
+				}
 			} catch (ytdlpError) {
 				console.error("yt-dlp failed, falling back to ytdl-core:", ytdlpError);
 
@@ -303,7 +399,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				);
 			} catch (ytdlStreamError) {
 				console.error("ytdl-core stream creation failed:", ytdlStreamError);
-				
+
 				if (isYtdlCoreParsingError(ytdlStreamError)) {
 					throw new Error("YouTube changed their format. Please try again later or contact support.");
 				} else if (isBotDetectionError(ytdlStreamError)) {
@@ -412,61 +508,124 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				}
 
 				try {
-					// Check if file exists and has content
+					// Check file existence and size before sending
 					if (!fs.existsSync(fileDown)) {
-						throw new Error("Output file was not created");
+						await sendMessageWTyping(from, { text: "❌ Video file was not created." }, { quoted: msg });
+						console.error("File not found:", fileDown);
+						return;
 					}
-
-					// Validate the video file
-					if (!isValidVideoFile(fileDown)) {
-						throw new Error("Invalid video file generated");
-					}
-
 					const stats = fs.statSync(fileDown);
-					const fileSizeMB = stats.size / 1024 / 1024;
-
-					console.log(`File ready: ${fileSizeMB.toFixed(2)}MB`);
-
-					// Check file size limit (50MB for WhatsApp)
-					if (fileSizeMB > 50) {
-						throw new Error(`File too large: ${fileSizeMB.toFixed(2)}MB (max 50MB)`);
+					if (stats.size === 0) {
+						try {
+							await sendMessageWTyping(from, { text: "❌ Video file is empty." }, { quoted: msg });
+						} catch (err) {
+							console.error("Error sending empty file message:", err);
+						}
+						console.error("File is empty:", fileDown);
+						return;
 					}
-
-					// Read the file efficiently
-					const videoBuffer = await readFileEfficiently(fileDown);
-
-					await sock.sendMessage(
+					if (!isValidVideoFile(fileDown)) {
+						try {
+							await sendMessageWTyping(
+								from,
+								{ text: "❌ Video file is not valid or not supported." },
+								{ quoted: msg }
+							);
+						} catch (err) {
+							console.error("Error sending invalid file message:", err);
+						}
+						console.error("Invalid video file:", fileDown);
+						return;
+					}
+					const fileSizeMB = stats.size / (1024 * 1024);
+					console.log("Attempting to send video file:", fileDown, "Size:", fileSizeMB.toFixed(2), "MB");
+					if (fileSizeMB > 60) {
+						// WhatsApp hard limit is usually 64MB, but use 60MB for safety
+						try {
+							await sendMessageWTyping(
+								from,
+								{
+									text: `❌ Video is too large to send on WhatsApp (${fileSizeMB.toFixed(
+										2
+									)}MB). Limit is 60MB.`,
+								},
+								{ quoted: msg }
+							);
+						} catch (err) {
+							console.error("Error sending file too large message:", err);
+						}
+						console.error("File too large for WhatsApp:", fileDown, fileSizeMB);
+						memoryManager.safeUnlink(fileDown);
+						return;
+					}
+					// Wait 2-3 seconds to ensure file system flush
+					await new Promise((res) => setTimeout(res, 2500));
+					// Normalize file path for WhatsApp library
+					const normalizedFileDown = fileDown.split(path.sep).join("/");
+					try {
+						await sendMessageWTyping(
+							from,
+							{
+								video: normalizedFileDown,
+								caption: `🎥 *${title}*\n📊 Size: ${fileSizeMB.toFixed(2)}MB`,
+								mimetype: "video/mp4",
+							},
+							{ quoted: msg }
+						);
+						console.log("Video sent successfully");
+						try {
+							await sendMessageWTyping(from, { text: "✅ Video sent successfully." }, { quoted: msg });
+						} catch (err) {
+							console.error("Error sending success message:", err);
+						}
+					} catch (sendPathError) {
+						console.error("File path send failed, trying buffer fallback:", sendPathError);
+						try {
+							const videoBuffer = await readFileEfficiently(fileDown);
+							await sendMessageWTyping(
+								from,
+								{
+									video: videoBuffer,
+									caption: `🎥 *${title}*\n📊 Size: ${fileSizeMB.toFixed(2)}MB`,
+									mimetype: "video/mp4",
+								},
+								{ quoted: msg }
+							);
+							console.log("Video sent with buffer fallback");
+							try {
+								await sendMessageWTyping(
+									from,
+									{ text: "✅ Video sent with buffer fallback." },
+									{ quoted: msg }
+								);
+							} catch (err) {
+								console.error("Error sending buffer fallback success message:", err);
+							}
+						} catch (sendBufferError) {
+							console.error("Buffer fallback also failed:", sendBufferError);
+							try {
+								await sendMessageWTyping(
+									from,
+									{
+										text: `❌ Failed to send video: ${sendBufferError.message}`,
+									},
+									{ quoted: msg }
+								);
+							} catch (err) {
+								console.error("Error sending buffer fallback error message:", err);
+							}
+						}
+					} finally {
+						// Ensure cleanup happens
+						memoryManager.safeUnlink(fileDown);
+					}
+				} catch (sendError) {
+					console.error("Send error:", sendError);
+					await sendMessageWTyping(
 						from,
-						{
-							video: videoBuffer,
-							caption: `🎥 *${title}*\n📊 Size: ${fileSizeMB.toFixed(2)}MB`,
-							mimetype: "video/mp4",
-						},
+						{ text: `❌ Failed to send video: ${sendError.message}` },
 						{ quoted: msg }
 					);
-
-					console.log("Video sent successfully");
-				} catch (error) {
-					console.error("Error sending video:", error);
-
-					// More specific error handling
-					if (error.message.includes("too large")) {
-						await sendMessageWTyping(
-							from,
-							{
-								text: `❌ ${error.message}\nTry downloading a shorter video.`,
-							},
-							{ quoted: msg }
-						);
-					} else {
-						await sendMessageWTyping(
-							from,
-							{
-								text: `❌ Failed to send video: ${error.message}`,
-							},
-							{ quoted: msg }
-						);
-					}
 				} finally {
 					// Ensure cleanup happens
 					memoryManager.safeUnlink(fileDown);

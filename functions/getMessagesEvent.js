@@ -3,6 +3,7 @@ const fs = require("fs");
 
 const logOwner = require("./getOwnerSend");
 const { validateMessageObject, sanitizeMessageContent } = require("./systemCleanup");
+const { readFileEfficiently } = require("./fileUtils");
 
 const prefix = process.env.PREFIX;
 const moderatos = [...process.env.MODERATORS?.split(",")];
@@ -12,72 +13,45 @@ const { stickerForward, forwardGroup } = require("../functions/getStickerForward
 const { createMembersData, getMemberData, member } = require("../mongo-DB/membersDataDb");
 const { createGroupData, getGroupData, group } = require("../mongo-DB/groupDataDb");
 const { commandsPublic, commandsMembers, commandsAdmins, commandsOwners } = require("./getAddCommands");
-const myNumber = process.env.MY_NUMBER;
+const myNumber = [
+	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
+	process.env.MY_NUMBER.split(",")[1] + "@lid",
+];
 
 const getCommand = async (sock, msg, cache) => {
 	const startTime = process.hrtime();
 
 	try {
-		if (!sock || !sock.user) {
-			console.log("⚠️ Socket not ready, skipping message processing");
-			return;
-		}
-
-		if (sock.startupTime) {
-			const timeSinceStart = Date.now() - sock.startupTime;
-			if (timeSinceStart < 1000) {
-				console.log("⏳ Skipping message processing during startup period");
-				return;
-			}
-		}
-
-		if (!validateMessageObject(msg)) {
-			console.log("⚠️ Invalid message object detected, skipping - Keys:", Object.keys(msg.message || {}));
-			return;
-		}
-
+		if (!sock || !sock.user) return;
+		if (sock.startupTime && Date.now() - sock.startupTime < 1000) return;
+		if (!validateMessageObject(msg)) return;
 		const messageKeys = Object.keys(msg.message);
-		if (messageKeys.length === 0) {
-			console.log("⚠️ Empty message object, skipping");
-			return;
-		}
+		if (messageKeys.length === 0) return;
+		if (msg.key.fromMe && !msg.key.remoteJid) return;
 
-		if (msg.key.fromMe && !msg.key.remoteJid) {
-			console.log("⚠️ Skipping malformed bot message");
-			return;
-		}
-
-		//-------------------------------------------------------------------------------------------------------------//
 		const sendMessageWTyping = async (jid, option1, option2) => {
 			try {
-				// Validate inputs to prevent sending empty messages
-				if (!jid || !option1) {
-					console.log("⚠️ Attempted to send message with missing jid or content");
-					return;
-				}
-
-				// Check if the message content is empty
+				if (!jid || !option1) return;
 				if (option1.text !== undefined) {
 					const sanitized = sanitizeMessageContent(option1.text);
-					if (!sanitized) {
-						console.log("⚠️ Attempted to send empty text message, skipping");
-						return;
-					}
+					if (!sanitized) return;
 					option1.text = sanitized;
 				}
+				if (!sock || !sock.user) return;
 
-				// Ensure socket is ready before sending
-				if (!sock || !sock.user) {
-					console.log("⚠️ Socket not ready for sending message");
-					return;
+				// Async media file reading for images, stickers, audio, video
+				const mediaTypes = ["image", "sticker", "audio", "video", "document"];
+				for (const type of mediaTypes) {
+					if (option1[type] && typeof option1[type] === "string") {
+						// If a file path is provided, read it efficiently
+						option1[type] = await readFileEfficiently(option1[type]);
+					}
+					if (option1[type] && Buffer.isBuffer(option1[type])) {
+						console.log(
+							`[sendMessageWTyping] Media type: ${type}, Buffer size: ${option1[type].length} bytes`
+						);
+					}
 				}
-
-				// await sock.presenceSubscribe(jid);
-				// await delay(500);
-
-				// await sock?.sendPresenceUpdate("composing", jid);
-				// await delay(2000);
-				// await sock?.sendPresenceUpdate("paused", jid);
 
 				await sock.sendMessage(jid, option1, {
 					...option2,
@@ -85,24 +59,20 @@ const getCommand = async (sock, msg, cache) => {
 				});
 			} catch (error) {
 				console.error("❌ Error in sendMessageWTyping:", error);
-				// Don't throw error to prevent breaking the flow
 			}
 		};
-		//-------------------------------------------------------------------------------------------------------------//
+
 		const from = msg.key.remoteJid;
 		const content = JSON.stringify(msg.message);
 		const type = Object.keys(msg.message)[0];
 
-		//-------------------------------------------------------------------------------------------------------------//
 		if (type === "stickerMessage" && forwardGroup != "") {
 			stickerForward(sock, msg, from);
 		}
-		//-------------------------------------------------------------------------------------------------------------//
+
 		let botNumberJid = sock.user.id;
 		botNumberJid = botNumberJid.includes(":") ? botNumberJid.split(":")[0] + "@s.whatsapp.net" : botNumberJid;
-		//-------------------------------------------------------------------------------------------------------------//
-		//--------------------------------------------------BODY-------------------------------------------------------//
-		//-------------------------------------------------------------------------------------------------------------//
+
 		let body =
 			type === "conversation"
 				? msg.message.conversation
@@ -119,13 +89,7 @@ const getCommand = async (sock, msg, cache) => {
 				: type == "listResponseMessage"
 				? msg.message.listResponseMessage.title
 				: "";
-
-		// Additional safety check for body
-		if (body === null || body === undefined) {
-			body = "";
-		}
-
-		// Ensure body is a string
+		if (body === null || body === undefined) body = "";
 		body = String(body).trim();
 
 		let types = [
@@ -137,89 +101,88 @@ const getCommand = async (sock, msg, cache) => {
 			"templateButtonReplyMessage",
 			"listResponseMessage",
 		];
+		if (!types.includes(type)) return;
 
-		if (!types.includes(type)) {
-			return;
+		if (type == "buttonsResponseMessage") {
+			if (msg.message.buttonsResponseMessage.selectedButtonId == "eva")
+				body = body.startsWith(prefix) ? body : prefix + body;
+		} else if (type == "templateButtonReplyMessage") {
+			body = body.startsWith(prefix) ? body : prefix + body;
+		} else if (type == "listResponseMessage") {
+			if (msg.message.listResponseMessage.singleSelectReply.selectedRowId == "eva")
+				body = body.startsWith(prefix) ? body : prefix + body;
 		}
-		//-------------------------------------------------------------------------------------------------------------//
-		//-------------------------------------------------------------------------------------------------------------//
-		//-------------------------------------------------------------------------------------------------------------//
 		if (body[1] == " ") body = body[0] + body.slice(2);
 		const evv = body.trim().split(/ +/).slice(1).join(" ");
 		const command = body.slice(1).trim().split(/ +/).shift().toLowerCase();
 		const args = body.trim().split(/ +/).slice(1);
-		//-------------------------------------------------------------------------------------------------------------//
 		const isCmd = body.startsWith(prefix);
 		if (!isCmd && type == "stickerMessage") return;
-		//-------------------------------------------------------------------------------------------------------------//
 		const isGroup = from.endsWith("@g.us");
 		const senderJid = isGroup ? msg.key.participant : msg.key.remoteJid;
-		const isOwner = senderJid == myNumber ? true : false;
+		const isOwner = myNumber.includes(senderJid);
+		if (!senderJid || !senderJid.includes("@")) return;
 
-		if (!senderJid || senderJid === "" || senderJid === null || senderJid === undefined) {
-			return;
-		}
-
-		if (!senderJid.includes("@")) {
-			return;
-		}
-		//--------------------------------------------------Count------------------------------------------------------//
 		const updateId = msg.key.fromMe ? botNumberJid : senderJid;
 		const updateName = msg.key.fromMe ? sock.user.name : msg.pushName;
+		// Parallelize member update and creation
 		if (type == "conversation" || type == "extendedTextMessage") {
-			member.updateOne({ _id: updateId }, { $inc: { totalmsg: 1 } }, { $set: { username: updateName } }); //19-10-2022
-			await createMembersData(updateId, updateName);
+			Promise.all([
+				member.updateOne({ _id: updateId }, { $inc: { totalmsg: 1 } }, { $set: { username: updateName } }),
+				createMembersData(updateId, updateName),
+			]);
 		}
-		//-------------------------------------------------------------------------------------------------------------//
+
 		let groupMetadata = "";
+		let groupData = "";
 		if (isGroup) {
 			groupMetadata = cache.get(from + ":groupMetadata");
 			if (!groupMetadata) {
 				groupMetadata = await sock.groupMetadata(from);
-				const success = cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
-				await createGroupData(from, groupMetadata);
+				cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
+				createGroupData(from, groupMetadata);
 			}
 		}
 		if (isGroup && (type == "conversation" || type == "extendedTextMessage")) {
-			group
-				.updateOne(
-					{ _id: from, "members.id": updateId },
-					{
-						$inc: { "members.$.count": 1 },
-						$set: { "members.$.name": updateName },
-					}
-				)
-				.then((r) => {
-					if (r.matchedCount == 0) {
-						group.updateOne(
-							{ _id: from },
-							{
-								$push: {
-									members: { id: updateId, name: updateName, count: 1 },
-								},
-							}
-						);
-					}
-				});
-			group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } }); //19-10-2022
+			Promise.all([
+				group
+					.updateOne(
+						{ _id: from, "members.id": updateId },
+						{
+							$inc: { "members.$.count": 1 },
+							$set: { "members.$.name": updateName },
+						}
+					)
+					.then((r) => {
+						if (r.matchedCount == 0) {
+							group.updateOne(
+								{ _id: from },
+								{
+									$push: { members: { id: updateId, name: updateName, count: 1 } },
+								}
+							);
+						}
+					}),
+				group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } }),
+			]);
 		}
-		//-------------------------------------------------------------------------------------------------------------//
 		if (msg.message.extendedTextMessage) {
 			if (msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumberJid) {
 				sock.sendMessage(from, { sticker: fs.readFileSync("./media/tag.webp") }, { quoted: msg });
 			}
 		}
-		//--------------------------------------------------SENDER-----------------------------------------------------//
 		const senderNumber = senderJid.includes(":") ? senderJid.split(":")[0] : senderJid.split("@")[0];
 		if (senderJid !== updateId) {
-			await createMembersData(senderJid, msg.pushName);
+			createMembersData(senderJid, msg.pushName);
 		}
-		const senderData = await getMemberData(senderJid);
-		const groupData = isGroup ? await getGroupData(from) : "";
-		//-------------------------------------------------------------------------------------------------------------//
+		// Parallelize member and group data fetch
+		const [senderData, groupDataFetched] = await Promise.all([
+			getMemberData(senderJid),
+			isGroup ? getGroupData(from) : Promise.resolve(""),
+		]);
+		if (isGroup) groupData = groupDataFetched;
 		if (isGroup && type == "imageMessage" && groupData?.isAutoStickerOn) {
 			if (msg.message.imageMessage.caption == "") {
-				console.log("Sticker Created");
 				commandsPublic["sticker"](sock, msg, from, args, {
 					senderJid,
 					type,
@@ -230,9 +193,13 @@ const getCommand = async (sock, msg, cache) => {
 				});
 			}
 		}
-		//---------------------------------------------IS-BLOCK--------------------------------------------------------//
+		if (isGroup && type == "videoMessage" && from == "19016677357-1630334490@g.us") {
+			sock.sendMessage("120363304235745811@g.us", {
+				forward: msg,
+				contextInfo: { forwardingScore: 1, isForwarded: false },
+			});
+		}
 		if (senderData?.isBlock) return;
-		//-------------------------------------------------ChatBot-----------------------------------------------------//
 		if (type == "conversation" || type == "extendedTextMessage") {
 			if (body.split(" ")[0].toLowerCase() == "eva" || body.split(" ")[0].toLowerCase() == "gemini") {
 				const isChatBotOn = groupData ? groupData.isChatBotOn : false;
@@ -247,13 +214,9 @@ const getCommand = async (sock, msg, cache) => {
 		}
 		//---------------------------------------------------NO-CMD----------------------------------------------------//
 		if (!isCmd) return;
-		//-------------------------------------------------READ-SEEN---------------------------------------------------//
 		await sock.readMessages([msg.key]);
-		//------------------------------------------------GROUP-DATA---------------------------------------------------//
 		const groupAdmins = isGroup ? getGroupAdmins(groupMetadata.participants) : "";
 		const isGroupAdmin = groupAdmins?.includes(senderJid) || false;
-		// const groupData = isGroup ? await getGroupData(from) : "";
-		//-------------------------------------------------------------------------------------------------------------//
 		const msgInfoObj = {
 			prefix,
 			type,
@@ -272,12 +235,11 @@ const getCommand = async (sock, msg, cache) => {
 			isOwner,
 			startTime,
 		};
-		//-------------------------------------------------------------------------------------------------------------//
 		console.log(
 			"[COMMAND]",
 			command,
 			"[FROM]",
-			senderNumber,
+			senderJid,
 			"[name]",
 			msg.pushName,
 			"[IN]",
@@ -285,13 +247,18 @@ const getCommand = async (sock, msg, cache) => {
 		);
 		logOwner(
 			sock,
-			`📝: ${prefix}${command} by ${msg.pushName}(+${senderNumber}) in ${isGroup ? groupMetadata.subject : "DM"}`,
+			"[COMMAND] " +
+				command +
+				" [FROM] " +
+				senderJid +
+				" [name] " +
+				msg.pushName +
+				" [IN] " +
+				(isGroup ? groupMetadata.subject : "Directs"),
 			msg
 		);
-		//-------------------------------------------------BLOCK-CMDs--------------------------------------------------//
 		if (isGroup) {
 			let resBotOn = groupData ? await groupData.isBotOn : false;
-
 			if (resBotOn == false && !(command.startsWith("group") || command.startsWith("dev"))) {
 				return sendMessageWTyping(from, {
 					text:
@@ -307,44 +274,63 @@ const getCommand = async (sock, msg, cache) => {
 				}
 			}
 		}
-		//-------------------------------------------------------------------------------------------------------------//
-		//---------------------------------------------------COMMANDS--------------------------------------------------//
-		//-------------------------------------------------------------------------------------------------------------//
-
 		if (commandsPublic[command]) {
-			return commandsPublic[command](sock, msg, from, args, msgInfoObj);
+			const t0 = Date.now();
+			const result = await commandsPublic[command](sock, msg, from, args, msgInfoObj);
+			const t1 = Date.now();
+			console.log(`[PROFILE] Command '${command}' (public) took ${t1 - t0}ms`);
+			return result;
 		} else if (commandsMembers[command]) {
+			const t0 = Date.now();
+			let result;
 			if (isGroup || msg.key.fromMe) {
-				return commandsMembers[command](sock, msg, from, args, msgInfoObj);
+				result = await commandsMembers[command](sock, msg, from, args, msgInfoObj);
 			} else {
-				return sendMessageWTyping(
+				result = await sendMessageWTyping(
 					from,
 					{ text: "```❎ This command is only applicable in Groups!```" },
 					{ quoted: msg }
 				);
 			}
+			const t1 = Date.now();
+			console.log(`[PROFILE] Command '${command}' (members) took ${t1 - t0}ms`);
+			return result;
 		} else if (commandsAdmins[command]) {
+			const t0 = Date.now();
+			let result;
 			if (!isGroup) {
-				return sendMessageWTyping(
+				result = await sendMessageWTyping(
 					from,
 					{ text: "```❎ This command is only applicable in Groups!```" },
 					{ quoted: msg }
 				);
 			} else if (isGroupAdmin || moderatos.includes(senderNumber)) {
-				return commandsAdmins[command](sock, msg, from, args, msgInfoObj);
+				result = await commandsAdmins[command](sock, msg, from, args, msgInfoObj);
 			} else {
-				return sendMessageWTyping(from, { text: "```🤭 kya matlab tum admin nhi ho.```" }, { quoted: msg });
+				result = await sendMessageWTyping(
+					from,
+					{ text: "```🤭 kya matlab tum admin nhi ho.```" },
+					{ quoted: msg }
+				);
 			}
+			const t1 = Date.now();
+			console.log(`[PROFILE] Command '${command}' (admins) took ${t1 - t0}ms`);
+			return result;
 		} else if (commandsOwners[command]) {
-			if (moderatos.includes(senderNumber) || myNumber == senderJid) {
-				return commandsOwners[command](sock, msg, from, args, msgInfoObj);
+			const t0 = Date.now();
+			let result;
+			if (moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
+				result = await commandsOwners[command](sock, msg, from, args, msgInfoObj);
 			} else {
-				return sendMessageWTyping(
+				result = await sendMessageWTyping(
 					from,
 					{ text: "```🤭 kya matlab tum mere owner nhi ho.```" },
 					{ quoted: msg }
 				);
 			}
+			const t1 = Date.now();
+			console.log(`[PROFILE] Command '${command}' (owners) took ${t1 - t0}ms`);
+			return result;
 		} else {
 			return sendMessageWTyping(
 				from,
@@ -368,23 +354,16 @@ const getCommand = async (sock, msg, cache) => {
 				2
 			)
 		);
-
-		// Only send error message if we have sufficient context and socket is ready
 		if (sock && sock.user && msg && msg.key && msg.key.remoteJid) {
-			try {
-				// Add delay to avoid overwhelming the connection
-				setTimeout(async () => {
-					try {
-						await sock.sendMessage(msg.key.remoteJid, {
-							text: "❌ Sorry, I encountered an error processing your message. Please try again in a moment.",
-						});
-					} catch (sendError) {
-						console.error("❌ Failed to send error message:", sendError.message);
-					}
-				}, 1000); // 1 second delay
-			} catch (sendError) {
-				console.error("❌ Failed to schedule error message:", sendError.message);
-			}
+			setTimeout(async () => {
+				try {
+					await sock.sendMessage(msg.key.remoteJid, {
+						text: "❌ Sorry, I encountered an error processing your message. Please try again in a moment.",
+					});
+				} catch (sendError) {
+					console.error("❌ Failed to send error message:", sendError.message);
+				}
+			}, 1000);
 		}
 	}
 };

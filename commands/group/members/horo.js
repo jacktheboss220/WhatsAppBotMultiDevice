@@ -6,7 +6,7 @@ const URL = "https://www.horoscope.com/us/horoscopes/general/horoscope-general-d
 const getHoroscope = async (sign) => {
     const res = await axios.get(URL + sign);
     const $ = cheerio.load(res.data);
-    const horoscope = $('body > div.grid.grid-right-sidebar.primis-rr > main > div.main-horoscope > p:nth-child(2)').text();
+    const horoscope = $('body > div.grid.grid-right-sidebar > main > div.main-horoscope > p:nth-child(2)').text();
     return horoscope;
 }
 

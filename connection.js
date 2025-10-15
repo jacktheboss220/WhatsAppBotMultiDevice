@@ -36,13 +36,13 @@ const MIN_CONNECTION_INTERVAL = 10000; // 10 seconds minimum between attempts
 const startSock = async (reason = "initial") => {
 	try {
 		const now = Date.now();
-
+		
 		// Prevent too frequent reconnection attempts
 		if (now - lastConnectionTime < MIN_CONNECTION_INTERVAL) {
 			console.log("⏳ Connection attempt too soon, waiting...");
 			return null;
 		}
-
+		
 		if (connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
 			console.log("❌ Max connection attempts reached. Performing emergency cleanup and resetting...");
 			await emergencyCleanup();
@@ -72,15 +72,14 @@ const startSock = async (reason = "initial") => {
 		console.error("❌ Error starting socket:", error.message);
 
 		// Enhanced session error detection and handling
-		if (
-			error.message.includes("session") ||
-			error.message.includes("prekey") ||
+		if (error.message.includes("session") || 
+			error.message.includes("prekey") || 
 			error.message.includes("stale") ||
-			error.message.includes("unauthorized")
-		) {
+			error.message.includes("unauthorized")) {
+			
 			console.log("🧹 Session-related error detected, performing comprehensive cleanup...");
 			await performFullCleanup();
-
+			
 			// Reset connection attempts for session issues
 			connectionAttempts = Math.max(0, connectionAttempts - 1);
 		}

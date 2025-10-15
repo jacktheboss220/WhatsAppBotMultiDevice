@@ -1,5 +1,8 @@
 require("dotenv").config();
-const myNumber = process.env.MY_NUMBER + "@s.whatsapp.net";
+const myNumber = [
+	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
+	process.env.MY_NUMBER.split(",")[1] + "@lid",
+];
 const { fake_quoted } = require("./getFakeQuoted");
 const { getGroupData } = require("../mongo-DB/groupDataDb");
 
@@ -37,13 +40,13 @@ const getGroupEvent = async (sock, events, cache) => {
 				);
 			}
 		}
-		sock.sendMessage(myNumber, {
+		sock.sendMessage(myNumber[0], {
 			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
 				groupDataDB?.grpName
 			}\n*Participants:* ${events.participants.map((p) => p.split("@")[0])}`,
 		});
 	} else {
-		sock.sendMessage(myNumber, {
+		sock.sendMessage(myNumber[0], {
 			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
 				groupDataDB?.grpName
 			}\n*Participants:* ${events.participants.map((p) => p.split("@")[0])}`,

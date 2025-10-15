@@ -1,8 +1,11 @@
 require("dotenv").config();
-const myNumber = process.env.MY_NUMBER;
+const myNumber = [
+	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
+	process.env.MY_NUMBER.split(",")[1] + "@lid",
+];
 
 const logOwner = (sock, mess, msg) => {
-	if (!myNumber) {
+	if (myNumber.length === 0) {
 		console.error("MY_NUMBER is not set in the environment variables.");
 		return;
 	}
@@ -18,7 +21,7 @@ const logOwner = (sock, mess, msg) => {
 		message.mentions = mentionedJid;
 	}
 
-	sock.sendMessage(myNumber + "@s.whatsapp.net", message);
+	sock.sendMessage(myNumber[0], message);
 };
 
 module.exports = logOwner;

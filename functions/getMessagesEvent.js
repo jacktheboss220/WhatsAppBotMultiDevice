@@ -193,12 +193,6 @@ const getCommand = async (sock, msg, cache) => {
 				});
 			}
 		}
-		if (isGroup && type == "videoMessage" && from == "19016677357-1630334490@g.us") {
-			sock.sendMessage("120363304235745811@g.us", {
-				forward: msg,
-				contextInfo: { forwardingScore: 1, isForwarded: false },
-			});
-		}
 		if (senderData?.isBlock) return;
 		if (type == "conversation" || type == "extendedTextMessage") {
 			if (body.split(" ")[0].toLowerCase() == "eva" || body.split(" ")[0].toLowerCase() == "gemini") {

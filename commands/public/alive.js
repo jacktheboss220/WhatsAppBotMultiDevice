@@ -1,5 +1,5 @@
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, startTime } = msgInfoObj;
+	const { sendMessageWTyping, startTime, updateName } = msgInfoObj;
 
 	const uptime = process.uptime();
 	const hours = Math.floor(uptime / 3600);
@@ -18,7 +18,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const platform = `${process.platform} (${process.arch})`;
 
 	const response =
-		`*🎾 Eva is Online!*\n\n` +
+		`*👋🏻 Hello ${updateName}*\n\n` +
+		`*🎾 Eva is Online!*\n` +
 		`*🟢 Response Time:* ${
 			responseTime >= 1000 ? `${responseTimeInSeconds.toFixed(2)}s` : `${responseTime.toFixed(2)}ms`
 		}\n` +

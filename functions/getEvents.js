@@ -9,28 +9,28 @@ const events = async (sock, startSock, cache) => {
 			if (event["messages.upsert"]) {
 				const upsert = event["messages.upsert"];
 				if (upsert.type === "notify") {
-					for (const msg of upsert.messages) {
-						if (!msg || !msg.message || !msg.key || !msg.key.remoteJid) {
-							continue;
-						}
+					const validMessages = upsert.messages.filter(
+						(msg) =>
+						msg &&
+						msg.message &&
+						msg.key &&
+						msg.key.remoteJid &&
+						JSON.stringify(msg.message) !== "{}" &&
+						JSON.stringify(msg.message) !== "null" &&
+						JSON.stringify(msg.message) !== "undefined" &&
+						!(msg.key.fromMe || (sock.user && msg.key.participant === sock.user.id))
+					);
 
-						const messageContent = JSON.stringify(msg.message);
-						if (messageContent === "{}" || messageContent === "null" || messageContent === "undefined") {
-							continue;
-						}
-
-						const isFromBot = msg.key.fromMe || (sock.user && msg.key.participant === sock.user.id);
-						if (isFromBot && upsert.type === "notify") {
-							continue;
-						}
-
-						try {
-							await getCommand(sock, msg, cache);
-						} catch (msgError) {
-							console.error("Error processing individual message:", msgError);
-							console.error("Problematic message key:", msg.key);
-						}
-					}
+					await Promise.all(
+						validMessages.map(async (msg) => {
+							try {
+								await getCommand(sock, msg, cache);
+							} catch (msgError) {
+								console.error("Error processing individual message:", msgError);
+								console.error("Problematic message key:", msg.key);
+							}
+						})
+					);
 				}
 			}
 

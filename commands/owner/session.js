@@ -3,10 +3,13 @@ require("dotenv").config();
 const { resetAuthentication, cleanupStaleSessions, emergencyCleanup } = require("../../functions/systemCleanup");
 const fs = require("fs");
 const path = require("path");
-const myNumber = process.env.MY_NUMBER + "@s.whatsapp.net";
+const myNumber = [
+	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
+	process.env.MY_NUMBER.split(",")[1] + "@lid",
+];
 
 const handler = async (sock, msg, from, args, { sendMessageWTyping, isOwner, senderJid }) => {
-	if (senderJid !== myNumber) {
+	if (!myNumber.includes(senderJid) && !isOwner) {
 		return sendMessageWTyping(from, { text: "```❌ Only the bot owner can use this command```" }, { quoted: msg });
 	}
 

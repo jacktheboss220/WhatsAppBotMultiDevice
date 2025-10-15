@@ -39,17 +39,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
                 sendMessageWTyping(from,
                     { text: "❎ There is some problem!\nOnly non-animated stickers can be convert to image!" },
                     { quoted: msg });
-            }).on("end", () => {
-                sock.sendMessage(from, {
-                    image: fs.readFileSync(ran),
+            }).on("end", async () => {
+                // Use sendMessageWTyping with file path for async/efficient sending
+                await sendMessageWTyping(from, {
+                    image: ran,
                     caption: 'Sent by eva',
                     mimetype: 'image/png',
-                }, { quoted: msg }).then(() => {
-                    try {
-                        fs.unlinkSync(media)
-                        fs.unlinkSync(ran);
-                    } catch { }
-                })
+                }, { quoted: msg });
+                try {
+                    fs.unlinkSync(media)
+                    fs.unlinkSync(ran);
+                } catch { }
             });
         } catch (err) {
             sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });

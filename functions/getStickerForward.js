@@ -1,7 +1,7 @@
-const { downloadMediaMessage, proto } = require("baileys");
-const WSF = require("wa-sticker-formatter");
+import { downloadMediaMessage, proto } from "baileys";
+import WSF from "wa-sticker-formatter";
 
-const fs = require("fs");
+import fs from "fs";
 const getRandom = (ext) => {
 	return `${Math.floor(Math.random() * 10000)}${ext}`;
 };
@@ -94,4 +94,5 @@ const stickerForward = async (sock, msg, from) => {
 	});
 };
 
-module.exports = { stickerForward, forwardGroup };
+export { stickerForward, forwardGroup };
+

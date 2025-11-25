@@ -1,6 +1,7 @@
-require("dotenv").config();
+import dotenv from "dotenv"
+dotenv.config();
 
-const { cmdToText } = require("../../functions/getAddCommands");
+import { cmdToText } from "../../functions/getAddCommands.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
@@ -46,7 +47,7 @@ ${directCommands
 	});
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["help", "menu"],
 	desc: "Help menu",
 	usage: "help",

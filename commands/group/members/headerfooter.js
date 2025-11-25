@@ -1,7 +1,7 @@
-const { downloadContentFromMessage } = require("baileys");
-const memeMaker = require('@erickwendel/meme-maker');
-const { writeFile } = require('fs/promises');
-const fs = require('fs');
+import { downloadContentFromMessage } from "baileys";
+import memeMaker from '@erickwendel/meme-maker';
+import { writeFile } from 'fs/promises';
+import fs from 'fs';
 
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
@@ -106,7 +106,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 };
 
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["text", "txt", "texmeme"],
     desc: "Create a meme with text",
     usage: "textmeme _FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_ | reply to an image",

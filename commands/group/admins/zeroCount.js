@@ -1,4 +1,5 @@
-const { group } = require('../../../mongo-DB/groupDataDb');
+import { group } from "../../../mongo-DB/groupDataDb.js";
+import { extractPhoneNumber } from "../../../functions/lidUtils.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
@@ -26,7 +27,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
             let mess = "____________________________\n\n*Group Name:* " + res.grpName + '\n*Members <= ' + numberOfMessages + ' Count.*' + '\n*Total Zero Members:* ' + filtered.length + '\n____________________________\n\n' + readMore + '\n';
             filtered.forEach(element => {
-                mess += element.id.split("@")[0] + ',\n'
+                // Use extractPhoneNumber for LID/PN compatibility
+                mess += extractPhoneNumber(element.id) + ',\n'
             });
             sendMessageWTyping(from, { text: mess }, { quoted: msg });
 
@@ -34,7 +36,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     })
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['zero'],
     desc: 'Get members with zero message count',
     usage: 'zero <number> | zero',

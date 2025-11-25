@@ -1,4 +1,4 @@
-const logOwner = require("./getOwnerSend");
+import logOwner from "./getOwnerSend.js";
 
 const getCallEvent = async (sock, call) => {
 	// console.log(`Received call event:`, call);
@@ -28,4 +28,4 @@ const getCallEvent = async (sock, call) => {
 	}
 };
 
-module.exports = getCallEvent;
+export default getCallEvent;

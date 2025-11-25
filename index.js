@@ -1,149 +1,124 @@
-const startSock = require("./connection");
-const getDate = require("./functions/getDate");
-const memoryManager = require("./functions/memoryUtils");
-const performanceMonitor = require("./functions/performanceMonitor");
+import startSock from "./connection.js";
+import getDate from "./functions/getDate.js";
+import memoryManager from "./functions/memoryUtils.js";
+import performanceMonitor from "./functions/performanceMonitor.js";
+import { normalizeJID } from "./functions/lidUtils.js";
 
-const cors = require("cors");
-const express = require("express");
-const bodyParser = require("body-parser");
-const WebSocket = require("ws");
+import cors from "cors";
+import express from "express";
+import bodyParser from "body-parser";
+import { WebSocketServer } from "ws";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Remove cluster logic, always run as a single process
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const isProduction = process.env.NODE_ENV === "production";
-if (isProduction) {
-	// Reduce logging in production
-	console.log = function () {};
-	console.debug = function () {};
-}
+const app = express();
 
-function startServer() {
-	const app = express();
-	const path = require("path");
+app.use(
+	cors({
+		credentials: true,
+		optionsSuccessStatus: 200,
+	})
+);
 
-	// Optimize express middleware
-	app.use(
-		cors({
-			credentials: true,
-			optionsSuccessStatus: 200,
-		})
-	);
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(
+	express.static(path.join(__dirname, "public"), {
+		maxAge: "1d",
+		etag: false,
+	})
+);
 
-	app.use(bodyParser.json({ limit: "10mb" })); // Limit body size
-	app.use(
-		express.static(path.join(__dirname, "public"), {
-			maxAge: "1d", // Cache static files for better performance
-			etag: false,
-		})
-	);
+app.set("views", path.join(__dirname, "./public"));
+app.set("view engine", "ejs");
 
-	app.set("views", path.join(__dirname, "./public"));
-	app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-	app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+const port = process.env.PORT || 8000;
 
-	const port = process.env.PORT || 8000;
+app.get("/", (req, res) => {
+	res.render("index");
+});
 
-	app.get("/", (req, res) => {
-		res.render("index");
-	});
+const server = app.listen(port, () => {
+	console.log("\nWeb-server running!\n" + getDate());
+	console.log(`Memory usage at startup: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+	startServer();
+});
 
-	const server = app.listen(port, () => {
-		if (!isProduction) {
-			console.log("\nWeb-server running!\n" + getDate());
-			console.log(`Memory usage at startup: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+app.on("error", (error) => {
+	console.error("Web-server error:", error.message);
+});
+
+const wss = new WebSocketServer({
+	server,
+	maxPayload: 10 * 1024 * 1024,
+	perMessageDeflate: true,
+});
+
+async function startServer() {
+	const sock = await startSock("start");
+
+	sock.ev.on("connection.update", (update) => {
+		const { qr, isOnline } = update;
+		if (qr) {
+			wss.clients.forEach((client) => {
+				if (client.readyState === WebSocket.OPEN) {
+					client.send(JSON.stringify({ type: "qr", qr }));
+				}
+			});
+		} else if (isOnline) {
+			wss.clients.forEach((client) => {
+				if (client.readyState === WebSocket.OPEN) {
+					client.send(JSON.stringify({ type: "status", status: "connected" }));
+				}
+			});
 		}
-		// const host_url = process.env.HOST_URL || "";
-		// if (host_url != "") {
-		//     const axios = require("axios");
-		//     console.log("Pinging server every 15 minutes:", host_url);
-		//     const pingServer = setInterval(() => {
-		//         axios.get(host_url).then((response) => {
-		//             console.log("Initial self-request successful:", response.data.timestamp);
-		//         }).catch((error) => {
-		//             console.error("Initial self-request error:", error.message);
-		//             clearInterval(pingServer);
-		//         });
-		//     }, 1000 * 60 * 15); // 15 minutes
-		// }
 	});
 
-	app.on("error", (error) => {
-		console.error("Web-server error:", error.message);
-	});
+	wss.on("connection", (ws) => {
+		const heartbeat = setInterval(() => {
+			if (ws.readyState === WebSocket.OPEN) {
+				ws.ping();
+			}
+		}, 30000);
 
-	// Optimize WebSocket server
-	const wss = new WebSocket.Server({
-		server,
-		maxPayload: 10 * 1024 * 1024, // 10MB max message size
-		perMessageDeflate: true, // Enable compression
-	});
+		ws.on("pong", () => {});
 
-	(async () => {
-		const sock = await startSock("start");
-		sock.ev.on("connection.update", (update) => {
-			const { qr, isOnline } = update;
-			if (qr) {
-				wss.clients.forEach((client) => {
-					if (client.readyState === WebSocket.OPEN) {
-						client.send(JSON.stringify({ type: "qr", qr }));
-					}
+		ws.on("message", async (message) => {
+			try {
+				const { to, message: text } = JSON.parse(message);
+				if (!to || !text) {
+					ws.send(JSON.stringify({ type: "error", error: "Invalid request" }));
+					return;
+				}
+
+				if (text.length > 4096) {
+					ws.send(JSON.stringify({ type: "error", error: "Message too long" }));
+					return;
+				}
+
+				await sock.sendMessage(to + "@s.whatsapp.net", { text }).then(() => {
+					console.log("Message sent to", to, ":", text);
+					ws.send(JSON.stringify({ type: "success", success: "Message sent" }));
 				});
-			} else if (isOnline) {
-				wss.clients.forEach((client) => {
-					if (client.readyState === WebSocket.OPEN) {
-						client.send(JSON.stringify({ type: "status", status: "connected" }));
-					}
-				});
+			} catch (err) {
+				console.error("Error handling WebSocket message:", err);
+				ws.send(JSON.stringify({ type: "error", error: "Failed to send message" }));
 			}
 		});
 
-		wss.on("connection", (ws) => {
-			// Set up connection timeout and heartbeat
-			const heartbeat = setInterval(() => {
-				if (ws.readyState === WebSocket.OPEN) {
-					ws.ping();
-				}
-			}, 30000); // 30 seconds
-
-			ws.on("pong", () => {
-				// Connection is alive
-			});
-
-			ws.on("message", async (message) => {
-				try {
-					const { to, message: text } = JSON.parse(message);
-					if (!to || !text) {
-						ws.send(JSON.stringify({ type: "error", error: "Invalid request" }));
-						return;
-					}
-
-					// Validate message size
-					if (text.length > 4096) {
-						ws.send(JSON.stringify({ type: "error", error: "Message too long" }));
-						return;
-					}
-
-					await sock.sendMessage(to + "@s.whatsapp.net", { text }).then(() => {
-						console.log("Message sent to", to, ":", text);
-						ws.send(JSON.stringify({ type: "success", success: "Message sent" }));
-					});
-				} catch (err) {
-					console.error("Error handling WebSocket message:", err);
-					ws.send(JSON.stringify({ type: "error", error: "Failed to send message" }));
-				}
-			});
-
-			ws.on("close", () => {
-				clearInterval(heartbeat);
-			});
-
-			ws.on("error", (error) => {
-				console.error("WebSocket error:", error);
-				clearInterval(heartbeat);
-			});
+		ws.on("close", () => {
+			clearInterval(heartbeat);
 		});
-	})();
+
+		ws.on("error", (error) => {
+			console.error("WebSocket error:", error);
+			clearInterval(heartbeat);
+		});
+	});
 
 	app.post("/send", async (req, res) => {
 		const { to, message } = req.body;
@@ -154,15 +129,14 @@ function startServer() {
 
 		try {
 			if (Array.isArray(to)) {
-				// Parallel send for multiple recipients
-				await Promise.all(
-					to.map((recipient) => sock.sendMessage(recipient + "@s.whatsapp.net", { text: message }))
-				);
+				const jids = await Promise.all(to.map((recipient) => normalizeJID(sock, recipient)));
+				await Promise.all(jids.map((jid) => sock.sendMessage(jid, { text: message })));
 				console.log("Message sent to multiple recipients");
 				performanceMonitor.incrementCommandCount();
 				return res.send({ message: "Messages sent" });
 			} else {
-				await sock.sendMessage(to + "@s.whatsapp.net", { text: message });
+				const recipientJid = await normalizeJID(sock, to);
+				await sock.sendMessage(recipientJid, { text: message });
 				console.log("Message sent to", to, ":", message);
 				performanceMonitor.incrementCommandCount();
 				return res.send({ message: "Message sent" });
@@ -173,67 +147,50 @@ function startServer() {
 			return res.status(500).send({ message: "Failed to send message" });
 		}
 	});
-
-	// Enhanced error handling
-	process.on("unhandledRejection", (reason, p) => {
-		console.error("Unhandled Rejection at: ", p, "reason:", reason);
-		performanceMonitor.incrementErrorCount();
-	});
-
-	process.on("uncaughtException", function (err) {
-		console.error("Uncaught Exception:", err);
-		performanceMonitor.incrementErrorCount();
-
-		// Graceful shutdown
-		gracefulShutdown("UNCAUGHT_EXCEPTION");
-	});
-
-	// Graceful shutdown function
-	function gracefulShutdown(signal) {
-		console.log(`\n🔄 Received ${signal}. Starting graceful shutdown...`);
-
-		// Stop accepting new connections
-		server.close(() => {
-			console.log("✅ HTTP server closed");
-
-			// Close WebSocket connections
-			wss.clients.forEach((client) => {
-				client.close();
-			});
-
-			// Cleanup memory manager
-			memoryManager.destroy();
-
-			// Save final metrics
-			performanceMonitor.saveMetrics();
-
-			console.log("✅ Graceful shutdown completed");
-			process.exit(0);
-		});
-
-		// Force exit if graceful shutdown takes too long
-		setTimeout(() => {
-			console.error("❌ Forced shutdown due to timeout");
-			process.exit(1);
-		}, 10000); // 10 seconds timeout
-	}
-
-	// Handle shutdown signals
-	process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-	process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-	// Memory leak detection
-	if (process.env.NODE_ENV === "development") {
-		setInterval(() => {
-			const memUsage = process.memoryUsage();
-			if (memUsage.heapUsed > 1024 * 1024 * 1024) {
-				// 1GB
-				console.warn("⚠️  Potential memory leak detected");
-				performanceMonitor.triggerMemoryCleanup();
-			}
-		}, 120000); // Check every 2 minutes
-	}
 }
 
-// Directly start the server
-startServer();
+process.on("unhandledRejection", (reason, p) => {
+	console.error("Unhandled Rejection at: ", p, "reason:", reason);
+	performanceMonitor.incrementErrorCount();
+});
+
+process.on("uncaughtException", function (err) {
+	console.error("Uncaught Exception:", err);
+	performanceMonitor.incrementErrorCount();
+
+	gracefulShutdown("UNCAUGHT_EXCEPTION");
+});
+
+function gracefulShutdown(signal) {
+	console.log(`\n🔄 Received ${signal}. Starting graceful shutdown...`);
+
+	server.close(() => {
+		console.log("✅ HTTP server closed");
+
+		wss.clients.forEach((client) => {
+			client.close();
+		});
+		memoryManager.destroy();
+		performanceMonitor.saveMetrics();
+		console.log("✅ Graceful shutdown completed");
+		process.exit(0);
+	});
+
+	setTimeout(() => {
+		console.error("❌ Forced shutdown due to timeout");
+		process.exit(1);
+	}, 10000); // 10 seconds timeout
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+if (process.env.NODE_ENV === "development") {
+	setInterval(() => {
+		const memUsage = process.memoryUsage();
+		if (memUsage.heapUsed > 1024 * 1024 * 1024) {
+			console.warn("⚠️  Potential memory leak detected");
+			performanceMonitor.triggerMemoryCleanup();
+		}
+	}, 120000);
+}

@@ -51,7 +51,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["hidetag"],
     desc: "Hide Tag Message",
     usage: "hidetag <message>",

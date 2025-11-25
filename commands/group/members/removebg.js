@@ -1,14 +1,15 @@
-require('dotenv').config()
+import dotenv from 'dotenv';
+dotenv.config();
 const REMOVE_BG_KEY = process.env.REMOVE_BG_KEY || ''
 
-const axios = require('axios')
-const FormData = require('form-data')
-const fs = require('fs')
-const path = require('path')
+import axios from 'axios'
+import FormData from 'form-data'
+import fs from 'fs'
+import path from 'path'
 const removebgAPI = REMOVE_BG_KEY
-const { writeFile } = require('fs/promises')
+import { writeFile } from 'fs/promises'
 
-const { downloadContentFromMessage } = require('baileys')
+import { downloadContentFromMessage } from 'baileys'
 
 const getRandom = ext => {
   return `${Math.floor(Math.random() * 10000)}${ext}`
@@ -100,7 +101,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
   }
 }
 
-module.exports.command = () => ({
+export default () => ({
   cmd: ['removebg', 'bg'],
   desc: 'Remove background from image',
   usage: 'removebg | reply to image',

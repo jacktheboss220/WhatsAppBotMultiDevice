@@ -1,7 +1,8 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 const PIN_KEY = process.env.PIN_KEY || "";
 
-const axios = require("axios");
+import axios from "axios";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
@@ -29,7 +30,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     })
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["pin"],
     desc: "Download pin from pinterest",
     usage: "pin <pinurl>",

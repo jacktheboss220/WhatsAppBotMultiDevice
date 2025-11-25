@@ -54,7 +54,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	);
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["categories", "cate"],
 	desc: "Get news categories",
 	usage: "categories",

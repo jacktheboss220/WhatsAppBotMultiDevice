@@ -1,4 +1,4 @@
-const { cmdToText } = require("../../functions/getAddCommands");
+import { cmdToText } from "../../functions/getAddCommands.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
@@ -23,7 +23,7 @@ ${ownerCommands.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUs
     );
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['owner', 'ownerhelp', 'ownermenu'],
     desc: "Owner help menu",
     usage: "owner",

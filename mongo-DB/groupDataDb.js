@@ -1,4 +1,5 @@
-const mdClient = require("../mongodb");
+import mdClient from "../mongodb.js";
+
 mdClient.connect();
 
 const group = mdClient.db("MyBotDataDB").collection("Groups");
@@ -20,6 +21,7 @@ const createGroupData = async (groupJid, groupMetadata) => {
 				totalMsgCount: 0,
 				memberWarnCount: [],
 				members: [],
+				chatHistory: [],
 			});
 		} else {
 			await group.updateOne(
@@ -47,4 +49,5 @@ const getGroupData = async (groupJid) => {
 	}
 };
 
-module.exports = { getGroupData, createGroupData, group };
+export { getGroupData, createGroupData, group };
+

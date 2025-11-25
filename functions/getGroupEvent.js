@@ -1,10 +1,13 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 const myNumber = [
 	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
 ];
-const { fake_quoted } = require("./getFakeQuoted");
-const { getGroupData } = require("../mongo-DB/groupDataDb");
+
+import { fake_quoted } from "./getFakeQuoted.js";
+import { getGroupData } from "../mongo-DB/groupDataDb.js";
+import { extractPhoneNumber, formatJIDForDisplay } from "./lidUtils.js";
 
 const getGroupEvent = async (sock, events, cache) => {
 	let jid = events.id;
@@ -16,10 +19,12 @@ const getGroupEvent = async (sock, events, cache) => {
 		if (groupDataDB.welcome != "") {
 			// const wel_members = anu.participants.map((mem) => mem.split("@")[0]);
 			events.participants.forEach((member) => {
+				// Extract phone number from either LID or PN format
+				const phoneNumber = extractPhoneNumber(member);
 				sock.sendMessage(
 					jid,
 					{
-						text: "Welcome @" + member.split("@")[0] + "\n\n" + groupDataDB.welcome,
+						text: "Welcome @" + phoneNumber + "\n\n" + groupDataDB.welcome,
 						mentions: [member],
 					},
 					{ quoted: fake_quoted(events, "Welcome to " + groupDataDB.grpName) }
@@ -28,7 +33,11 @@ const getGroupEvent = async (sock, events, cache) => {
 		}
 		//91Only Working
 		if (groupDataDB.is91Only == true) {
-			let filteredParticipants = events.participants.filter((p) => !p.startsWith("91"));
+			// Filter participants based on phone number (works for both LID and PN)
+			let filteredParticipants = events.participants.filter((p) => {
+				const phoneNumber = extractPhoneNumber(p);
+				return !phoneNumber.startsWith("91");
+			});
 			if (filteredParticipants.length > 0) {
 				sock.groupParticipantsUpdate(jid, filteredParticipants, "remove");
 				sock.sendMessage(
@@ -41,18 +50,17 @@ const getGroupEvent = async (sock, events, cache) => {
 			}
 		}
 		sock.sendMessage(myNumber[0], {
-			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
-				groupDataDB?.grpName
-			}\n*Participants:* ${events.participants.map((p) => p.split("@")[0])}`,
+			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${groupDataDB?.grpName
+				}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p))}`,
 		});
 	} else {
 		sock.sendMessage(myNumber[0], {
-			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
-				groupDataDB?.grpName
-			}\n*Participants:* ${events.participants.map((p) => p.split("@")[0])}`,
+			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${groupDataDB?.grpName
+				}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p))}`,
 		});
 	}
 	console.log(events);
 };
 
-module.exports = getGroupEvent;
+export default getGroupEvent;
+

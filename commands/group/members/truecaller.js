@@ -1,6 +1,8 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 const TRUECALLER_ID = process.env.TRUECALLER_ID || "";
-const truecallerjs = require("truecallerjs");
+import truecallerjs from "truecallerjs";
+import { extractPhoneNumber } from "../../../functions/lidUtils.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	let { evv, sendMessageWTyping, logOwner } = msgInfoObj;
@@ -9,9 +11,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	let number;
 	if (msg.message.extendedTextMessage?.contextInfo?.participant?.length > 0) {
-		number = msg.message.extendedTextMessage.contextInfo.participant.split("@")[0];
+		// Use extractPhoneNumber for LID/PN compatibility
+		number = extractPhoneNumber(msg.message.extendedTextMessage.contextInfo.participant);
 	} else if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-		number = msg.message.extendedTextMessage.contextInfo.mentionedJid[0].split("@")[0];
+		number = extractPhoneNumber(msg.message.extendedTextMessage.contextInfo.mentionedJid[0]);
 	} else {
 		if (!args[0]) return sendMessageWTyping(from, { text: `❎ Give number or tag on message` }, { quoted: msg });
 		number = evv.replace(/\s*/g, "");
@@ -66,7 +69,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	sendMessageWTyping(from, { text: message }, { quoted: msg });
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["true", "truecaller"],
 	desc: "Get Truecaller details of a number",
 	usage: "true | reply to a message to get Truecaller details of that number",

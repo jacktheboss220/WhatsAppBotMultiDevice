@@ -1,13 +1,15 @@
-const { getGroupData, createGroupData, group } = require("../../../mongo-DB/groupDataDb");
-const { createMembersData, getMemberData, member } = require("../../../mongo-DB/membersDataDb");
+import { getGroupData, createGroupData, group } from "../../../mongo-DB/groupDataDb.js";
+import { createMembersData, getMemberData, member } from "../../../mongo-DB/membersDataDb.js";
+import { extractPhoneNumber } from "../../../functions/lidUtils.js";
 
-require("dotenv").config();
+import { config } from "dotenv";
+config();
 const myNumber = [
 	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
 ];
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { command, groupAdmins, sendMessageWTyping, botNumberJid } = msgInfoObj;
+	let { command, groupAdmins, sendMessageWTyping, botNumber } = msgInfoObj;
 	try {
 		if (!msg.message.extendedTextMessage) {
 			return sendMessageWTyping(from, { text: "❎ Tag someone! or reply to a message" }, { quoted: msg });
@@ -16,11 +18,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		let taggedJid =
 			msg.message.extendedTextMessage.contextInfo.participant ||
 			msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
-		taggedJid = taggedJid.includes(":") ? taggedJid.split(":")[0] + "@s.whatsapp.net" : taggedJid;
+		// JID is already in correct format (LID or PN)
 
 		let isGroupAdmin = groupAdmins.includes(taggedJid);
 		if (command != "unwarn") {
-			if (taggedJid == botNumberJid)
+			if (taggedJid == botNumber[0] || taggedJid == botNumber[1])
 				return sendMessageWTyping(from, { text: `_How can I warn Myself_` }, { quoted: msg });
 			if (myNumber.includes(taggedJid))
 				return sendMessageWTyping(from, { text: `_Owner or Moderator cannot be warned_` }, { quoted: msg });
@@ -63,12 +65,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
 			}
 		}
-		let num_split = taggedJid.split("@s.whatsapp.net")[0];
+		// Use extractPhoneNumber for LID/PN compatibility
+		const phoneNumber = extractPhoneNumber(taggedJid);
 		let warnMsg;
 		switch (command) {
 			case "warn":
 				try {
-					warnMsg = `@${num_split} 😒,You've been warned. Status of warning ${++warnCount} / 3. Do not repeat this sort of action or you will be kicked!`;
+					warnMsg = `@${phoneNumber} 😒,You've been warned. Status of warning ${++warnCount} / 3. Do not repeat this sort of action or you will be kicked!`;
 					sock.sendMessage(from, {
 						text: warnMsg,
 						mentions: [taggedJid],
@@ -94,7 +97,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 									{ $push: { warning: { group: from, count: warnCount } } }
 								);
 							if (warnCount >= 3) {
-								if (!groupAdmins.includes(botNumberJid)) {
+								if (!groupAdmins.includes(botNumber[0]) && !groupAdmins.includes(botNumber[1])) {
 									sendMessageWTyping(from, { text: "❎ I'm not Admin here!" }, { quoted: msg });
 									return;
 								}
@@ -134,7 +137,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["warn", "unwarn"],
 	desc: "Warn a member",
 	usage: "warn @mention | unwarn @mention | reply",

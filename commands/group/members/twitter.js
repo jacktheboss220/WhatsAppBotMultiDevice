@@ -1,7 +1,8 @@
-require("dotenv").config();
-const { TwitterApi } = require("twitter-api-v2");
-const fs = require("fs");
-const axios = require("axios");
+import dotenv from "dotenv";
+dotenv.config();
+import { TwitterApi } from "twitter-api-v2";
+import fs from "fs";
+import axios from "axios";
 
 const getRandom = (ext) => {
 	return `${Math.floor(Math.random() * 10000)}${ext}`;
@@ -70,7 +71,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["twitter", "tw", "x"],
 	desc: "Download Twitter Video",
 	usage: "twitter <tweet url>",

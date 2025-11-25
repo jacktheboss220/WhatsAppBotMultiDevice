@@ -33,7 +33,7 @@ const evalInContext = async (code, context) => {
 	return result;
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["exec", "execute"],
 	desc: "Execute JavaScript code",
 	usage: "exec <code>",

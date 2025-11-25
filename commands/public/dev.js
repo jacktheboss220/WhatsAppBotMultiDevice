@@ -18,7 +18,7 @@ const handler = async (sock, msg, from, args, msgTnfoObj) => {
 	await sendMessageWTyping(from, { text }, { quoted: msg });
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["dev", "developer"],
 	desc: "Developer info",
 	usage: "dev | developer",

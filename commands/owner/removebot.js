@@ -6,7 +6,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['removebot'],
     desc: 'Remove bot from group',
     usage: 'removebot',

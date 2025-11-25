@@ -1,16 +1,9 @@
-const NodeCache = require("node-cache");
+import NodeCache from "node-cache";
+import makeWASocket from "baileys";
+import { fetchLatestBaileysVersion, makeCacheableSignalKeyStore } from "baileys";
+import { useMongoDBAuthState } from "./useMongoDBAuthState.js";
+import P from "pino";
 
-const {
-	default: makeWASocket,
-	fetchLatestBaileysVersion,
-	useMultiFileAuthState,
-	makeCacheableSignalKeyStore,
-	proto,
-} = require("baileys");
-
-const { fetchAuth, updateLogin } = require("./getAuthDB");
-
-const P = require("pino");
 const logger = P({ level: "silent" }); // Set to "error" to allow essential logs but suppress debug spam
 
 // Optimized caches with memory management
@@ -47,20 +40,22 @@ setInterval(() => {
 const socket = async () => {
 	const { version, isLatest } = await fetchLatestBaileysVersion();
 	console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}\n`);
-	const { state, saveCreds } = await useMultiFileAuthState("baileys_auth_info");
 
-	const creds = await fetchAuth(state);
-	if (creds) {
-		state.creds = creds;
+	// Use custom MongoDB auth state instead of file-based auth
+	const { state, saveCreds } = await useMongoDBAuthState();
+
+	console.log("✅ Using MongoDB auth state");
+	if (state.creds?.me) {
+		console.log(`✅ Authenticated as: ${state.creds.me.id}`);
+	} else {
+		console.log("⚠️ No existing credentials - QR scan required");
 	}
 
-	// Track when the socket was created to prevent immediate message processing
 	const socketStartTime = Date.now();
 
 	const sock = makeWASocket({
 		version,
 		logger,
-		// printQRInTerminal: true, // Removed deprecated option
 		auth: {
 			creds: state.creds,
 			keys: makeCacheableSignalKeyStore(state.keys, logger),
@@ -68,31 +63,20 @@ const socket = async () => {
 		msgRetryCounterCache,
 		generateHighQualityLinkPreview: true,
 		getMessage,
-		// Improved session management options
 		markOnlineOnConnect: true,
-		syncFullHistory: false,
+		syncFullHistory: true,
 		shouldSyncHistoryMessage: () => false,
 		shouldIgnoreJid: (jid) => false,
-		// Better connection management to reduce session conflicts
 		connectTimeoutMs: 60000,
 		defaultQueryTimeoutMs: 60000,
 		keepAliveIntervalMs: 30000,
-		// Browser configuration to reduce detection
 		browser: ["Ubuntu", "Chrome", "20.0.04"],
-		// Reduce session conflicts by limiting retries
 		emitOwnEvents: false,
-		// Additional options to handle session issues
 		retryRequestDelayMs: 250,
 		maxMsgRetryCount: 5,
-		// Handle pre-key issues better
-		shouldIgnoreSignalKeyStore: false,
-		// Better handling of message sending failures
+		shouldIgnoreSignalKeyStore: true,
 		uploadTimeoutMs: 30000,
-		// Prevent immediate message processing during startup
 		fireInitQueries: false,
-		// Reduce sync conflicts that can cause empty messages
-		syncFullHistory: false,
-		shouldSyncHistoryMessage: () => false,
 	});
 
 	async function getMessage(key) {
@@ -132,7 +116,8 @@ const socket = async () => {
 		try {
 			// Add startup delay to prevent processing old messages immediately after restart
 			const timeSinceStart = Date.now() - socketStartTime;
-			if (timeSinceStart < 5000) { // Wait 5 seconds after socket creation
+			if (timeSinceStart < 5000) {
+				// Wait 5 seconds after socket creation
 				console.log("⏳ Skipping message during startup period");
 				return;
 			}
@@ -152,12 +137,87 @@ const socket = async () => {
 	});
 
 	// Enhanced session cleanup on errors
-	sock.ev.on("creds.update", async (creds) => {
+	sock.ev.on("creds.update", async () => {
 		try {
-			saveCreds(creds);
-			updateLogin(state);
+			await saveCreds();
+			console.log("💾 Credentials saved to MongoDB");
 		} catch (error) {
 			console.error("Error updating credentials:", error);
+		}
+	});
+
+	// Periodic auth state stats logging (every 5 minutes)
+	const statsInterval = setInterval(async () => {
+		try {
+			const { getAuthStateStats } = await import("./useMongoDBAuthState.js");
+			const stats = await getAuthStateStats();
+			console.log(`📊 Auth state: ${stats.total} documents in MongoDB`, stats.byType);
+		} catch (error) {
+			console.error("Error getting auth state stats:", error);
+		}
+	}, 5 * 60 * 1000); // Every 5 minutes
+
+	// Clear interval on socket close
+	sock.ws.on("close", () => {
+		clearInterval(statsInterval);
+	});
+
+	// Handle LID mapping updates (new in Baileys 7.x)
+	// This event fires when Baileys discovers LID↔PN mappings
+	sock.ev.on("lid-mapping.update", async (update) => {
+		console.log("📋 LID mapping update received:", update);
+
+		try {
+			if (!update || Object.keys(update).length === 0) return;
+
+			console.log(`📋 LID mapping update: ${Object.keys(update).length} mappings received`);
+
+			// Import member collection dynamically to avoid circular dependencies
+			const { member } = await import("../mongo-DB/membersDataDb.js");
+			const { extractPhoneNumber } = await import("./lidUtils.js");
+
+			// Process each mapping
+			for (const [key, value] of Object.entries(update)) {
+				try {
+					// The update object contains mappings in the format:
+					// { "phoneNumber": "lid@lid" } or { "lid@lid": "phoneNumber" }
+					let phoneNumber, lid;
+
+					if (key.includes("@lid")) {
+						// key is LID, value is PN
+						lid = key;
+						phoneNumber = value;
+					} else {
+						// key is PN, value is LID
+						phoneNumber = key;
+						lid = value;
+					}
+
+					// Normalize the phone number JID
+					const pnJid = phoneNumber.includes("@") ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
+					const cleanPN = extractPhoneNumber(pnJid);
+
+					// Update database with the LID mapping
+					const result = await member.updateOne(
+						{ _id: pnJid },
+						{
+							$set: {
+								lid: lid,
+								phoneNumber: cleanPN,
+							},
+						},
+						{ upsert: false } // Don't create new documents, only update existing
+					);
+
+					if (result.modifiedCount > 0) {
+						console.log(`✅ Updated LID for ${cleanPN}: ${lid}`);
+					}
+				} catch (err) {
+					console.error(`❌ Error processing LID mapping for ${key}:`, err.message);
+				}
+			}
+		} catch (error) {
+			console.error("❌ Error handling LID mapping update:", error);
 		}
 	});
 
@@ -182,4 +242,4 @@ const socket = async () => {
 	return sock;
 };
 
-module.exports = socket;
+export default socket;

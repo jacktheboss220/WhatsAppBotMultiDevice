@@ -1,5 +1,4 @@
-const { DisconnectReason } = require("baileys");
-const { cleanupStaleSessions } = require("./systemCleanup");
+import { DisconnectReason } from "baileys";
 
 const getConnectionUpdate = async (startSock, events) => {
 	const update = events;
@@ -16,21 +15,7 @@ const getConnectionUpdate = async (startSock, events) => {
 
 		const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-		// Check if it's a session-related error
-		if (
-			error?.message?.includes("session") ||
-			error?.message?.includes("prekey") ||
-			error?.message?.includes("stale") ||
-			statusCode === DisconnectReason.badSession
-		) {
-			console.log("🧹 Session-related disconnection detected, cleaning up...");
-			cleanupStaleSessions();
-
-			setTimeout(() => {
-				console.log("🔄 Reconnecting after session cleanup...");
-				startSock("session-cleanup");
-			}, 10000); // 10 seconds delay
-		} else if (shouldReconnect) {
+		if (shouldReconnect) {
 			console.log("🔄 Attempting to reconnect...");
 			setTimeout(() => {
 				startSock("reconnect");
@@ -50,4 +35,4 @@ const getConnectionUpdate = async (startSock, events) => {
 	}
 };
 
-module.exports = getConnectionUpdate;
+export default getConnectionUpdate;

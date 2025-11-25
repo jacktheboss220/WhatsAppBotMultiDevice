@@ -1,4 +1,4 @@
-const { getGroupData, group } = require('../../../mongo-DB/groupDataDb');
+import { getGroupData, group } from "../../../mongo-DB/groupDataDb.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
@@ -17,7 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["welcome"],
     desc: "Set welcome message",
     usage: "welcome <message> | reset",

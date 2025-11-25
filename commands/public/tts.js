@@ -1,6 +1,6 @@
-const { createCanvas, loadImage } = require("canvas");
-const { Sticker } = require("wa-sticker-formatter");
-const fs = require("fs");
+import { createCanvas, loadImage } from "canvas";
+import { Sticker } from "wa-sticker-formatter";
+import fs from "fs";
 
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
@@ -43,7 +43,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	});
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["tts", "attp"],
 	desc: "Convert text to sticker",
 	usage: "tts <text>",

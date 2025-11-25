@@ -1,7 +1,7 @@
-const getConnectionUpdate = require("./getConnectionUpdateEvent");
-const getCommand = require("./getMessagesEvent");
-const getGroupEvent = require("./getGroupEvent");
-const getCallEvent = require("./getCallEvents");
+import getConnectionUpdate from "./getConnectionUpdateEvent.js";
+import getCommand from "./getMessagesEvent.js";
+import getGroupEvent from "./getGroupEvent.js";
+import getCallEvent from "./getCallEvents.js";
 
 const events = async (sock, startSock, cache) => {
 	sock.ev.process(async (event) => {
@@ -64,4 +64,4 @@ const events = async (sock, startSock, cache) => {
 	});
 };
 
-module.exports = events;
+export default events;

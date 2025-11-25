@@ -1,8 +1,8 @@
-const { downloadMediaMessage } = require("baileys");
+import { downloadMediaMessage } from "baileys";
 
-const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg');
-const { writeFile } = require('fs/promises');
+import fs from 'fs';
+import ffmpeg from 'fluent-ffmpeg';
+import { writeFile } from 'fs/promises';
 
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
@@ -48,7 +48,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["mp3", "mp4audio", "tomp3"],
     desc: 'Convert video to mp3',
     usage: 'mp3 | reply to video',

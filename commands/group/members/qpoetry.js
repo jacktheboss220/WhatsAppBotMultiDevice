@@ -1,4 +1,4 @@
-const axios = require('axios')
+import axios from 'axios'
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
@@ -67,7 +67,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['qpt', 'qpoetry'],
     desc: 'Get random poetry',
     usage: 'qpoetry <author>',

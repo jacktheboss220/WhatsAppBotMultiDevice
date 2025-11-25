@@ -1,10 +1,10 @@
-const fs = require("fs");
-const yts = require("yt-search");
-const ytdl = require("@distube/ytdl-core");
-const youtubedl = require("youtube-dl-exec");
-const memoryManager = require("../../../functions/memoryUtils");
-const { readFileEfficiently, isValidAudioFile } = require("../../../functions/fileUtils");
-const {
+import fs from "fs";
+import yts from "yt-search";
+import ytdl from "@distube/ytdl-core";
+import youtubedl from "youtube-dl-exec";
+import memoryManager from "../../../functions/memoryUtils.js";
+import { readFileEfficiently, isValidAudioFile } from "../../../functions/fileUtils.js";
+import {
 	getYtDlpOptions,
 	getYtdlCoreOptions,
 	retryWithBackoff,
@@ -13,7 +13,7 @@ const {
 	delay,
 	checkYtDlpBinary,
 	isPyInstallerError,
-} = require("../../../functions/youtubeUtils");
+} from "../../../functions/youtubeUtils.js";
 
 // Create multiple agents with different configurations to avoid bot detection
 const agents = [ytdl.createAgent(), ytdl.createAgent(), ytdl.createAgent()];
@@ -171,7 +171,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				);
 			} catch (ytdlError) {
 				console.error("ytdl-core also failed:", ytdlError);
-				
+
 				if (isYtdlCoreParsingError(ytdlError)) {
 					throw new Error("YouTube changed their format. Please try again later or contact support.");
 				} else if (isBotDetectionError(ytdlError)) {
@@ -269,7 +269,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["song", "play"],
 	desc: "Download song",
 	usage: "song | play | song [song name]",

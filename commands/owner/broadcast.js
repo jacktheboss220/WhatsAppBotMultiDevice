@@ -1,4 +1,4 @@
-const { delay } = require("baileys");
+import { delay } from "baileys";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping } = msgInfoObj;
@@ -22,7 +22,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["bb", "broadcast"],
 	desc: "Broadcast message to all groups",
 	usage: "broadcast <message>",

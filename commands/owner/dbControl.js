@@ -1,6 +1,7 @@
-const { getGroupData, group } = require('../../mongo-DB/groupDataDb');
-const { getMemberData, member } = require('../../mongo-DB/membersDataDb');
-const { getBotData, bot } = require('../../mongo-DB/botDataDb');
+import { getGroupData, group } from '../../mongo-DB/groupDataDb.js';
+import { getMemberData, member } from '../../mongo-DB/membersDataDb.js';
+import { getBotData, bot } from '../../mongo-DB/botDataDb.js';
+import { extractPhoneNumber } from '../../functions/lidUtils.js';
 
 const updateData = async (collection, id, data, value, sendMessageWTyping, from, msg) => {
     if (value.match(/^[0-9]+$/)) value = Number(value);
@@ -26,7 +27,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
             }
             collection = member;
             getDataFunc = getMemberData;
-            id = msg.message.extendedTextMessage.contextInfo.participant;
+            // Normalize to PN-based JID for DB consistency
+            id = extractPhoneNumber(msg.message.extendedTextMessage.contextInfo.participant) + "@s.whatsapp.net";
             break;
         case "bot":
             collection = bot;
@@ -46,7 +48,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["group", "member", "bot"],
     desc: "Control Database",
     usage: "group | member | bot",

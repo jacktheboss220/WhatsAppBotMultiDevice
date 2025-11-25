@@ -1,8 +1,8 @@
-const fs = require("fs");
-const yts = require("yt-search");
-const memoryManager = require("../../../functions/memoryUtils");
-const { readFileEfficiently, isValidVideoFile } = require("../../../functions/fileUtils");
-const {
+import fs from "fs";
+import yts from "yt-search";
+import memoryManager from "../../../functions/memoryUtils.js";
+import { readFileEfficiently, isValidVideoFile } from "../../../functions/fileUtils.js";
+import {
 	getYtDlpOptions,
 	getYtdlCoreOptions,
 	retryWithBackoff,
@@ -11,17 +11,17 @@ const {
 	delay,
 	checkYtDlpBinary,
 	isPyInstallerError,
-} = require("../../../functions/youtubeUtils");
+} from "../../../functions/youtubeUtils.js";
 //-------------------------------------------------------------------------------------------------------------//
 
-const cp = require("child_process");
-const readline = require("readline");
+import cp from "child_process";
+import readline from "readline";
 // External modules
-const ffmpeg = require("ffmpeg-static");
-const youtubedl = require("youtube-dl-exec");
+import ffmpeg from "ffmpeg-static";
+import youtubedl from "youtube-dl-exec";
 // Global constants
-const ytdl = require("@distube/ytdl-core");
-const path = require("path");
+import ytdl from "@distube/ytdl-core";
+import path from "path";
 
 // Create multiple agents with different configurations to avoid bot detection
 const agents = [ytdl.createAgent(), ytdl.createAgent(), ytdl.createAgent()];
@@ -694,7 +694,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["yt", "ytv", "vs"],
 	desc: "Download youtube video",
 	usage: "yt <youtube link>",

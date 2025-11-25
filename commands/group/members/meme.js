@@ -1,16 +1,34 @@
-const fs = require("fs");
-const axios = require("axios");
-const memoryManager = require("../../../functions/memoryUtils");
+import dotenv from "dotenv";
+dotenv.config();
 
-const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
-const ffmpeg = require("fluent-ffmpeg");
-ffmpeg.setFfmpegPath(ffmpegPath);
+import fs from "fs";
+import axios from "axios";
+import memoryManager from "../../../functions/memoryUtils.js";
+import ffmpeg from "fluent-ffmpeg";
+
+// Get FFmpeg path - prioritize environment variable
+let ffmpegPath1 = process.env.FFMPEG_PATH;
+
+if (!ffmpegPath1) {
+	// If no custom path, try to use ffmpeg-static or fallback to system ffmpeg
+	try {
+		// Dynamic import of ffmpeg-static (it might not have the binary)
+		const { default: ffmpegStatic } = await import("ffmpeg-static");
+		ffmpegPath1 = ffmpegStatic || 'ffmpeg';
+	} catch (err) {
+		// If ffmpeg-static fails, use system ffmpeg
+		ffmpegPath1 = 'ffmpeg';
+	}
+}
+
+console.log(`🎬 Meme command using FFmpeg: ${ffmpegPath1}`);
+ffmpeg.setFfmpegPath(ffmpegPath1);
 
 const getRandom = (ext) => {
 	return memoryManager.generateTempFileName(ext);
 };
 
-const { delay } = require("baileys");
+import { delay } from "baileys";
 
 let down_meme = getRandom(".mp4");
 let down_gif = getRandom(".gif");
@@ -98,7 +116,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	});
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["meme"],
 	desc: "Get random meme",
 	usage: "meme",

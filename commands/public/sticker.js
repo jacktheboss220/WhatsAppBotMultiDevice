@@ -1,14 +1,33 @@
-const { downloadMediaMessage } = require("baileys");
-const WSF = require("wa-sticker-formatter");
-const memoryManager = require("../../functions/memoryUtils");
+import dotenv from "dotenv";
+dotenv.config();
 
-const ffmpeg = require("fluent-ffmpeg");
-const ffmpegPath = require("ffmpeg-static");
-ffmpeg.setFfmpegPath(ffmpegPath);
+import { downloadMediaMessage } from "baileys";
+import WSF from "wa-sticker-formatter";
+import memoryManager from "../../functions/memoryUtils.js";
 
-const { getMemberData, member } = require("../../mongo-DB/membersDataDb");
-const { writeFile } = require("fs/promises");
-const fs = require("fs");
+import ffmpeg from "fluent-ffmpeg";
+
+// Get FFmpeg path - prioritize environment variable
+let ffmpegPath1 = process.env.FFMPEG_PATH;
+
+if (!ffmpegPath1) {
+	// If no custom path, try to use ffmpeg-static or fallback to system ffmpeg
+	try {
+		// Dynamic import of ffmpeg-static (it might not have the binary)
+		const { default: ffmpegStatic } = await import("ffmpeg-static");
+		ffmpegPath1 = ffmpegStatic || 'ffmpeg';
+	} catch (err) {
+		// If ffmpeg-static fails, use system ffmpeg
+		ffmpegPath1 = 'ffmpeg';
+	}
+}
+
+console.log(`🎬 Sticker command using FFmpeg: ${ffmpegPath1}`);
+ffmpeg.setFfmpegPath(ffmpegPath1);
+
+import { getMemberData, member } from "../../mongo-DB/membersDataDb.js";
+import { writeFile } from "fs/promises";
+import fs from "fs";
 
 const getRandom = (ext = "") => memoryManager.generateTempFileName(ext);
 
@@ -49,30 +68,30 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const outputOptions =
 		args.includes("crop") || args.includes("c")
 			? [
-					`-vcodec`,
-					`libwebp`,
-					`-vf`,
-					`crop=w='min(min(iw\,ih)\,500)':h='min(min(iw\,ih)\,500)',scale=500:500,setsar=1,fps=15`,
-					`-loop`,
-					`0`,
-					`-ss`,
-					`00:00:00.0`,
-					`-t`,
-					`00:00:09.0`,
-					`-preset`,
-					`default`,
-					`-an`,
-					`-vsync`,
-					`0`,
-					`-s`,
-					`512:512`,
-			  ]
+				`-vcodec`,
+				`libwebp`,
+				`-vf`,
+				`crop=w='min(min(iw\,ih)\,500)':h='min(min(iw\,ih)\,500)',scale=500:500,setsar=1,fps=15`,
+				`-loop`,
+				`0`,
+				`-ss`,
+				`00:00:00.0`,
+				`-t`,
+				`00:00:09.0`,
+				`-preset`,
+				`default`,
+				`-an`,
+				`-vsync`,
+				`0`,
+				`-s`,
+				`512:512`,
+			]
 			: [
-					`-vcodec`,
-					`libwebp`,
-					`-vf`,
-					`scale='min(220,iw)':min'(220,ih)':force_original_aspect_ratio=decrease,fps=15, pad=220:220:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`,
-			  ];
+				`-vcodec`,
+				`libwebp`,
+				`-vf`,
+				`scale='min(220,iw)':min'(220,ih)':force_original_aspect_ratio=decrease,fps=15, pad=220:220:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`,
+			];
 
 	const media = isTaggedImage ? getRandom(".png") : getRandom(".mp4");
 
@@ -172,7 +191,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["sticker", "s"],
 	desc: "Convert image or video to sticker",
 	usage: "sticker | s | reply to image or video | pack | author | nometadata",

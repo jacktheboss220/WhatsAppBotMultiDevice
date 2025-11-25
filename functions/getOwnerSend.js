@@ -1,4 +1,5 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 const myNumber = [
 	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
@@ -24,4 +25,4 @@ const logOwner = (sock, mess, msg) => {
 	sock.sendMessage(myNumber[0], message);
 };
 
-module.exports = logOwner;
+export default logOwner;

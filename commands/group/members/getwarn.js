@@ -1,6 +1,7 @@
-require('dotenv').config();
-
-const { getGroupData, createGroupData, group } = require('../../../mongo-DB/groupDataDb');
+import dotenv from 'dotenv';
+dotenv.config();
+import { extractPhoneNumber } from '../../../functions/lidUtils.js';
+import { getGroupData } from '../../../mongo-DB/groupDataDb.js';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     let { senderJid } = msgInfoObj;
@@ -31,16 +32,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
         warnCount = 0;
     }
     warnCount = (warnCount == undefined) ? 0 : warnCount;
-    let num_split = taggedJid.split("@s.whatsapp.net")[0];
+    // Use extractPhoneNumber for LID/PN compatibility
+    let phoneNumber = extractPhoneNumber(taggedJid);
     let warnMsg;
-    warnMsg = `@${num_split}, Your warning status is (${warnCount}/3) in this group.`;
+    warnMsg = `@${phoneNumber}, Your warning status is (${warnCount}/3) in this group.`;
     sock.sendMessage(from,
         { text: warnMsg, mentions: [taggedJid] },
         { quoted: msg }
     );
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["getwarn"],
     desc: "Get warning status of a member",
     usage: "getwarn | reply to a message to get warning status of that member",

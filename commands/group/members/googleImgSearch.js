@@ -1,9 +1,12 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
-const fs = require("fs");
-const axios = require("axios");
-const { getGroupData } = require("../../../mongo-DB/groupDataDb");
+
+import fs from "fs";
+import axios from "axios";
+import { getGroupData } from "../../../mongo-DB/groupDataDb.js";
 
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
@@ -76,7 +79,7 @@ const downloadImage = async (url, imageUrl) => {
     });
 };
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["img"],
     desc: "Search image from google",
     usage: "img <search word> | <number> (optional) <search word>",

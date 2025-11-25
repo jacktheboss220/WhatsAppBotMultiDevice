@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 const getGender = async (name) => {
     let url = "https://api.genderize.io/?name=" + name;
@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     });
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['gender'],
     desc: 'get gender of a name',
     usage: 'gender <name> | reply to a message.',

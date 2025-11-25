@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 /**
  * Utility functions for handling large files efficiently
@@ -167,8 +167,5 @@ function isValidVideoFile(filePath) {
 	}
 }
 
-module.exports = {
-	readFileEfficiently,
-	isValidVideoFile,
-	isValidAudioFile,
-};
+export { readFileEfficiently, isValidVideoFile, isValidAudioFile };
+

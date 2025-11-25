@@ -1,36 +1,38 @@
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { groupAdmins, groupMetadata, sendMessageWTyping, botNumberJid } = msgInfoObj;
-    // return sendMessageWTyping(
-    //     from,
-    //     { text: "```❎ The admin commands are blocked for sometime to avoid ban on whatsapp!```" },
-    //     { quoted: msg }
-    // );
+	const { groupAdmins, groupMetadata, sendMessageWTyping, botNumber } = msgInfoObj;
+	// return sendMessageWTyping(
+	//     from,
+	//     { text: "```❎ The admin commands are blocked for sometime to avoid ban on whatsapp!```" },
+	//     { quoted: msg }
+	// );
 
-    if (!groupAdmins.includes(botNumberJid)) {
-        return sendMessageWTyping(from, { text: '❎ I\'m not admin here' }, { quoted: msg });
-    }
+	if (!groupAdmins.includes(botNumber[0]) && !groupAdmins.includes(botNumber[1])) {
+		return sendMessageWTyping(from, { text: "❎ I'm not admin here." }, { quoted: msg });
+	}
 
-    if (!msg.message.extendedTextMessage) {
-        return sendMessageWTyping(from, { text: 'Mention or tag member.' }, { quoted: msg });
-    }
+	if (!msg.message.extendedTextMessage) {
+		return sendMessageWTyping(from, { text: "Mention or tag member." }, { quoted: msg });
+	}
 
-    const taggedJid = msg.message.extendedTextMessage.contextInfo.participant || msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
-    if (taggedJid === groupMetadata.owner) {
-        return sendMessageWTyping(from, { text: '❎ *Group Owner Tagged*' }, { quoted: msg });
-    }
+	const taggedJid =
+		msg.message.extendedTextMessage.contextInfo.participant ||
+		msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+	if (taggedJid === groupMetadata.owner) {
+		return sendMessageWTyping(from, { text: "❎ *Group Owner Tagged*" }, { quoted: msg });
+	}
 
-    try {
-        await sock.groupParticipantsUpdate(from, [taggedJid], 'demote');
-        sendMessageWTyping(from, { text: '✅ *Demoted*' }, { quoted: msg });
-    } catch (err) {
-        sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-        console.error(err);
-    }
+	try {
+		await sock.groupParticipantsUpdate(from, [taggedJid], "demote");
+		sendMessageWTyping(from, { text: "✅ *Demoted*" }, { quoted: msg });
+	} catch (err) {
+		sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+		console.error(err);
+	}
 };
 
-module.exports.command = () => ({
-    cmd: ["demote"],
-    desc: "Remove admin permission of a member",
-    usage: "demote @mention | reply",
-    handler
+export default () => ({
+	cmd: ["demote"],
+	desc: "Remove admin permission of a member",
+	usage: "demote @mention | reply",
+	handler,
 });

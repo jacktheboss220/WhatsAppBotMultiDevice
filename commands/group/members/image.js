@@ -1,7 +1,7 @@
-const ffmpeg = require('fluent-ffmpeg');
-const fs = require('fs');
-const { downloadMediaMessage } = require("baileys");
-const { writeFile } = require('fs/promises');
+import ffmpeg from 'fluent-ffmpeg';
+import fs from 'fs';
+import { downloadMediaMessage } from "baileys";
+import { writeFile } from 'fs/promises';
 
 const getRandom = (ext) => { return `${Math.floor(Math.random() * 10000)}${ext}` };
 
@@ -58,7 +58,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["image", "toimg"],
     desc: "Convert sticker to image",
     usage: "image | reply to a sticker",

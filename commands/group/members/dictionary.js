@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
@@ -20,7 +20,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 };
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["dictionary", "dict"],
     desc: "Get meaning of a word",
     usage: "dict <word>",

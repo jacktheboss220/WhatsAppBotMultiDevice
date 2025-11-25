@@ -1,4 +1,4 @@
-const { createMembersData, getMemberData, member } = require("../../mongo-DB/membersDataDb");
+import { createMembersData, getMemberData, member } from "../../mongo-DB/membersDataDb.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, senderJid, evv } = msgInfoObj;
@@ -26,7 +26,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["sets", "stealText"],
 	desc: "Set custom steal text",
 	usage: "sets <text>",

@@ -1,4 +1,4 @@
-const ud = require('urban-dictionary');
+import ud from 'urban-dictionary';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
@@ -22,7 +22,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['ud', 'urban'],
     desc: 'Get Urban Dictionary meaning',
     usage: 'ud <word>',

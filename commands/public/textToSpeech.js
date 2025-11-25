@@ -1,4 +1,4 @@
-const tts = require("google-tts-api");
+import tts from "google-tts-api";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { prefix, sendMessageWTyping, evv, content } = msgInfoObj;
@@ -80,7 +80,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["say", "tts"],
 	desc: "Convert text to speech (supports English and Hindi)",
 	usage: "say <text> | say hin <hindi text> | Reply to message with say",

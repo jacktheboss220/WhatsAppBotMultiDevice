@@ -1,62 +1,44 @@
-const axios = require("axios");
-const { getBotData } = require("../../mongo-DB/botDataDb");
+import axios from "axios";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping } = msgInfoObj;
 	if (!args[0] || args[0].includes("http"))
 		return sendMessageWTyping(from, { text: `*Provide Username*` }, { quoted: msg });
 	let prof = args[0];
-	const botData = await getBotData();
 
-	if (botData.instaSession_id) {
-		const text = botData.instaSession_id;
-		const sessionid = /sessionid=([^;]+);/.exec(text)[1];
-		const ds_user_id = /ds_user_id=([^;]+);/.exec(text)[1];
+	let config = {
+		method: "get",
+		maxBodyLength: Infinity,
+		url: `https://i.instagram.com/api/v1/users/web_profile_info/?username=${prof}`,
+		headers: {
+			"User-Agent": "iphone_ua",
+			"x-ig-app-id": "936619743392459",
+			Cookie: "csrftoken=dOj8Cg7x7dcopcYjfdyb2CXn5Q5q8Nae; ig_did=23EC9D92-710B-4E35-81C6-302661C68C7A; ig_nrcb=1; mid=aSVNkwAAAAHSQh6TfnudZMPSYyKd",
+		},
+	};
 
-		await axios({
-			url: `https://www.instagram.com/${prof}/?__a=1&__d=dis`,
-			headers: {
-				accept: "*/*",
-				"accept-language": "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
-				"sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="102", "Google Chrome";v="102"',
-				"sec-ch-ua-mobile": "?0",
-				"sec-ch-ua-platform": '"Linux"',
-				"sec-fetch-dest": "empty",
-				"sec-fetch-mode": "cors",
-				"sec-fetch-site": "same-site",
-				"x-asbd-id": "198387",
-				"x-csrftoken": "9id7NIrYulj8aPVUSAOLvNC2nkhRRWdd",
-				"x-ig-app-id": "936619743392459",
-				"x-ig-www-claim": "hmac.AR2rCmfN1Jb98fTtIV5rXy1EHz-DxQIGk6fgEQbmFdZp0uiw",
-				cookie: `sessionid=${sessionid}; ig_nrcb=1; fbm_124024574287414=base_domain=.instagram.com; ds_user_id=${ds_user_id}; dpr=1.5;`,
-				Referer: "https://www.instagram.com/",
-				"Referrer-Policy": "strict-origin-when-cross-origin",
-			},
-			method: "GET",
+	axios
+		.request(config)
+		.then((res) => {
+			if (res.data.status === "ok") {
+				sendMessageWTyping(
+					from,
+					{
+						image: { url: res.data.data.user.profile_pic_url_hd },
+						caption: `*Here is the Profile Picture of ${prof}*`,
+					},
+					{ quoted: msg }
+				);
+			} else {
+				sendMessageWTyping(from, { text: `*No Data Found*` }, { quoted: msg });
+			}
 		})
-			.then((res) => {
-				if (res?.data?.graphql?.user?.profile_pic_url_hd) {
-					sendMessageWTyping(
-						from,
-						{
-							image: { url: res.data.graphql.user.profile_pic_url_hd },
-							caption: `Sent by eva`,
-						},
-						{ quoted: msg }
-					);
-				} else {
-					sendMessageWTyping(from, { text: `*No Profile Picture Found*` }, { quoted: msg });
-				}
-			})
-			.catch(async (err) => {
-				sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-			});
-	} else {
-		sendMessageWTyping(from, { text: `*No Key is Set*` }, { quoted: msg });
-	}
+		.catch(async (err) => {
+			sendMessageWTyping(from, { text: "*Error fetching profile picture*" }, { quoted: msg });
+		});
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["idp", "dp"],
 	desc: "Get Instagram Profile Picture",
 	usage: "idp | dp <username>",

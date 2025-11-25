@@ -1,4 +1,4 @@
-const snapsave = require("snapsave-downloader");
+import snapsave from "snapsave-downloader";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { prefix, sendMessageWTyping, ig } = msgInfoObj;
@@ -76,7 +76,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	// });
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["insta", "i"],
 	desc: "Download Instagram post",
 	usage: "insta | i <url>",

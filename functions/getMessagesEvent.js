@@ -1,21 +1,27 @@
-require("dotenv").config();
-const fs = require("fs");
+import dotenv from "dotenv";
+dotenv.config();
+import fs from "fs";
 
-const logOwner = require("./getOwnerSend");
-const { validateMessageObject, sanitizeMessageContent } = require("./systemCleanup");
-const { readFileEfficiently } = require("./fileUtils");
+import logOwner from "./getOwnerSend.js";
+import { readFileEfficiently } from "./fileUtils.js";
 
 const prefix = process.env.PREFIX;
-const moderatos = [...process.env.MODERATORS?.split(",")];
-const getGroupAdmins = require("./getGroupAdmins");
+const moderatos = ["918318585418", ...process.env.MODERATORS?.split(",")];
+import getGroupAdmins from "./getGroupAdmins.js";
+import { stickerForward, forwardGroup } from "../functions/getStickerForward.js";
+import { createMembersData, getMemberData, member } from "../mongo-DB/membersDataDb.js";
+import { createGroupData, getGroupData, group } from "../mongo-DB/groupDataDb.js";
+import { commandsPublic, commandsMembers, commandsAdmins, commandsOwners } from "./getAddCommands.js";
 
-const { stickerForward, forwardGroup } = require("../functions/getStickerForward");
-const { createMembersData, getMemberData, member } = require("../mongo-DB/membersDataDb");
-const { createGroupData, getGroupData, group } = require("../mongo-DB/groupDataDb");
-const { commandsPublic, commandsMembers, commandsAdmins, commandsOwners } = require("./getAddCommands");
+// Support both LID and PN formats for bot owner numbers
+// These will be used for permission checks
 const myNumber = [
 	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
+];
+const botNumber = [
+	process.env.BOT_NUMBER.split(",")[0] + "@s.whatsapp.net",
+	process.env.BOT_NUMBER.split(",")[1] + "@lid",
 ];
 
 const getCommand = async (sock, msg, cache) => {
@@ -24,39 +30,51 @@ const getCommand = async (sock, msg, cache) => {
 	try {
 		if (!sock || !sock.user) return;
 		if (sock.startupTime && Date.now() - sock.startupTime < 1000) return;
-		if (!validateMessageObject(msg)) return;
 		const messageKeys = Object.keys(msg.message);
 		if (messageKeys.length === 0) return;
 		if (msg.key.fromMe && !msg.key.remoteJid) return;
 
-		const sendMessageWTyping = async (jid, option1, option2) => {
+		const sendMessageWTyping = async (to, msgObj, messageOptions) => {
 			try {
-				if (!jid || !option1) return;
-				if (option1.text !== undefined) {
-					const sanitized = sanitizeMessageContent(option1.text);
-					if (!sanitized) return;
-					option1.text = sanitized;
+				if (!to || !msgObj) return;
+				console.log("Message Object:", JSON.parse(JSON.stringify(msgObj)));
+
+				if (msgObj.text !== undefined) {
+					console.log("[sendMessageWTyping] Sending text message:", JSON.stringify(msgObj));
+				} else {
+					console.log("[sendMessageWTyping] Sending non-text message");
 				}
 				if (!sock || !sock.user) return;
 
 				// Async media file reading for images, stickers, audio, video
-				const mediaTypes = ["image", "sticker", "audio", "video", "document"];
-				for (const type of mediaTypes) {
-					if (option1[type] && typeof option1[type] === "string") {
-						// If a file path is provided, read it efficiently
-						option1[type] = await readFileEfficiently(option1[type]);
-					}
-					if (option1[type] && Buffer.isBuffer(option1[type])) {
-						console.log(
-							`[sendMessageWTyping] Media type: ${type}, Buffer size: ${option1[type].length} bytes`
-						);
-					}
-				}
+				// const mediaTypes = ["image", "sticker", "audio", "video", "document"];
+				// for (const type of mediaTypes) {
+				// 	if (msgObj[type] && typeof msgObj[type] === "string") {
+				// 		// If a file path is provided, read it efficiently
+				// 		msgObj[type] = await readFileEfficiently(msgObj[type]);
+				// 	}
+				// 	if (msgObj[type] && Buffer.isBuffer(msgObj[type])) {
+				// 		console.log(
+				// 			`[sendMessageWTyping] Media type: ${type}, Buffer size: ${msgObj[type].length} bytes`
+				// 		);
+				// 	}
+				// 	if (msgObj[type] && typeof msgObj[type] == "object") {
+				// 		console.log(
+				// 			`[sendMessageWTyping] Media type: ${type}, Object keys: ${Object.keys(msgObj[type])}`
+				// 		);
+				// 	}
+				// }
 
-				await sock.sendMessage(jid, option1, {
-					...option2,
-					mediaUploadTimeoutMs: 1000 * 60 * 60,
-				});
+				await sock.presenceSubscribe(to);
+				await new Promise((resolve) => setTimeout(resolve, 500));
+				await sock.sendPresenceUpdate("composing", to);
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+				// await sock.sendMessage(to, msgObj, {
+				// 	...messageOptions,
+				// 	mediaUploadTimeoutMs: 1000 * 60 * 60,
+				// });
+				await sock.sendMessage(to, msgObj, messageOptions);
+				await sock.sendPresenceUpdate("paused", to);
 			} catch (error) {
 				console.error("❌ Error in sendMessageWTyping:", error);
 			}
@@ -69,9 +87,6 @@ const getCommand = async (sock, msg, cache) => {
 		if (type === "stickerMessage" && forwardGroup != "") {
 			stickerForward(sock, msg, from);
 		}
-
-		let botNumberJid = sock.user.id;
-		botNumberJid = botNumberJid.includes(":") ? botNumberJid.split(":")[0] + "@s.whatsapp.net" : botNumberJid;
 
 		let body =
 			type === "conversation"
@@ -123,7 +138,7 @@ const getCommand = async (sock, msg, cache) => {
 		const isOwner = myNumber.includes(senderJid);
 		if (!senderJid || !senderJid.includes("@")) return;
 
-		const updateId = msg.key.fromMe ? botNumberJid : senderJid;
+		const updateId = msg.key.fromMe ? botNumber[0] : senderJid;
 		const updateName = msg.key.fromMe ? sock.user.name : msg.pushName;
 		// Parallelize member update and creation
 		if (type == "conversation" || type == "extendedTextMessage") {
@@ -167,7 +182,10 @@ const getCommand = async (sock, msg, cache) => {
 			]);
 		}
 		if (msg.message.extendedTextMessage) {
-			if (msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumberJid) {
+			if (
+				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[0] ||
+				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[1]
+			) {
 				sock.sendMessage(from, { sticker: fs.readFileSync("./media/tag.webp") }, { quoted: msg });
 			}
 		}
@@ -221,7 +239,8 @@ const getCommand = async (sock, msg, cache) => {
 			senderJid,
 			groupMetadata,
 			groupAdmins,
-			botNumberJid,
+			isGroupAdmin,
+			botNumber,
 			sendMessageWTyping,
 			logOwner,
 			updateName,
@@ -298,7 +317,7 @@ const getCommand = async (sock, msg, cache) => {
 					{ text: "```❎ This command is only applicable in Groups!```" },
 					{ quoted: msg }
 				);
-			} else if (isGroupAdmin || moderatos.includes(senderNumber)) {
+			} else if (isGroupAdmin || moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
 				result = await commandsAdmins[command](sock, msg, from, args, msgInfoObj);
 			} else {
 				result = await sendMessageWTyping(
@@ -362,4 +381,4 @@ const getCommand = async (sock, msg, cache) => {
 	}
 };
 
-module.exports = getCommand;
+export default getCommand;

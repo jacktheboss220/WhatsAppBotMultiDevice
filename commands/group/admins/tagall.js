@@ -1,3 +1,7 @@
+import { config } from "dotenv";
+config();
+import { extractPhoneNumber } from "../../../functions/lidUtils.js";
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { prefix, sendMessageWTyping, groupMetadata, type, content } = msgInfoObj;
 	if (msg.message.extendedTextMessage) {
@@ -21,7 +25,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			tempMess[Object.keys(tempMess)[0]]["caption"] = tempCaption.includes(prefix + "tagall")
 				? tempCaption.split(prefix + "tagall")[1].trim()
 				: tempCaption;
-			const tags = groupMetadata.participants.map((i) => "👉🏻 @" + i.id.split("@")[0]).join("\n");
+			// Use extractPhoneNumber for LID/PN compatibility
+			const tags = groupMetadata.participants.map((i) => "👉🏻 @" + extractPhoneNumber(i.id)).join("\n");
 			const tt = await sock.sendMessage(from, {
 				forward: {
 					key: {
@@ -49,7 +54,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			let message = msg.message.conversation ?? "";
 			message = message.includes(prefix + "tagall") ? message.split(prefix + "tagall")[1].trim() : message;
 			message = message ? message + "\n\n" : "*Total Members* :" + groupMetadata.participants.length + "\n\n";
-			message += groupMetadata.participants.map((i) => "👉🏻 @" + i.id.split("@")[0]).join("\n");
+			// Use extractPhoneNumber for LID/PN compatibility
+			message += groupMetadata.participants.map((i) => "👉🏻 @" + extractPhoneNumber(i.id)).join("\n");
 			sendMessageWTyping(from, {
 				text: message,
 				mentions: [...groupMetadata.participants.map((e) => e.id)],
@@ -61,9 +67,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["tagall"],
 	desc: "Tag all members in group",
 	usage: "tagall | tagall <message> | reply with tagall",
 	handler,
 });
+

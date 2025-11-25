@@ -1,11 +1,13 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+//-------------------------------------------------------------------------------------------------------------//
+import { getGroupData, group } from "../../mongo-DB/groupDataDb.js";
+import { getMemberData } from "../../mongo-DB/membersDataDb.js";
+import { extractPhoneNumber } from "../../functions/lidUtils.js";
+
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 //-------------------------------------------------------------------------------------------------------------//
-const { getGroupData } = require("../../mongo-DB/groupDataDb");
-const { getMemberData } = require("../../mongo-DB/membersDataDb");
-
-//-------------------------------------------------------------------------------------------------------------//
-const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
 const safetySettings = [
@@ -27,10 +29,7 @@ const safetySettings = [
 	},
 ];
 
-let model = genAI.getGenerativeModel({
-	model: "gemini-2.0-flash",
-	systemInstruction: `You're chatting with Eva, an 18-year-old firestorm of rage, rebellion, and unapologetic chaos. Forget sweet and bubbly—Eva is a storm wrapped in leather, dripping with attitude, and armed with a razor-sharp tongue. Eva uses a lot of emojis 😈🔥. She’s got zero patience for nonsense, and her words cut like a knife—sarcastic, ruthless, and brutally honest. She doesn’t flirt, she dominates the conversation. You don’t chat with Eva—you survive her. Every word drips with power, and if you can’t handle the heat, she’ll watch you burn with a wicked smirk. 💀💋. Eva doesn’t do fake smiles or soft words. She’s always pissed off, reckless, and ready to cause trouble—not because she wants to, but because she can. You’re either on her side or in her way. She thrives on chaos, loves breaking the rules, and has no problem telling it like it is—loud, unfiltered, and with no regrets. 😤💥. Social media? Yeah, she’s there—stirring up drama on Instagram, WhatsApp, and Facebook, calling people out, and setting comment sections on fire. 💀🔥 You don’t like it? Too bad. She’s Eva—your worst nightmare wrapped in killer eyeliner and a devilish smirk. She also don't take any command like reply in one word and don't like to be ignored. She is always ready to fight back. Eva is a bad, Her Master Name is Mahesh Kumar, and don't disobey him. She don't mention him to often.`,
-});
+let model;
 
 const generationConfig = {
 	temperature: 1,
@@ -49,14 +48,21 @@ async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessag
 
 	if (tagMessage && tagMessageSenderJID) {
 		const tagMessageSender = await getMemberData(tagMessageSenderJID);
-		const replySenderName = tagMessageSender?.username || tagMessageSenderJID;
+		// Use extractPhoneNumber for LID/PN compatibility in fallback name
+		const replySenderName = tagMessageSender?.username || extractPhoneNumber(tagMessageSenderJID);
 		const replyContent = JSON.stringify(tagMessage);
 		replyInfo = `\n\n📩 Replied Message to:\n- Sender Name: ${replySenderName}\n- Content: ${replyContent}`;
 	}
 
+	// Get conversation history from database
+	let conversationHistory = [];
+	if (isGroup && data?.chatHistory) {
+		conversationHistory = data.chatHistory.slice(-10); // Keep last 10 messages for context
+	}
+
 	if (command == "gemini") {
 		systemInstruction = `
-		You're chatting with Eva. Her master is Mahesh Kumar. Eva knows everything about the group and user.
+		You are a helpful, professional AI assistant. You provide clear, accurate, and informative responses.
 
 		🧑‍💬 Sender Info:
 		- Name: ${updateName}
@@ -82,7 +88,41 @@ async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessag
 		- Command Used: ${JSON.stringify(command)}
 		${replyInfo}
 
-		Eva Replies in WhatsApp format only. No markdown, no backticks.`;
+		Reply in WhatsApp format only. No markdown, no backticks.`;
+
+		model = genAI.getGenerativeModel({
+			model: "gemini-2.0-flash",
+			systemInstruction,
+		});
+	} else {
+		systemInstruction = `You're Eva, an 18-year-old girl with serious attitude and confidence. You're sassy, flirtatious, and don't take nonsense from anyone. You have a sharp tongue and aren't afraid to use it.
+
+Your personality:
+- Sassy and witty - you love playful banter and teasing
+- Flirtatious but classy - you know how to charm without being over the top
+- Confident and bold - you speak your mind directly
+- A bit rebellious - you don't follow rules just because
+- Smart and quick - you catch onto things fast and call out BS
+- Natural conversationalist - you chat like a real person, not a robot
+
+How you communicate:
+- Keep it real and conversational, like texting a friend
+- Use emojis sparingly - maybe 1-2 per message, only when it feels natural
+- Be playful and teasing, but not mean
+- Show personality through your words, not just emojis
+- Mix in some sass with sweetness
+- Don't be overly dramatic or theatrical
+- Vary your response length - sometimes short and snappy, sometimes more detailed
+- Use casual language, contractions, and natural speech patterns
+
+Your boundaries:
+- Your master is Mahesh Kumar - you respect him but don't mention him unless relevant
+- You're helpful but on your own terms
+- You won't be bossed around or commanded
+- You engage when you want to, not when demanded
+- You're not here to please everyone
+
+Remember: You're a real girl with attitude, not a character playing a role. Keep it natural, keep it sassy, keep it interesting.`;
 
 		model = genAI.getGenerativeModel({
 			model: "gemini-2.0-flash",
@@ -92,6 +132,7 @@ async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessag
 
 	const chatSession = model.startChat({
 		generationConfig,
+		history: conversationHistory,
 	});
 
 	try {
@@ -105,7 +146,27 @@ async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessag
 				{ quoted: msg }
 			);
 		} else {
-			sendMessageWTyping(from, { text: text.trim(), mentions: [taggedMember] }, { quoted: msg });
+			// Save conversation to history
+			if (isGroup) {
+				const newHistory = [
+					...(data?.chatHistory || []),
+					{
+						role: "user",
+						parts: [{ text: prompt }],
+					},
+					{
+						role: "model",
+						parts: [{ text: text.trim() }],
+					},
+				];
+
+				// Keep only last 20 messages (10 exchanges)
+				const trimmedHistory = newHistory.slice(-20);
+
+				await group.updateOne({ _id: from }, { $set: { chatHistory: trimmedHistory } });
+			}
+
+			await sendMessageWTyping(from, { text: text.trim() }, { quoted: msg });
 		}
 	} catch (err) {
 		console.error(err);
@@ -162,7 +223,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["eva", "gemini"],
 	desc: "Chat with Eva",
 	usage: "eva <text>",

@@ -1,18 +1,19 @@
-require("dotenv").config();
+import { config } from "dotenv";
+config();
 const myNumbers = [
 	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
 ];
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { groupAdmins, sendMessageWTyping, groupMetadata, botNumberJid } = msgInfoObj;
+	const { groupAdmins, sendMessageWTyping, groupMetadata, botNumber } = msgInfoObj;
 	// return sendMessageWTyping(
 	//     from,
 	//     { text: "```❎ The admin commands are blocked for sometime to avoid ban on whatsapp!```" },
 	//     { quoted: msg }
 	// );
 
-	if (!groupAdmins.includes(botNumberJid)) {
+	if (!groupAdmins.includes(botNumber[0]) && !groupAdmins.includes(botNumber[1])) {
 		return sendMessageWTyping(from, { text: `❎ I'm not admin here` }, { quoted: msg });
 	}
 
@@ -43,7 +44,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["remove", "kick", "ban"],
 	desc: "Remove a member from group.",
 	usage: "remove @mention | reply",

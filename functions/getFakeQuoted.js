@@ -12,4 +12,4 @@ const fake_quoted = (anu, message) => {
     };
 };
 
-module.exports = { fake_quoted };
+export { fake_quoted };

@@ -1,4 +1,5 @@
-const mdClient = require("../mongodb");
+import mdClient from "../mongodb.js";
+
 mdClient.connect();
 
 const bot = mdClient.db("MyBotDataDB").collection("AuthTable");
@@ -26,4 +27,5 @@ const getBotData = async () => {
 	}
 };
 
-module.exports = { getBotData, createBotData, bot };
+export { getBotData, createBotData, bot };
+

@@ -1,7 +1,7 @@
-const { getGroupData, createGroupData, group } = require('../../mongo-DB/groupDataDb');
-const { getMemberData, createMembersData, member } = require('../../mongo-DB/membersDataDb');
-const axios = require('axios');
-const fs = require('fs');
+import { getGroupData, createGroupData, group } from '../../mongo-DB/groupDataDb.js';
+import { getMemberData, createMembersData, member } from '../../mongo-DB/membersDataDb.js';
+import axios from 'axios';
+import fs from 'fs';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, evv } = msgInfoObj;
@@ -26,7 +26,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["test", "code"],
     desc: "Test your code",
     usage: "test | code",

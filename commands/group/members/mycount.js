@@ -1,4 +1,4 @@
-const { group } = require('../../../mongo-DB/groupDataDb');
+import { group } from '../../../mongo-DB/groupDataDb.js';
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping, senderJid } = msgInfoObj;
@@ -28,7 +28,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["mycount", "total"],
     desc: "Get your message count in group",
     usage: "total | reply to a message to get message count of that member",

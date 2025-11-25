@@ -1,5 +1,7 @@
+import { extractPhoneNumber } from "../../functions/lidUtils.js";
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { botNumberJid, sendMessageWTyping, groupAdmins, senderJid } = msgInfoObj;
+	const { botNumber, sendMessageWTyping, groupAdmins, senderJid } = msgInfoObj;
 
 	try {
 		// Check if the message is a reply
@@ -9,8 +11,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 		// Check if the sender is authorized to delete messages
 		const senderIsAdmin = groupAdmins.includes(senderJid);
-		const botIsAdmin = groupAdmins.includes(botNumberJid);
-		const isBotMessage = msg.message.extendedTextMessage.contextInfo.participant === botNumberJid;
+		const isBotAdmin = groupAdmins.includes(botNumber[0]) || groupAdmins.includes(botNumber[1]);
+		const participant = msg.message.extendedTextMessage.contextInfo.participant;
+		// Use extractPhoneNumber for LID/PN compatibility
+		const isBotMessage =
+			extractPhoneNumber(participant) === extractPhoneNumber(botNumber[0]) ||
+			extractPhoneNumber(participant) === extractPhoneNumber(botNumber[1]);
 
 		if (!isBotMessage) {
 			if (!senderIsAdmin) {
@@ -21,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				);
 			}
 
-			if (!botIsAdmin) {
+			if (!isBotAdmin) {
 				return sendMessageWTyping(
 					from,
 					{ text: `❎ Bot needs to be admin to delete others' messages.` },
@@ -40,7 +46,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 		// If the message is from the bot, delete its own message
 		if (isBotMessage) {
-			options.remoteJid = botNumberJid;
+			options.remoteJid = botNumber[0];
 			options.fromMe = true;
 		}
 
@@ -52,7 +58,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["delete", "d", "dd"],
 	desc: "Delete a message",
 	usage: "delete <reply to message>",

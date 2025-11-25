@@ -1,8 +1,8 @@
-const { getMemberData } = require("../../mongo-DB/membersDataDb");
-const { downloadContentFromMessage } = require("baileys");
-const WSF = require("wa-sticker-formatter");
+import { getMemberData } from "../../mongo-DB/membersDataDb.js";
+import { downloadContentFromMessage } from "baileys";
+import WSF from "wa-sticker-formatter";
 
-const fs = require("fs");
+import fs from "fs";
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -10,7 +10,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const memberData = await getMemberData(senderJid);
 
 	if (type === "extendedTextMessage" && content.includes("stickerMessage")) {
-		let packName = (authorName = "eva");
+		let packName = "eva";
+		let authorName = "eva";
 		if (args.includes("pack")) packName = args.join(" ").split("pack ")[1].split("author")[0];
 
 		if (args.includes("author")) authorName = args.join(" ").split("author ")[1].split("pack")[0];
@@ -47,7 +48,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["steal", "stealn"],
 	desc: "Steal stickers with custom pack and author names",
 	usage: "steal",

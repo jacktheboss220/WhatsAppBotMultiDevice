@@ -3,6 +3,7 @@
   "version": "2.2.0",
   "description": "well...Unique and intreating project",
   "main": "index.js",
+  "type": "module",
   "private": true,
   "directories": {
     "lib": "lib"
@@ -26,15 +27,17 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google/generative-ai": "^0.21.0",
     "axios": "^1.8.4",
-    "baileys": "^6.7.20",
+    "baileys": "^7.0.0-rc.9",
+    "body-parser": "^2.2.0",
     "canvas": "^3.1.0",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.0",
-    "ffmpeg-static": "^5.2.0",
+    "ffmpeg-static": "^5.3.0",
     "fluent-ffmpeg": "^2.1.3",
+    "form-data": "^4.0.5",
     "genius-lyrics": "^4.4.7",
     "genius-lyrics-api": "^3.2.1",
     "google-tts-api": "^0.0.6",
@@ -44,13 +47,16 @@
     "mongodb": "^6.12.0",
     "node-cache": "^5.1.2",
     "openai": "^4.80.1",
+    "pino": "^10.1.0",
     "snapsave-downloader": "github:jacktheboss220/insta-downloader",
     "truecallerjs": "^2.2.0",
     "twitter-api-v2": "^1.22.0",
     "urban-dictionary": "github:jacktheboss220/urban-dictionary",
     "wa-sticker-formatter": "^3.6.0",
+    "ws": "^8.18.3",
+    "youtube-dl-exec": "^3.0.22",
     "yt-search": "^2.12.1",
     "ytdl-core": "^4.11.5"
   },
-  "repository": "https://github.com/jacktheboss220/WhatsAppBotMultiDevice.git"
+  "repository": "https://github.com/jacktheboss220/WhatsAppBotMultiDevice-decrypted.git"
 }

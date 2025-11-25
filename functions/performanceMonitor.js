@@ -2,9 +2,14 @@
  * Performance monitoring and memory optimization utilities
  */
 
-const fs = require("fs");
-const path = require("path");
-const memoryManager = require("./memoryUtils");
+import fs from "fs";
+import path from "path";
+import memoryManager from "./memoryUtils.js";
+import { fileURLToPath } from "url";
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class PerformanceMonitor {
 	constructor() {
@@ -167,4 +172,4 @@ class PerformanceMonitor {
 const performanceMonitor = new PerformanceMonitor();
 
 // Export for use in other modules
-module.exports = performanceMonitor;
+export default performanceMonitor;

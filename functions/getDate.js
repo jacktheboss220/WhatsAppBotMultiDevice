@@ -5,5 +5,5 @@ const getDate = () => {
     return new Date(date);
 };
 
-module.exports = getDate;
+export default getDate;
 

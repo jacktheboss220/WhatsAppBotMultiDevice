@@ -1,6 +1,7 @@
-const fs = require("fs");
-const path = require("path");
-require("dotenv").config();
+import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
+dotenv.config();
 
 /**
  * YouTube anti-bot utilities
@@ -241,7 +242,7 @@ function isPyInstallerError(error) {
 	);
 }
 
-module.exports = {
+export {
 	CONFIG,
 	getRotatingUserAgent,
 	getBrowserHeaders,

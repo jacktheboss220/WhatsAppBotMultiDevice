@@ -1,4 +1,4 @@
-const { group } = require('../../../mongo-DB/groupDataDb');
+import { group } from '../../../mongo-DB/groupDataDb.js';
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
@@ -33,7 +33,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     })
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["totalg"],
     desc: "Get your message count in all groups",
     usage: "totalg | reply to a message to get message count of that member",

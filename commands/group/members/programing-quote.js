@@ -1,4 +1,4 @@
-const axios = require('axios')
+import axios from 'axios'
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
     const { sendMessageWTyping } = msgInfoObj;
@@ -12,7 +12,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     })
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['proquote', 'pqoute'],
     desc: 'Get random programming quote',
     usage: 'proquote',

@@ -1,4 +1,4 @@
-const inshorts = require('inshorts-api');
+import inshorts from 'inshorts-api';
 const readMore = String.fromCharCode(8206).repeat(4000);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -39,7 +39,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     });
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["news", "categories"],
     desc: "Get news",
     usage: "news | news <category> | categories",

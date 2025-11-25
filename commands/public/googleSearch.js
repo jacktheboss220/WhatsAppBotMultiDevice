@@ -1,5 +1,5 @@
-const fs = require("fs");
-const axios = require("axios");
+import fs from "fs";
+import axios from "axios";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
@@ -53,7 +53,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["search", "gs"],
 	desc: "Search on Google",
 	usage: "search | gs <query>",

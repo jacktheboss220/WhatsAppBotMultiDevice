@@ -1,4 +1,5 @@
 node_modules
+backups
 # package-lock.json
 baileys_auth_info
 test.json

@@ -1,5 +1,5 @@
-const ytdl = require("ytdl-core");
-const fs = require("fs");
+import ytdl from "ytdl-core";
+import fs from "fs";
 const getRandom = (ext) => {
 	return `${Math.floor(Math.random() * 10000)}${ext}`;
 };
@@ -46,7 +46,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	})();
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["yta"],
 	desc: "Download youtube audio",
 	usage: "yta <youtube link>",

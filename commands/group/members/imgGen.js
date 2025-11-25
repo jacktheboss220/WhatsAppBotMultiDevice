@@ -1,7 +1,9 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 
-const OpenAI = require('openai');
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
     apiKey: OPENAI_API_KEY,
@@ -33,7 +35,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 }
 
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["make", "gen"],
     desc: "Generate an image from a prompt",
     usage: "gen <prompt>",

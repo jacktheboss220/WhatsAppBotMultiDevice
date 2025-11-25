@@ -1,11 +1,12 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 const GENIUS_ACCESS_SECRET = process.env.GENIUS_ACCESS_SECRET || "";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
-const Genius = require("genius-lyrics");
-const { getLyrics } = require("genius-lyrics-api");
+import Genius from "genius-lyrics";
+import { getLyrics } from "genius-lyrics-api";
 const Client = new Genius.Client(GENIUS_ACCESS_SECRET);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -41,7 +42,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["l", "lyric"],
     desc: "Get lyrics of a song",
     usage: "lyric <song name>",

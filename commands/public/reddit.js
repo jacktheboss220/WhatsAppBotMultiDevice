@@ -1,6 +1,6 @@
-const axiox = require("axios");
-const jsdom = require("jsdom");
-const { getMemberData, member } = require("../../mongo-DB/membersDataDb");
+import axiox from "axios";
+import jsdom from "jsdom";
+import { getMemberData, member } from "../../mongo-DB/membersDataDb.js";
 
 const { JSDOM } = jsdom;
 
@@ -61,7 +61,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		});
 };
 
-module.exports.command = () => ({
+export default () => ({
 	cmd: ["reddit"],
 	desc: "Download post from reddit",
 	usage: "reddit | post link",

@@ -3,4 +3,4 @@ const getGroupAdmins = (participants) => {
         i.admin === "superadmin").map((i) => i.id);
 }
 
-module.exports = getGroupAdmins;
+export default getGroupAdmins;

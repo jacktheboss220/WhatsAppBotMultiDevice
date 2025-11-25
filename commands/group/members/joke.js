@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 const baseURL = "https://v2.jokeapi.dev";
 const cate = ["Programming", "Misc", "Dark", "Pun", "Spooky", "Christmas"];
 
@@ -34,7 +34,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ["joke"],
     desc: "Get random joke",
     usage: "joke | joke <category>",

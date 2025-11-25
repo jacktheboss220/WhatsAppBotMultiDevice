@@ -1,5 +1,5 @@
-const cheerio = require('cheerio');
-const axios = require('axios');
+import * as cheerio from 'cheerio';
+import axios from 'axios';
 
 const URL = "https://www.horoscope.com/us/horoscopes/general/horoscope-general-daily-today.aspx?sign=";
 
@@ -61,7 +61,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     }
 }
 
-module.exports.command = () => ({
+export default () => ({
     cmd: ['horo'],
     desc: 'Get horoscope',
     usage: 'horo <sign> | aries, taurus, gemini, cancer, leo, virgo, libra, scorpio, sagittarius, capricorn, aquarius, pisces',

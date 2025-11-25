@@ -1,5 +1,7 @@
-require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+import dotenv from "dotenv";
+import { MongoClient, ServerApiVersion } from "mongodb";
+
+dotenv.config();
 
 const uri = process.env.MONGODB_KEY;
 const mdClient = new MongoClient(uri, {
@@ -28,4 +30,4 @@ const mdClient = new MongoClient(uri, {
 	}
 })();
 
-module.exports = mdClient;
+export default mdClient;

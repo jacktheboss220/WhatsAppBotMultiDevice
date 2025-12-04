@@ -1,4 +1,6 @@
-# WhatsAppBotMultiDevice
+[![Buy Me a Coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&slug=jacktheboss220&button_colour=BD5FFF&font_colour=ffffff&outline_colour=000000&coffee_colour=FFDD00)](https://www.buymeacoffee.com/jacktheboss220)
+
+# WhatsAppBotMultiDevice 
 
 Our WhatsApp bot project allows users to easily perform various actions such as downloading songs, getting lyrics, creating memes, and more. Some of the available commands include: downloading songs, getting lyrics, creating stickers, converting media types, searching for images, converting videos to audio, getting facts, showing news and horoscopes, getting quotes, and more. Additionally, users can download media from Instagram and Facebook, and get the gender percentage based on a name. Our bot also has a dictionary feature and can translate text to a specified language. Give it a try and see all that it can do!
 

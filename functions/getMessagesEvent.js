@@ -6,7 +6,7 @@ import notifyOwner from "./getOwnerSend.js";
 import { readFileEfficiently } from "./fileUtils.js";
 
 const prefix = process.env.PREFIX;
-const moderatos = ["918318585418", ...process.env.MODERATORS?.split(",")];
+const moderators = [...process.env.MODERATORS?.split(",")];
 import getGroupAdmins from "./getGroupAdmins.js";
 import { stickerForward, forwardGroup } from "../functions/getStickerForward.js";
 import { createMembersData, getMemberData, member } from "../mongo-DB/membersDataDb.js";
@@ -361,7 +361,7 @@ const getCommand = async (sock, msg, cache) => {
 					{ text: "```❎ This command is only applicable in Groups!```" },
 					{ quoted: msg }
 				);
-			} else if (isGroupAdmin || moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
+			} else if (isGroupAdmin || moderators.includes(senderNumber) || myNumber.includes(senderJid)) {
 				result = await commandsAdmins[command](sock, msg, from, args, msgInfoObj);
 			} else {
 				result = await sendMessageWTyping(
@@ -376,7 +376,7 @@ const getCommand = async (sock, msg, cache) => {
 		} else if (commandsOwners[command]) {
 			const t0 = Date.now();
 			let result;
-			if (moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
+			if (moderators.includes(senderNumber) || myNumber.includes(senderJid)) {
 				result = await commandsOwners[command](sock, msg, from, args, msgInfoObj);
 			} else {
 				result = await sendMessageWTyping(

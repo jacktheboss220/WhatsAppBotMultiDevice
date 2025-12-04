@@ -28,4 +28,3 @@ const getBotData = async () => {
 };
 
 export { getBotData, createBotData, bot };
-

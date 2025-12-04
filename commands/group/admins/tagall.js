@@ -73,4 +73,3 @@ export default () => ({
 	usage: "tagall | tagall <message> | reply with tagall",
 	handler,
 });
-

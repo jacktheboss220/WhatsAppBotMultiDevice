@@ -29,7 +29,7 @@ const loadCommands = async (dirPath, commandsObj, cmdDetails) => {
 
 				// Commands export a function that returns the command object
 				const commandFunc = module.default;
-				if (!commandFunc || typeof commandFunc !== 'function') {
+				if (!commandFunc || typeof commandFunc !== "function") {
 					console.warn(`⚠️ Warning: ${file} does not export a function`);
 					continue;
 				}
@@ -46,7 +46,7 @@ const loadCommands = async (dirPath, commandsObj, cmdDetails) => {
 					console.warn(`⚠️ Warning: ${file} has invalid cmd array:`, cmd_info.cmd);
 					continue;
 				}
-				if (!cmd_info.handler || typeof cmd_info.handler !== 'function') {
+				if (!cmd_info.handler || typeof cmd_info.handler !== "function") {
 					console.warn(`⚠️ Warning: ${file} has invalid handler`);
 					continue;
 				}
@@ -92,18 +92,18 @@ addCommands();
 const cmdToText = () => {
 	let adminCommands = [];
 	let publicCommands = [];
+	let groupCommands = [];
 	let ownerCommands = [];
 	let directCommands = [];
 
 	return new Promise(async (resolve, reject) => {
 		await loadCommands(mainPath + "public/", {}, directCommands);
 		await loadCommands(mainPath + "public/", {}, publicCommands);
-		await loadCommands(mainPath + "group/members/", {}, publicCommands);
+		await loadCommands(mainPath + "group/members/", {}, groupCommands);
 		await loadCommands(mainPath + "group/admins/", {}, adminCommands);
 		await loadCommands(mainPath + "owner/", {}, ownerCommands);
-		resolve({ publicCommands, adminCommands, ownerCommands, directCommands });
+		resolve({ publicCommands, groupCommands, adminCommands, ownerCommands, directCommands });
 	});
 };
 
 export { commandsPublic, commandsMembers, commandsAdmins, commandsOwners, cmdToText };
-

@@ -1,43 +1,57 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-    apiKey: OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { sendMessageWTyping, evv } = msgInfoObj;
+	const { sendMessageWTyping, evv } = msgInfoObj;
 
-    if (!OPENAI_API_KEY)
-        return sendMessageWTyping(from,
-            { text: "```OpenAI API Key is Missing```" },
-            { quoted: msg }
-        );
-    //return sendMessageWTyping(from, { text: "This command is currently disabled." }, { quoted: msg });
-    if (!args[0]) return sendMessageWTyping(from, { text: "Please provide a prompt to generate an image from." }, { quoted: msg });
-    await openai.images.generate({
-        prompt: evv,
-        n: 1,
-        size: "1024x1024",
-    }).then(result => {
-        if (!result) return sendMessageWTyping(from, { text: "Something went wrong." }, { quoted: msg });
-        else {
-            sendMessageWTyping(from, { image: { url: result.data.data[0].url } }, { quoted: msg });
-        }
-    }).catch(err => {
-        console.log(err);
-        return sendMessageWTyping(from, { text: "Something went wrong." }, { quoted: msg });
-    });
-}
+	if (!GOOGLE_API_KEY) {
+		return sendMessageWTyping(from, { text: "```Google API Key is Missing```" }, { quoted: msg });
+	}
 
+	if (!args[0]) {
+		return sendMessageWTyping(
+			from,
+			{ text: "Please provide a prompt to generate an image from." },
+			{ quoted: msg }
+		);
+	}
+
+	try {
+		const model = genAI.getGenerativeModel({ model: "imagen-3.0" });
+
+		const result = await model.generateImage({
+			prompt: evv,
+			// quality options: "standard" | "high"
+			// high = best quality but slower
+			size: "1024x1024",
+			n: 1,
+		});
+
+		const image = result.response.images?.[0];
+
+		if (!image) {
+			return sendMessageWTyping(from, { text: "Something went wrong." }, { quoted: msg });
+		}
+
+		// Gemini returns base64
+		const imageBuffer = Buffer.from(image.base64, "base64");
+
+		await sendMessageWTyping(from, { image: imageBuffer }, { quoted: msg });
+	} catch (err) {
+		console.log("Gemini Error:", err);
+		return sendMessageWTyping(from, { text: "Something went wrong." }, { quoted: msg });
+	}
+};
 
 export default () => ({
-    cmd: ["make", "gen"],
-    desc: "Generate an image from a prompt",
-    usage: "gen <prompt>",
-    handler
+	cmd: ["make", "gen"],
+	desc: "Generate an image from a prompt using Google Gemini",
+	usage: "gen <prompt>",
+	handler,
 });

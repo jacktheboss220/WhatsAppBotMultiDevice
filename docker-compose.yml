@@ -1,0 +1,49 @@
+services:
+    whatsapp-bot:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: whatsapp-bot
+        restart: unless-stopped
+        ports:
+            - "8080:8080"
+        # Environment variables will be set in the Koyeb dashboard, not from .env
+        # env_file:
+        #   - .env
+        environment:
+            - NODE_ENV=production
+            - PORT=8080
+        volumes:
+            # Persist temporary files
+            # For persistent storage, use Koyeb's volume feature or cloud storage
+            # - ./temp:/app/temp
+            # Persist performance metrics
+            - ./performance-metrics.json:/app/performance-metrics.json
+        networks:
+            - bot-network
+        # Optional: Add memory limits
+        mem_limit: 1g
+        mem_reservation: 512m
+
+    # Optional: Add MongoDB if you don't have an external instance
+    # Uncomment the section below if you need a local MongoDB
+    # mongodb:
+    #   image: mongo:latest
+    #   container_name: whatsapp-bot-mongodb
+    #   restart: unless-stopped
+    #   ports:
+    #     - "27017:27017"
+    #   environment:
+    #     - MONGO_INITDB_ROOT_USERNAME=admin
+    #     - MONGO_INITDB_ROOT_PASSWORD=changeme
+    #   volumes:
+    #     - mongodb-data:/data/db
+    #   networks:
+    #     - bot-network
+
+networks:
+    bot-network:
+        driver: bridge
+# Uncomment if using local MongoDB
+# volumes:
+#   mongodb-data:

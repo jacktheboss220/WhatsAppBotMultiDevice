@@ -50,4 +50,3 @@ const getGroupData = async (groupJid) => {
 };
 
 export { getGroupData, createGroupData, group };
-

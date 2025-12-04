@@ -1,28 +1,56 @@
-import axios from 'axios';
+import axios from "axios";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-    const { sendMessageWTyping } = msgInfoObj;
-    if (!args[0]) return sendMessageWTyping(from, { text: `*Enter the word the search*` }, { quoted: msg });
+	const { sendMessageWTyping } = msgInfoObj;
 
-    try {
-        const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${args[0]}`);
-        const dice = response.data[0];
-        console.log(dice.word);
-        sendMessageWTyping(from, {
-            text: `*Term*:- ${dice.word}
-*Pronounciation*:- ${dice.phonetic}
-*Meaning*: ${dice.meanings[0].definitions[0].definition}
-*Example*: ${dice.meanings[0].definitions[0].example}`
-        }, { quoted: msg });
-    } catch (err) {
-        console.log(err);
-        return sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-    }
+	if (!args[0]) {
+		return sendMessageWTyping(from, { text: `*Please enter a word to search.*` }, { quoted: msg });
+	}
+
+	const word = args[0];
+
+	try {
+		const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+
+		const data = response.data[0];
+
+		const term = data.word || word;
+		const pronunciation = data.phonetic || data.phonetics?.[0]?.text || "N/A";
+
+		const meaningObj = data.meanings?.[0];
+		const partOfSpeech = meaningObj?.partOfSpeech || "N/A";
+
+		const definition = meaningObj?.definitions?.[0]?.definition || "No definition found.";
+		const example = meaningObj?.definitions?.[0]?.example || "No example available.";
+
+		const text = `*📚 Dictionary Result*
+
+*Term:* ${term}
+*Pronunciation:* ${pronunciation}
+*Type:* ${partOfSpeech}
+
+*Meaning:* 
+${definition}
+
+*Example:* 
+_${example}_`;
+
+		await sendMessageWTyping(from, { text }, { quoted: msg });
+	} catch (err) {
+		console.error(err);
+
+		// User-friendly error
+		return sendMessageWTyping(
+			from,
+			{ text: `Couldn't find the word *${word}*. Try another one.` },
+			{ quoted: msg }
+		);
+	}
 };
 
 export default () => ({
-    cmd: ["dictionary", "dict"],
-    desc: "Get meaning of a word",
-    usage: "dict <word>",
-    handler
+	cmd: ["dictionary", "dict"],
+	desc: "Get meaning of a word",
+	usage: "dict <word>",
+	handler,
 });

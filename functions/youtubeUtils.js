@@ -95,23 +95,16 @@ function getYtDlpOptions(additionalOptions = {}) {
 			"Sec-Fetch-Site:none",
 		],
 		noPlaylist: true,
-		// Remove unsupported options that cause errors
-		// verbose: false,  // Not supported in newer yt-dlp versions
-		// noWarnings: true,  // Not supported in newer yt-dlp versions
-		// ignoreErrors: false,  // Not supported in newer yt-dlp versions
 		// Use IPv4 to avoid potential IPv6 issues
 		forceIpv4: true,
 		// Retry on failures
 		retries: 3,
-		// Wait between retries
-		retrySleep: 1,
 		// Fragment retries
 		fragmentRetries: 5,
-		// Remove external downloader as it may not be available
-		// externalDownloader: "aria2c",
-		// externalDownloaderArgs: "aria2c:--max-connection-per-server=4 --min-split-size=1M",
-		// Throttle requests to avoid rate limiting
-		sleepInterval: 1,
+		// Skip download of unavailable fragments
+		skipUnavailableFragments: true,
+		// Prefer free formats
+		preferFreeFormats: true,
 	};
 
 	return { ...baseOptions, ...additionalOptions };
@@ -201,9 +194,13 @@ async function checkYtDlpBinary() {
 	}
 
 	try {
-		const youtubedl = require("youtube-dl-exec");
+		// Use dynamic import for ES modules
+		const { default: youtubedl } = await import("youtube-dl-exec");
 		// Try to get version to test if binary works
-		await youtubedl("--version", { stdio: ["ignore", "pipe", "pipe"] });
+		const result = await youtubedl("--version");
+		if (CONFIG.DEBUG) {
+			console.log("yt-dlp version:", result);
+		}
 		return true;
 	} catch (error) {
 		if (CONFIG.DEBUG) {

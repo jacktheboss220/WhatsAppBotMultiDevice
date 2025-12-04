@@ -1,4 +1,4 @@
-import logOwner from "./getOwnerSend.js";
+import notifyOwner from "./getOwnerSend.js";
 
 const getCallEvent = async (sock, call) => {
 	// console.log(`Received call event:`, call);
@@ -6,11 +6,11 @@ const getCallEvent = async (sock, call) => {
 	for (const c of call) {
 		if (c.status === "offer") {
 			// console.log(`Received call event:`, call);
-			// logOwner(sock, `Incoming call from ${c.from}`);
+			// notifyOwner(sock, `Incoming call from ${c.from}`);
 			await sock
 				.rejectCall(c.id, c.from)
 				.then(() => {
-					logOwner(sock, `Call from ${c.from} is ringing and rejected.`);
+					notifyOwner(sock, `Call from ${c.from} is ringing and rejected.`);
 				})
 				.catch((err) => {
 					console.error(`Failed to reject call from ${c.from}:`, err);

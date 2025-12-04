@@ -1,11 +1,4 @@
 /**
- * LID (Local Identifier) Utility Functions
- *
- * These utilities help manage the transition between WhatsApp's old Phone Number (PN)
- * based identification and the new Local Identifier (LID) system.
- */
-
-/**
  * Check if a JID is in LID format
  * @param {string} jid - The JID to check
  * @returns {boolean} True if the JID is in LID format

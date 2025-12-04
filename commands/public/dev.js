@@ -1,19 +1,18 @@
-const handler = async (sock, msg, from, args, msgTnfoObj) => {
-	const { sendMessageWTyping } = msgTnfoObj;
+const handler = async (sock, msg, from, args, msgInfoObj) => {
+	const { sendMessageWTyping } = msgInfoObj;
 
-	const text = `*👨‍💻 Developer Info – Mahesh Kumar*\n
-╭─────────────⭓
+	const text = `*👨‍💻 Developer — Mahesh Kumar*
+
+╭───────────────────────────
+│ *🔗 GitHub*
+│ github.com/jacktheboss220
 │
-│ *🔗 GitHub:*
-│ https://github.com/jacktheboss220
+│ *☕ Support My Work*
+│ buymeacoffee.com/jacktheboss220
 │
-│ *📢 Telegram Channel:*
-│ https://t.me/jackthebosss
-│
-│ *🌐 Portfolio:*
-│ https://www.jacktheboss220.com
-│
-╰─────────────⭓`;
+│ *🌐 Portfolio*
+│ jacktheboss220.com
+╰───────────────────────────`;
 
 	await sendMessageWTyping(from, { text }, { quoted: msg });
 };

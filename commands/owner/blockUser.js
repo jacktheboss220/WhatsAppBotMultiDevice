@@ -19,16 +19,6 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		? msg.message.extendedTextMessage.contextInfo.participant
 		: msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
 
-	// Use extractPhoneNumber for LID/PN compatibility
-	const phoneNumber = extractPhoneNumber(taggedJid);
-	// We need the full JID for database operations, but we'll use the phone number for checks
-	// Assuming database uses PN-based JIDs for now, or we should normalize
-	// For now, let's use the taggedJid directly if it's a JID, but the original code stripped it to number
-	// Let's keep using the number for checks but use the full JID for DB if possible, 
-	// OR better, use the JID as is if it's valid.
-
-	// The original code was stripping to number: taggedJid.split("@")[0]
-	// Let's use the extracted phone number for checks
 	const targetNumber = extractPhoneNumber(taggedJid);
 
 	console.log(taggedJid, botNumber[0], botNumber[1]);
@@ -41,17 +31,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		return sendMessageWTyping(from, { text: `_Command Can't be used on Bot / Mod / Owner_.💀` }, { quoted: msg });
 
 	if (command == "block") {
-		// Use the normalized JID (PN-based) for database consistency if that's what's stored
-		// Or better, update to use the actual JID from the message
-		// The original code appended @s.whatsapp.net to the number
-		const dbJid = targetNumber + "@s.whatsapp.net";
+		const dbJid = targetNumber + "@lid";
 		member.updateOne({ _id: dbJid }, { $set: { isBlock: true } }).then(() => {
 			sendMessageWTyping(from, { text: `❎ Blocked` }, { quoted: msg });
 		});
 	}
 
 	if (command == "unblock") {
-		const dbJid = targetNumber + "@s.whatsapp.net";
+		const dbJid = targetNumber + "@lid";
 		member.updateOne({ _id: dbJid }, { $set: { isBlock: false } }).then(() => {
 			sendMessageWTyping(from, { text: `✅ *Unblocked*` }, { quoted: msg });
 		});

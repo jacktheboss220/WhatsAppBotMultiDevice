@@ -1,4 +1,4 @@
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 dotenv.config();
 
 import { cmdToText } from "../../functions/getAddCommands.js";
@@ -10,7 +10,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	let { isGroup, sendMessageWTyping } = msgInfoObj;
 	let prefix = process.env.PREFIX;
 
-	const { publicCommands, adminCommands, ownerCommands, directCommands } = await cmdToText();
+	const { publicCommands, groupCommands, adminCommands, ownerCommands, directCommands } = await cmdToText();
 
 	const adminCmd = adminCommands.filter((cmd) => cmd.cmd.includes("admin"));
 	const ownerCmd = ownerCommands.filter((cmd) => cmd.cmd.includes("owner"));
@@ -25,11 +25,16 @@ ${publicCommands
 	.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`)
 	.join("\n\n")}
 
+${groupCommands
+	.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`)
+	.join("\n\n")}
+
 ${adminCmd.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`).join("\n\n")}
 
 ${ownerCmd.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`).join("\n\n")}
 
-♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️`;
+
+♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️\n buymeacoffee.com/jacktheboss220`;
 
 	const helpInDm = `
 ─「 *Dm Commands* 」─
@@ -40,7 +45,9 @@ ${ownerCmd.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: 
 
 ${directCommands
 	.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`)
-	.join("\n\n")}`;
+	.join("\n\n")}
+
+♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️\n buymeacoffee.com/jacktheboss220`;
 
 	await sendMessageWTyping(from, {
 		text: isGroup ? help : helpInDm,

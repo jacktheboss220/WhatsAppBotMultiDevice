@@ -4,22 +4,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, isGroup } = msgInfoObj;
 
 	if (!isGroup) {
-		return sendMessageWTyping(
-			from,
-			{ text: "```This command is only for groups!```" },
-			{ quoted: msg }
-		);
+		return sendMessageWTyping(from, { text: "```This command is only for groups!```" }, { quoted: msg });
 	}
 
 	try {
 		const data = await getGroupData(from);
 
 		if (!data) {
-			return sendMessageWTyping(
-				from,
-				{ text: "❌ Could not fetch group data." },
-				{ quoted: msg }
-			);
+			return sendMessageWTyping(from, { text: "❌ Could not fetch group data." }, { quoted: msg });
 		}
 
 		const historyLength = data.chatHistory ? data.chatHistory.length : 0;
@@ -35,22 +27,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 │
 ╰━━━━━━━━━━━━━━━━━╯
 
-${isChatBotOn ? "Eva is actively chatting in this group!" : "Eva is currently inactive. Admins can turn her on using the appropriate command."}
+${
+	isChatBotOn
+		? "Eva is actively chatting in this group!"
+		: "Eva is currently inactive. Admins can turn her on using the appropriate command."
+}
 
 💡 *Tip:* Use *clearhistory* to reset Eva's memory for this group.`;
 
-		return sendMessageWTyping(
-			from,
-			{ text: info },
-			{ quoted: msg }
-		);
+		return sendMessageWTyping(from, { text: info }, { quoted: msg });
 	} catch (err) {
 		console.error(err);
-		return sendMessageWTyping(
-			from,
-			{ text: "❌ Failed to fetch Eva info. Please try again." },
-			{ quoted: msg }
-		);
+		return sendMessageWTyping(from, { text: "❌ Failed to fetch Eva info. Please try again." }, { quoted: msg });
 	}
 };
 

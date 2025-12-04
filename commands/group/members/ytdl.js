@@ -89,13 +89,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				console.log("Getting video info with yt-dlp...");
 				const info = await retryWithBackoff(
 					async () => {
-						return await youtubedl(
-							URL,
-							getYtDlpOptions({
-								dumpSingleJson: true,
-								noDownload: true,
-							})
-						);
+						return await youtubedl(URL, {
+							dumpSingleJson: true,
+							noCheckCertificates: true,
+							noWarnings: true,
+							preferFreeFormats: true,
+							// Use extractor args to avoid JS runtime requirement
+							extractorArgs: "youtube:player_client=android,web",
+							addHeader: [
+								"User-Agent:com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip",
+							],
+						});
 					},
 					2,
 					1500
@@ -104,7 +108,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				title = info.title || "Unknown Video";
 				duration = info.duration || 0;
 			} catch (infoError) {
-				console.log("yt-dlp info failed:", infoError);
+				console.log("yt-dlp info failed:", infoError.message);
 
 				// Check if it's a PyInstaller/binary error
 				if (isPyInstallerError(infoError)) {
@@ -114,6 +118,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					throw new Error("YouTube is currently blocking requests. Please try again in a few minutes.");
 				} else {
 					// For other yt-dlp errors, fall back to ytdl-core
+					console.log("Falling back to ytdl-core due to error");
 					useYtdlp = false;
 				}
 			}
@@ -178,16 +183,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				const audioFile = getRandom("_audio.m4a");
 				const videoFile = getRandom("_video.mp4");
 
-				// Download audio with retry logic
+				// Download audio with retry logic - upgraded for highest quality
 				await retryWithBackoff(
 					async () => {
-						await youtubedl(
-							URL,
-							getYtDlpOptions({
-								format: "bestaudio[ext=m4a]/bestaudio",
-								output: audioFile,
-							})
-						);
+						await youtubedl(URL, {
+							format: "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best", // Highest quality audio with format fallback
+							output: audioFile,
+							noCheckCertificates: true,
+							noWarnings: true,
+							audioQuality: 0, // Best quality (0-9, where 0 is best)
+							// Use Android client to avoid JS runtime requirement
+							extractorArgs: "youtube:player_client=android,web",
+						});
 					},
 					3,
 					2000
@@ -205,16 +212,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					return;
 				}
 
-				// Download video with retry logic
+				// Download video with retry logic - upgraded for highest quality (up to 1080p)
 				await retryWithBackoff(
 					async () => {
-						await youtubedl(
-							URL,
-							getYtDlpOptions({
-								format: "bestvideo[ext=mp4]/bestvideo",
-								output: videoFile,
-							})
-						);
+						await youtubedl(URL, {
+							format: "bestvideo[height<=1080][ext=mp4]/bestvideo[height<=1080]/bestvideo[ext=mp4]/bestvideo/best", // Highest quality video with format fallback
+							output: videoFile,
+							noCheckCertificates: true,
+							noWarnings: true,
+							// Use Android client to avoid JS runtime requirement
+							extractorArgs: "youtube:player_client=android,web",
+						});
 					},
 					3,
 					2000
@@ -232,7 +240,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					return;
 				}
 
-				// Merge using ffmpeg
+				// Merge using ffmpeg with high quality settings
 				console.log("Merging audio and video with ffmpeg...");
 				const mergeProcess = cp.spawn(
 					ffmpeg,
@@ -242,11 +250,15 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						"-i",
 						videoFile,
 						"-c:v",
-						"copy",
+						"copy", // Copy video stream (no re-encoding)
 						"-c:a",
 						"aac",
+						"-b:a",
+						"192k", // High quality audio bitrate
 						"-strict",
 						"experimental",
+						"-movflags",
+						"+faststart", // Optimize for streaming
 						fileDown,
 					],
 					{ windowsHide: true }
@@ -363,10 +375,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						const currentAgent = getNextAgent();
 						const ytdlOptions = getYtdlCoreOptions(currentAgent);
 
-						// Get audio and video streams with memory management
+						// Get audio and video streams with memory management - upgraded quality
 						audio = ytdl(URL, {
 							...ytdlOptions,
 							quality: "highestaudio",
+							filter: "audioonly",
 							highWaterMark: 32 * 1024,
 						})
 							.on("progress", (_, downloaded, total) => {
@@ -380,6 +393,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						video = ytdl(URL, {
 							...ytdlOptions,
 							quality: "highestvideo",
+							filter: "videoonly",
 							highWaterMark: 32 * 1024,
 						})
 							.on("progress", (_, downloaded, total) => {

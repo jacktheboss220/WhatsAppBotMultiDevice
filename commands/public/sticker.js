@@ -7,18 +7,14 @@ import memoryManager from "../../functions/memoryUtils.js";
 
 import ffmpeg from "fluent-ffmpeg";
 
-// Get FFmpeg path - prioritize environment variable
 let ffmpegPath1 = process.env.FFMPEG_PATH;
 
 if (!ffmpegPath1) {
-	// If no custom path, try to use ffmpeg-static or fallback to system ffmpeg
 	try {
-		// Dynamic import of ffmpeg-static (it might not have the binary)
 		const { default: ffmpegStatic } = await import("ffmpeg-static");
-		ffmpegPath1 = ffmpegStatic || 'ffmpeg';
+		ffmpegPath1 = ffmpegStatic || "ffmpeg";
 	} catch (err) {
-		// If ffmpeg-static fails, use system ffmpeg
-		ffmpegPath1 = 'ffmpeg';
+		ffmpegPath1 = "ffmpeg";
 	}
 }
 
@@ -55,7 +51,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 
 	let packName = memberData ? await memberData?.customStealText : "eva";
-	let authorName = memberData?.customStealText ? undefined : "eva";
+	let authorName = memberData?.customStealText ? undefined : "jacktheboss220";
 
 	const isPackIncluded = args.includes("pack");
 	const isAuthorIncluded = args.includes("author");
@@ -68,30 +64,30 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const outputOptions =
 		args.includes("crop") || args.includes("c")
 			? [
-				`-vcodec`,
-				`libwebp`,
-				`-vf`,
-				`crop=w='min(min(iw\,ih)\,500)':h='min(min(iw\,ih)\,500)',scale=500:500,setsar=1,fps=15`,
-				`-loop`,
-				`0`,
-				`-ss`,
-				`00:00:00.0`,
-				`-t`,
-				`00:00:09.0`,
-				`-preset`,
-				`default`,
-				`-an`,
-				`-vsync`,
-				`0`,
-				`-s`,
-				`512:512`,
-			]
+					`-vcodec`,
+					`libwebp`,
+					`-vf`,
+					`crop=w='min(min(iw\,ih)\,500)':h='min(min(iw\,ih)\,500)',scale=500:500,setsar=1,fps=15`,
+					`-loop`,
+					`0`,
+					`-ss`,
+					`00:00:00.0`,
+					`-t`,
+					`00:00:09.0`,
+					`-preset`,
+					`default`,
+					`-an`,
+					`-vsync`,
+					`0`,
+					`-s`,
+					`512:512`,
+			  ]
 			: [
-				`-vcodec`,
-				`libwebp`,
-				`-vf`,
-				`scale='min(220,iw)':min'(220,ih)':force_original_aspect_ratio=decrease,fps=15, pad=220:220:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`,
-			];
+					`-vcodec`,
+					`libwebp`,
+					`-vf`,
+					`scale='min(220,iw)':min'(220,ih)':force_original_aspect_ratio=decrease,fps=15, pad=220:220:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`,
+			  ];
 
 	const media = isTaggedImage ? getRandom(".png") : getRandom(".mp4");
 
@@ -193,7 +189,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["sticker", "s"],
-	desc: "Convert image or video to sticker",
-	usage: "sticker | s | reply to image or video | pack | author | nometadata",
+	desc: "Convert image or video to sticker.",
+	usage: "sticker | s [pack <packname>] [author <authorname>] [crop/c] [nometadata]",
 	handler,
 });

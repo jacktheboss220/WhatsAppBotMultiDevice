@@ -15,11 +15,8 @@ const getGroupEvent = async (sock, events, cache) => {
 	cache.del(jid + ":groupMetadata");
 
 	if (events.action == "add") {
-		//Welcome Message
 		if (groupDataDB.welcome != "") {
-			// const wel_members = anu.participants.map((mem) => mem.split("@")[0]);
 			events.participants.forEach((member) => {
-				// Extract phone number from either LID or PN format
 				const phoneNumber = extractPhoneNumber(member);
 				sock.sendMessage(
 					jid,
@@ -33,9 +30,8 @@ const getGroupEvent = async (sock, events, cache) => {
 		}
 		//91Only Working
 		if (groupDataDB.is91Only == true) {
-			// Filter participants based on phone number (works for both LID and PN)
 			let filteredParticipants = events.participants.filter((p) => {
-				const phoneNumber = extractPhoneNumber(p);
+				const phoneNumber = extractPhoneNumber(p.phoneNumber);
 				return !phoneNumber.startsWith("91");
 			});
 			if (filteredParticipants.length > 0) {
@@ -50,17 +46,18 @@ const getGroupEvent = async (sock, events, cache) => {
 			}
 		}
 		sock.sendMessage(myNumber[0], {
-			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${groupDataDB?.grpName
-				}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p))}`,
+			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
+				groupDataDB?.grpName
+			}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p.phoneNumber))}`,
 		});
 	} else {
 		sock.sendMessage(myNumber[0], {
-			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${groupDataDB?.grpName
-				}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p))}`,
+			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
+				groupDataDB?.grpName
+			}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p.phoneNumber))}`,
 		});
 	}
 	console.log(events);
 };
 
 export default getGroupEvent;
-

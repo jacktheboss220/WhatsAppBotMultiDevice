@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
-import fs from "fs";
 
-import logOwner from "./getOwnerSend.js";
+import messageQueue from "./messageQueue.js";
+import notifyOwner from "./getOwnerSend.js";
 import { readFileEfficiently } from "./fileUtils.js";
 
 const prefix = process.env.PREFIX;
@@ -37,46 +37,61 @@ const getCommand = async (sock, msg, cache) => {
 		const sendMessageWTyping = async (to, msgObj, messageOptions) => {
 			try {
 				if (!to || !msgObj) return;
-				console.log("Message Object:", JSON.parse(JSON.stringify(msgObj)));
-
-				if (msgObj.text !== undefined) {
-					console.log("[sendMessageWTyping] Sending text message:", JSON.stringify(msgObj));
-				} else {
-					console.log("[sendMessageWTyping] Sending non-text message");
-				}
 				if (!sock || !sock.user) return;
 
-				// Async media file reading for images, stickers, audio, video
-				// const mediaTypes = ["image", "sticker", "audio", "video", "document"];
-				// for (const type of mediaTypes) {
-				// 	if (msgObj[type] && typeof msgObj[type] === "string") {
-				// 		// If a file path is provided, read it efficiently
-				// 		msgObj[type] = await readFileEfficiently(msgObj[type]);
-				// 	}
-				// 	if (msgObj[type] && Buffer.isBuffer(msgObj[type])) {
-				// 		console.log(
-				// 			`[sendMessageWTyping] Media type: ${type}, Buffer size: ${msgObj[type].length} bytes`
-				// 		);
-				// 	}
-				// 	if (msgObj[type] && typeof msgObj[type] == "object") {
-				// 		console.log(
-				// 			`[sendMessageWTyping] Media type: ${type}, Object keys: ${Object.keys(msgObj[type])}`
-				// 		);
-				// 	}
-				// }
+				const mediaTypes = ["sticker", "image", "audio", "video", "document"];
+				const messageType = Object.keys(msgObj)[0];
+				if (mediaTypes.includes(messageType)) {
+					if (typeof msgObj[messageType] === "string") {
+						try {
+							msgObj[messageType] = await readFileEfficiently(msgObj[messageType]);
+						} catch (readErr) {
+							console.error("❌ Error reading media file:", readErr.message);
+							throw readErr;
+						}
+					}
+				}
 
-				await sock.presenceSubscribe(to);
-				await new Promise((resolve) => setTimeout(resolve, 500));
-				await sock.sendPresenceUpdate("composing", to);
-				await new Promise((resolve) => setTimeout(resolve, 2000));
-				// await sock.sendMessage(to, msgObj, {
-				// 	...messageOptions,
-				// 	mediaUploadTimeoutMs: 1000 * 60 * 60,
-				// });
-				await sock.sendMessage(to, msgObj, messageOptions);
-				await sock.sendPresenceUpdate("paused", to);
+				// Only use presence updates for DMs, skip for groups to improve performance
+				const isGroupChat = to.endsWith("@g.us");
+
+				// Define the actual send function
+				const doSend = async () => {
+					if (!isGroupChat) {
+						// Reduced delays for DMs only
+						sock.presenceSubscribe(to).catch(() => {});
+						await new Promise((resolve) => setTimeout(resolve, 300));
+						sock.sendPresenceUpdate("composing", to).catch(() => {});
+						await new Promise((resolve) => setTimeout(resolve, 800));
+					}
+
+					try {
+						await sock.sendMessage(to, msgObj, {
+							...messageOptions,
+							mediaUploadTimeoutMs: 1000 * 60 * 5, // Reduced to 5 minutes
+						});
+					} catch (err) {
+						console.error("❌ Error sending message:", err.message);
+						throw err;
+					} finally {
+						if (!isGroupChat) {
+							sock.sendPresenceUpdate("paused", to).catch(() => {});
+						}
+					}
+				};
+
+				// Use queue for groups to prevent CPU overload
+				if (isGroupChat) {
+					// Priority: text=1, media=2 (lower number = higher priority)
+					const priority = mediaTypes.includes(messageType) ? 2 : 1;
+					await messageQueue.enqueue(to, doSend, priority);
+				} else {
+					// Send DMs directly without queueing
+					await doSend();
+				}
 			} catch (error) {
-				console.error("❌ Error in sendMessageWTyping:", error);
+				console.error("❌ Error in sendMessageWTyping:", error.message);
+				throw error;
 			}
 		};
 
@@ -88,23 +103,19 @@ const getCommand = async (sock, msg, cache) => {
 			stickerForward(sock, msg, from);
 		}
 
-		let body =
-			type === "conversation"
-				? msg.message.conversation
-				: type == "imageMessage" && msg.message.imageMessage.caption
-				? msg.message.imageMessage.caption
-				: type == "videoMessage" && msg.message.videoMessage.caption
-				? msg.message.videoMessage.caption
-				: type == "extendedTextMessage" && msg.message.extendedTextMessage.text
-				? msg.message.extendedTextMessage.text
-				: type == "buttonsResponseMessage"
-				? msg.message.buttonsResponseMessage.selectedDisplayText
-				: type == "templateButtonReplyMessage"
-				? msg.message.templateButtonReplyMessage.selectedDisplayText
-				: type == "listResponseMessage"
-				? msg.message.listResponseMessage.title
-				: "";
-		if (body === null || body === undefined) body = "";
+		const m = msg.message || {};
+
+		const bodyMap = {
+			conversation: m.conversation,
+			imageMessage: m.imageMessage?.caption,
+			videoMessage: m.videoMessage?.caption,
+			extendedTextMessage: m.extendedTextMessage?.text,
+			buttonsResponseMessage: m.buttonsResponseMessage?.selectedDisplayText,
+			templateButtonReplyMessage: m.templateButtonReplyMessage?.selectedDisplayText,
+			listResponseMessage: m.listResponseMessage?.title,
+		};
+
+		let body = bodyMap[type] ?? ""; // handles null + undefined
 		body = String(body).trim();
 
 		let types = [
@@ -116,6 +127,7 @@ const getCommand = async (sock, msg, cache) => {
 			"templateButtonReplyMessage",
 			"listResponseMessage",
 		];
+
 		if (!types.includes(type)) return;
 
 		if (type == "buttonsResponseMessage") {
@@ -127,12 +139,15 @@ const getCommand = async (sock, msg, cache) => {
 			if (msg.message.listResponseMessage.singleSelectReply.selectedRowId == "eva")
 				body = body.startsWith(prefix) ? body : prefix + body;
 		}
+
 		if (body[1] == " ") body = body[0] + body.slice(2);
 		const evv = body.trim().split(/ +/).slice(1).join(" ");
 		const command = body.slice(1).trim().split(/ +/).shift().toLowerCase();
 		const args = body.trim().split(/ +/).slice(1);
 		const isCmd = body.startsWith(prefix);
+		//-------------------------------------------------------------------------------------------------------------//
 		if (!isCmd && type == "stickerMessage") return;
+		//-------------------------------------------------------------------------------------------------------------//
 		const isGroup = from.endsWith("@g.us");
 		const senderJid = isGroup ? msg.key.participant : msg.key.remoteJid;
 		const isOwner = myNumber.includes(senderJid);
@@ -153,13 +168,26 @@ const getCommand = async (sock, msg, cache) => {
 		if (isGroup) {
 			groupMetadata = cache.get(from + ":groupMetadata");
 			if (!groupMetadata) {
-				groupMetadata = await sock.groupMetadata(from);
-				cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
-				createGroupData(from, groupMetadata);
+				// Fetch group metadata with a timeout to avoid blocking
+				try {
+					groupMetadata = await Promise.race([
+						sock.groupMetadata(from),
+						new Promise((_, reject) =>
+							setTimeout(() => reject(new Error("Group metadata fetch timeout")), 2000)
+						),
+					]);
+					cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
+					// Fire and forget DB write
+					createGroupData(from, groupMetadata).catch(() => {});
+				} catch (e) {
+					console.error("Group metadata fetch failed:", e.message);
+					groupMetadata = { participants: [] };
+				}
 			}
 		}
 		if (isGroup && (type == "conversation" || type == "extendedTextMessage")) {
-			Promise.all([
+			// Debounce group member updates to avoid DB overload
+			setTimeout(() => {
 				group
 					.updateOne(
 						{ _id: from, "members.id": updateId },
@@ -170,34 +198,50 @@ const getCommand = async (sock, msg, cache) => {
 					)
 					.then((r) => {
 						if (r.matchedCount == 0) {
-							group.updateOne(
-								{ _id: from },
-								{
-									$push: { members: { id: updateId, name: updateName, count: 1 } },
-								}
-							);
+							group
+								.updateOne(
+									{ _id: from },
+									{
+										$push: { members: { id: updateId, name: updateName, count: 1 } },
+									}
+								)
+								.catch(() => {});
 						}
-					}),
-				group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } }),
-			]);
+					})
+					.catch(() => {});
+				group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } }).catch(() => {});
+			}, 100);
 		}
 		if (msg.message.extendedTextMessage) {
 			if (
 				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[0] ||
 				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[1]
 			) {
-				sock.sendMessage(from, { sticker: fs.readFileSync("./media/tag.webp") }, { quoted: msg });
+				// Async file read for sticker
+				try {
+					const stickerBuffer = await readFileEfficiently("./media/tag.webp");
+					sock.sendMessage(from, { sticker: stickerBuffer }, { quoted: msg });
+				} catch (err) {
+					console.error("Failed to send tag sticker:", err.message);
+				}
 			}
 		}
 		const senderNumber = senderJid.includes(":") ? senderJid.split(":")[0] : senderJid.split("@")[0];
 		if (senderJid !== updateId) {
 			createMembersData(senderJid, msg.pushName);
 		}
-		// Parallelize member and group data fetch
-		const [senderData, groupDataFetched] = await Promise.all([
-			getMemberData(senderJid),
-			isGroup ? getGroupData(from) : Promise.resolve(""),
-		]);
+		// Parallelize member and group data fetch, but don't block main thread
+		let senderData = null;
+		let groupDataFetched = null;
+		try {
+			[senderData, groupDataFetched] = await Promise.all([
+				getMemberData(senderJid),
+				isGroup ? getGroupData(from) : Promise.resolve(""),
+			]);
+		} catch (e) {
+			senderData = null;
+			groupDataFetched = null;
+		}
 		if (isGroup) groupData = groupDataFetched;
 		if (isGroup && type == "imageMessage" && groupData?.isAutoStickerOn) {
 			if (msg.message.imageMessage.caption == "") {
@@ -242,7 +286,7 @@ const getCommand = async (sock, msg, cache) => {
 			isGroupAdmin,
 			botNumber,
 			sendMessageWTyping,
-			logOwner,
+			notifyOwner,
 			updateName,
 			updateId,
 			isOwner,
@@ -258,7 +302,7 @@ const getCommand = async (sock, msg, cache) => {
 			"[IN]",
 			isGroup ? groupMetadata.subject : "Directs"
 		);
-		logOwner(
+		notifyOwner(
 			sock,
 			"[COMMAND] " +
 				command +

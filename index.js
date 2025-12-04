@@ -3,11 +3,12 @@ import getDate from "./functions/getDate.js";
 import memoryManager from "./functions/memoryUtils.js";
 import performanceMonitor from "./functions/performanceMonitor.js";
 import { normalizeJID } from "./functions/lidUtils.js";
+import { cmdToText } from "./functions/getAddCommands.js";
 
 import cors from "cors";
 import express from "express";
 import bodyParser from "body-parser";
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -40,6 +41,16 @@ const port = process.env.PORT || 8000;
 
 app.get("/", (req, res) => {
 	res.render("index");
+});
+
+app.get("/api/commands", async (req, res) => {
+	try {
+		const commands = await cmdToText();
+		res.json(commands);
+	} catch (error) {
+		console.error("Error fetching commands:", error);
+		res.status(500).json({ error: "Failed to fetch commands" });
+	}
 });
 
 const server = app.listen(port, () => {
@@ -87,21 +98,21 @@ async function startServer() {
 
 		ws.on("pong", () => {});
 
-		ws.on("message", async (message) => {
+		ws.on("message", async (res) => {
 			try {
-				const { to, message: text } = JSON.parse(message);
-				if (!to || !text) {
+				const { to, message } = JSON.parse(res);
+				if (!to || !message) {
 					ws.send(JSON.stringify({ type: "error", error: "Invalid request" }));
 					return;
 				}
 
-				if (text.length > 4096) {
+				if (message.length > 4096) {
 					ws.send(JSON.stringify({ type: "error", error: "Message too long" }));
 					return;
 				}
 
-				await sock.sendMessage(to + "@s.whatsapp.net", { text }).then(() => {
-					console.log("Message sent to", to, ":", text);
+				await sock.sendMessage(to + "@s.whatsapp.net", { text: message }).then(() => {
+					console.log("Message sent to", to, ":", message);
 					ws.send(JSON.stringify({ type: "success", success: "Message sent" }));
 				});
 			} catch (err) {

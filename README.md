@@ -91,6 +91,7 @@ To set up Koyeb for this project, follow these steps:
 
 To run this WhatsApp bot locally, create a `.env` file in the local directory and add the following key-value pairs:
 
+
 ## Required Keys
 
 -   **PREFIX**: Enter your bot prefix. Default: `-` **(Required)**
@@ -167,6 +168,42 @@ Install the dependencies:
 To run the bot, enter the following command:
 
     node index.js
+
+## Accessing the Bot UI and QR Code
+
+Once the bot is running, open your browser and navigate to:
+
+    http://localhost:8000
+
+(Note: The default port is 8000, but it can be configured using the `PORT` environment variable)
+
+The UI will display a QR code that you need to scan with WhatsApp to authenticate the bot:
+
+1. Open WhatsApp on your phone
+2. Go to **Settings** → **Linked Devices**
+3. Tap **Link a Device**
+4. Scan the QR code displayed in the browser
+
+After successful authentication, the bot will be ready to use!
+
+## Enabling Bot in Groups
+
+For the bot to work in group chats, you need to enable it using one of these methods:
+
+### Method 1: Using Owner Command
+Send the following command from the owner's WhatsApp number in the group:
+
+    group isBotOn:true
+
+### Method 2: Direct MongoDB Configuration
+Alternatively, you can directly update the group settings in your MongoDB database:
+
+1. Access your MongoDB database
+2. Navigate to the groups collection
+3. Find the document for your group
+4. Set the field `isBotOn` to `true`
+
+**Note:** Only the owner number (specified in `MY_NUMBER` environment variable) can execute group configuration commands.
 
 ## evn
 

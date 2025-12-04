@@ -14,10 +14,10 @@ if (!ffmpegPath1) {
 	try {
 		// Dynamic import of ffmpeg-static (it might not have the binary)
 		const { default: ffmpegStatic } = await import("ffmpeg-static");
-		ffmpegPath1 = ffmpegStatic || 'ffmpeg';
+		ffmpegPath1 = ffmpegStatic || "ffmpeg";
 	} catch (err) {
 		// If ffmpeg-static fails, use system ffmpeg
-		ffmpegPath1 = 'ffmpeg';
+		ffmpegPath1 = "ffmpeg";
 	}
 }
 

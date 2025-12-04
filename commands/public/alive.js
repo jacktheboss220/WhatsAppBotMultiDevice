@@ -20,7 +20,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const response =
 		`*👋🏻 Hello ${updateName}*\n\n` +
 		`*🎾 Eva is Online!*\n` +
-		`*🟢 Response Time:* ${responseTime >= 1000 ? `${responseTimeInSeconds.toFixed(2)}s` : `${responseTime.toFixed(2)}ms`
+		`*🟢 Response Time:* ${
+			responseTime >= 1000 ? `${responseTimeInSeconds.toFixed(2)}s` : `${responseTime.toFixed(2)}ms`
 		}\n` +
 		`*⏱️ Uptime:* ${simpleUptime}\n` +
 		`*🧠 RAM Usage:* ${usedMB} MB\n` +
@@ -35,4 +36,4 @@ export default () => ({
 	desc: "Check if bot is alive",
 	usage: "alive | ping | a",
 	handler,
-})
+});

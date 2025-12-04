@@ -106,30 +106,32 @@ const getAuthStateStats = async () => {
 	try {
 		const collection = mdClient.db("MyBotDataDB").collection("AuthState");
 		const count = await collection.countDocuments();
-		
+
 		// Count by type
-		const types = await collection.aggregate([
-			{
-				$project: {
-					type: {
-						$arrayElemAt: [{ $split: ["$_id", "-"] }, 0]
-					}
-				}
-			},
-			{
-				$group: {
-					_id: "$type",
-					count: { $sum: 1 }
-				}
-			}
-		]).toArray();
+		const types = await collection
+			.aggregate([
+				{
+					$project: {
+						type: {
+							$arrayElemAt: [{ $split: ["$_id", "-"] }, 0],
+						},
+					},
+				},
+				{
+					$group: {
+						_id: "$type",
+						count: { $sum: 1 },
+					},
+				},
+			])
+			.toArray();
 
 		return {
 			total: count,
 			byType: types.reduce((acc, item) => {
 				acc[item._id] = item.count;
 				return acc;
-			}, {})
+			}, {}),
 		};
 	} catch (error) {
 		console.error("Error getting auth state stats:", error);

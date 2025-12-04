@@ -3,24 +3,198 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Eva - The Bot</title>
+		<title>Eva - WhatsApp Bot</title>
 		<link rel="stylesheet" href="/style.css" />
 		<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 	</head>
 	<body>
-		<h1>Eva - The Bot</h1>
-		<div id="qrcode" class="qr"></div>
+		<div class="container">
+			<!-- Header Section -->
+			<header class="header">
+				<div class="logo">
+					<h1>🤖 Eva Bot</h1>
+					<p class="tagline">Your Ultimate WhatsApp Assistant</p>
+				</div>
+			</header>
 
-		<h2>Send a Message</h2>
-		<form id="sendForm">
-			<input type="text" id="to" placeholder="Recipient number" required />
-			<input type="text" id="message" placeholder="Your message" required />
-			<button type="submit">Send</button>
-		</form>
-		<div id="status"></div>
+			<!-- Connection Status Section -->
+			<section class="connection-section">
+				<h2>Bot Status</h2>
+				<div id="qrcode" class="qr-container">
+					<div class="loading">
+						<div class="spinner"></div>
+						<p>Initializing...</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- Send Message Section -->
+			<section class="message-section">
+				<h2>Send a Test Message</h2>
+				<form id="sendForm">
+					<div class="form-group">
+						<input type="text" id="to" placeholder="Recipient number (e.g., 1234567890)" required />
+					</div>
+					<div class="form-group">
+						<input type="text" id="message" placeholder="Your message" required />
+					</div>
+					<button type="submit" class="btn-primary">Send Message</button>
+				</form>
+				<div id="status" class="status-message"></div>
+			</section>
+
+			<!-- Commands Section -->
+			<section class="commands-section">
+				<h2>📋 Available Commands</h2>
+				<div id="commands-container">
+					<div class="loading-commands">
+						<div class="spinner"></div>
+						<p>Loading commands...</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- Footer -->
+			<footer class="footer">
+				<p>
+					Made with ❤️ by
+					<a href="http://github.com/jacktheboss220">jacktheboss220</a>
+				</p>
+				<p class="footer-links">
+					<a href="https://github.com/jacktheboss220/WhatsAppBotMultiDevice" target="_blank">GitHub</a>
+				</p>
+			</footer>
+		</div>
 
 		<script>
 			const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + window.location.host);
+
+			// HTML escape function to prevent XSS and display issues
+			function escapeHtml(text) {
+				const map = {
+					"&": "&amp;",
+					"<": "&lt;",
+					">": "&gt;",
+					'"': "&quot;",
+					"'": "&#039;",
+					"`": "&#96;",
+				};
+				return text.replace(/[&<>"'`]/g, (m) => map[m]);
+			}
+
+			// Fetch and display commands
+			async function loadCommands() {
+				try {
+					const response = await fetch("/api/commands");
+					const data = await response.json();
+					displayCommands(data);
+				} catch (error) {
+					console.error("Error loading commands:", error);
+					document.getElementById("commands-container").innerHTML = `
+						<div class="error-message">
+							<p>❌ Failed to load commands</p>
+						</div>
+					`;
+				}
+			}
+
+			function displayCommands(data) {
+				const container = document.getElementById("commands-container");
+				let html = "";
+
+				// Public Commands
+				if (data.publicCommands && data.publicCommands.length > 0) {
+					html += `
+						<div class="command-category">
+							<h3 class="category-title">👥 Public Commands</h3>
+							<div class="commands-grid">
+								${data.publicCommands
+									.map(
+										(cmd) => `
+									<div class="command-card">
+										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
+										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
+										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
+									</div>
+								`
+									)
+									.join("")}
+							</div>
+						</div>
+					`;
+				}
+
+				// Group Commands
+				if (data.groupCommands && data.groupCommands.length > 0) {
+					html += `
+						<div class="command-category">
+							<h3 class="category-title">👫 Group Commands</h3>
+							<div class="commands-grid">
+								${data.groupCommands
+									.map(
+										(cmd) => `
+									<div class="command-card group">
+										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
+										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
+										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
+									</div>
+								`
+									)
+									.join("")}
+							</div>
+						</div>
+					`;
+				}
+
+				// Admin Commands
+				if (data.adminCommands && data.adminCommands.length > 0) {
+					html += `
+						<div class="command-category">
+							<h3 class="category-title">👑 Admin Commands</h3>
+							<div class="commands-grid">
+								${data.adminCommands
+									.map(
+										(cmd) => `
+									<div class="command-card admin">
+										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
+										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
+										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
+									</div>
+								`
+									)
+									.join("")}
+							</div>
+						</div>
+					`;
+				}
+
+				// Owner Commands
+				if (data.ownerCommands && data.ownerCommands.length > 0) {
+					html += `
+						<div class="command-category">
+							<h3 class="category-title">👨‍💼 Owner Commands</h3>
+							<div class="commands-grid">
+								${data.ownerCommands
+									.map(
+										(cmd) => `
+									<div class="command-card owner">
+										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
+										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
+										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
+									</div>
+								`
+									)
+									.join("")}
+							</div>
+						</div>
+					`;
+				}
+
+				container.innerHTML = html;
+			}
+
+			// Load commands on page load
+			loadCommands();
 
 			socket.onmessage = function (event) {
 				const qrCodeDiv = document.getElementById("qrcode");
@@ -32,18 +206,47 @@
 						QRCode.toDataURL(parsedData.qr, function (err, url) {
 							if (err) {
 								console.error("QR Code generation failed", err);
+								qrCodeDiv.innerHTML = '<div class="error"><p>❌ QR Code generation failed</p></div>';
 								return;
 							}
-							qrCodeDiv.innerHTML = `<img src="${url}" alt="QR Code" />`;
+							qrCodeDiv.innerHTML = `
+								<div class="qr-box">
+									<p class="qr-instruction">Scan this QR code with WhatsApp</p>
+									<img src="${url}" alt="QR Code" />
+									<p class="qr-hint">Open WhatsApp → Settings → Linked Devices → Link a Device</p>
+								</div>
+							`;
 						});
 					} else if (parsedData.type === "status" && parsedData.status === "connected") {
-						qrCodeDiv.innerHTML = "<p>Connected to WhatsApp!</p>";
+						qrCodeDiv.innerHTML = `
+							<div class="status-box connected">
+								<div class="status-icon">✅</div>
+								<h3>Bot is Running!</h3>
+								<p>Successfully connected to WhatsApp</p>
+							</div>
+						`;
 					} else if (parsedData.type === "success") {
-						qrCodeDiv.innerHTML = parsedData.success;
+						qrCodeDiv.innerHTML = `
+							<div class="status-box connected">
+								<div class="status-icon">✅</div>
+								<p>${parsedData.success}</p>
+							</div>
+						`;
 					}
 				} catch (err) {
 					console.error("Error parsing WebSocket message:", err);
 				}
+			};
+
+			socket.onerror = function (error) {
+				const qrCodeDiv = document.getElementById("qrcode");
+				qrCodeDiv.innerHTML = `
+					<div class="status-box error">
+						<div class="status-icon">⚠️</div>
+						<h3>Connection Error</h3>
+						<p>Unable to connect to the bot server</p>
+					</div>
+				`;
 			};
 
 			const form = document.getElementById("sendForm");
@@ -55,9 +258,12 @@
 
 				if (socket.readyState === WebSocket.OPEN) {
 					socket.send(JSON.stringify({ to, message }));
-					statusDiv.textContent = "Message sent!";
+					statusDiv.className = "status-message success";
+					statusDiv.textContent = "✅ Message sent successfully!";
+					form.reset();
 				} else {
-					statusDiv.textContent = "WebSocket connection not open.";
+					statusDiv.className = "status-message error";
+					statusDiv.textContent = "❌ WebSocket connection not open. Please wait for the bot to connect.";
 				}
 			});
 		</script>

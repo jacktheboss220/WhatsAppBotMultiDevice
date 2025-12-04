@@ -65,7 +65,7 @@ class PerformanceMonitor {
 		console.log(`📊 Memory: ${memoryData.heapUsed}MB heap, ${memoryData.rss}MB total`);
 	}
 
-	performDetailedAnalysis() {
+	async performDetailedAnalysis() {
 		const uptime = Math.round((Date.now() - this.startTime) / 1000 / 60); // minutes
 		const recent = this.metrics.memoryUsage.slice(-10);
 
@@ -78,7 +78,29 @@ class PerformanceMonitor {
 			console.log(`   Peak Memory: ${maxMemory}MB`);
 			console.log(`   Commands Processed: ${this.metrics.commandCount}`);
 			console.log(`   Errors: ${this.metrics.errorCount}`);
-			console.log(`   File Operations: ${this.metrics.fileOperations}\n`);
+			console.log(`   File Operations: ${this.metrics.fileOperations}`);
+
+			// Add file cache stats
+			try {
+				const { default: fileCache } = await import("./fileCache.js");
+				const cacheStats = fileCache.getStats();
+				console.log(
+					`   File Cache: ${cacheStats.entries} entries, ${cacheStats.sizeMB}MB, Hit Rate: ${cacheStats.hitRate}`
+				);
+			} catch (e) {
+				// Cache module not available
+			}
+
+			// Add message queue stats
+			try {
+				const { default: messageQueue } = await import("./messageQueue.js");
+				const queueStats = messageQueue.getStats();
+				console.log(
+					`   Message Queue: ${queueStats.totalQueued} queued, ${queueStats.activeSends} active sends\n`
+				);
+			} catch (e) {
+				// Queue module not available
+			}
 
 			// Save to file for analysis
 			this.saveMetrics();

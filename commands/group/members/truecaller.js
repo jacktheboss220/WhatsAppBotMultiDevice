@@ -5,7 +5,7 @@ import truecallerjs from "truecallerjs";
 import { extractPhoneNumber } from "../../../functions/lidUtils.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { evv, sendMessageWTyping, logOwner } = msgInfoObj;
+	let { evv, sendMessageWTyping, notifyOwner } = msgInfoObj;
 
 	if (!TRUECALLER_ID) return sendMessageWTyping(from, { text: "```Truecaller ID is Missing```" }, { quoted: msg });
 
@@ -65,7 +65,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		email +
 		"\n";
 
-	logOwner(sock, message, msg);
+	notifyOwner(sock, message, msg);
 	sendMessageWTyping(from, { text: message }, { quoted: msg });
 };
 

@@ -1,18 +1,40 @@
 import fs from "fs";
+import fileCache from "./fileCache.js";
 
 /**
  * Utility functions for handling large files efficiently
  */
 
 /**
- * Read file efficiently with memory management
+ * Read file efficiently with memory management and caching
  * @param {string} filePath - Path to the file
  * @param {number} maxSize - Maximum file size in bytes (default 50MB)
+ * @param {boolean} useCache - Whether to use cache (default true for media files)
  * @returns {Promise<Buffer>} File buffer
  */
-async function readFileEfficiently(filePath, maxSize = 50 * 1024 * 1024) {
+async function readFileEfficiently(filePath, maxSize = 50 * 1024 * 1024, useCache = true) {
+	// Check cache first
+	if (useCache) {
+		const cached = fileCache.get(filePath);
+		if (cached) {
+			return cached;
+		}
+	}
+
 	return new Promise((resolve, reject) => {
-		const stats = fs.statSync(filePath);
+		// Check if file exists first
+		if (!fs.existsSync(filePath)) {
+			reject(new Error(`File not found: ${filePath}`));
+			return;
+		}
+
+		let stats;
+		try {
+			stats = fs.statSync(filePath);
+		} catch (err) {
+			reject(err);
+			return;
+		}
 
 		if (stats.size > maxSize) {
 			reject(
@@ -25,14 +47,19 @@ async function readFileEfficiently(filePath, maxSize = 50 * 1024 * 1024) {
 			return;
 		}
 
-		// For files under 10MB, read directly
-		if (stats.size < 10 * 1024 * 1024) {
-			try {
-				const buffer = fs.readFileSync(filePath);
-				resolve(buffer);
-			} catch (error) {
-				reject(error);
-			}
+		// For small files (< 5MB), use async readFile
+		if (stats.size < 5 * 1024 * 1024) {
+			fs.readFile(filePath, (err, buffer) => {
+				if (err) {
+					reject(err);
+				} else {
+					// Cache small files if enabled
+					if (useCache && stats.size < 2 * 1024 * 1024) {
+						fileCache.set(filePath, buffer);
+					}
+					resolve(buffer);
+				}
+			});
 			return;
 		}
 
@@ -47,6 +74,10 @@ async function readFileEfficiently(filePath, maxSize = 50 * 1024 * 1024) {
 		stream.on("end", () => {
 			try {
 				const buffer = Buffer.concat(chunks);
+				// Cache if enabled and not too large
+				if (useCache && stats.size < 5 * 1024 * 1024) {
+					fileCache.set(filePath, buffer);
+				}
 				resolve(buffer);
 			} catch (error) {
 				reject(error);
@@ -168,4 +199,3 @@ function isValidVideoFile(filePath) {
 }
 
 export { readFileEfficiently, isValidVideoFile, isValidAudioFile };
-

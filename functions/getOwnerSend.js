@@ -5,7 +5,7 @@ const myNumber = [
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
 ];
 
-const logOwner = (sock, mess, msg) => {
+const notifyOwner = (sock, mess, msg) => {
 	if (myNumber.length === 0) {
 		console.error("MY_NUMBER is not set in the environment variables.");
 		return;
@@ -25,4 +25,4 @@ const logOwner = (sock, mess, msg) => {
 	sock.sendMessage(myNumber[0], message);
 };
 
-export default logOwner;
+export default notifyOwner;

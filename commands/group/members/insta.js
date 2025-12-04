@@ -1,4 +1,6 @@
 import snapsave from "snapsave-downloader";
+import axios from "axios";
+import { fileTypeFromBuffer } from "file-type";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { prefix, sendMessageWTyping, ig } = msgInfoObj;
@@ -54,27 +56,63 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	//         }
 	//     }
 	// }).catch(() => {
-	snapsave(urlInstagram).then(async (res) => {
-		// console.log(res);
-		if (res.status) {
-			const data = [...new Set(res.data.map((item) => item.url))];
-			for (let i = 0; i < data.length; i++) {
-				// await new Promise((resolve) => setTimeout(resolve, 500));
-				setTimeout(() => {
+	snapsave(urlInstagram)
+		.then(async (res) => {
+			if (res.status) {
+				const data = [...new Set(res.data.map((item) => item.url))];
+
+				for (let i = 0; i < data.length; i++) {
+					// await new Promise((resolve) => setTimeout(resolve, 500));
 					const url = data[i];
-					if (url.includes("jpg") || url.includes("png") || url.includes("jpeg") || url.includes("webp")) {
+					const detected = await detectUrlType(url);
+
+					if (detected.detected === "video") {
+						sock.sendMessage(from, { video: { url: url } }, { quoted: msg });
+					} else if (detected.detected === "image") {
 						sock.sendMessage(from, { image: { url: url } }, { quoted: msg });
 					} else {
-						sock.sendMessage(from, { video: { url: url } }, { quoted: msg });
+						sock.sendMessage(
+							from,
+							{ document: { url: url }, mimetype: detected.mime, fileName: `file.${detected.ext}` },
+							{ quoted: msg }
+						);
 					}
-				}, 1000 * 1);
+					await new Promise((resolve) => setTimeout(resolve, 1000));
+				}
+			} else {
+				sendMessageWTyping(from, { text: "No Data Found!!" }, { quoted: msg });
 			}
-		} else {
-			sendMessageWTyping(from, { text: "No Data Found!!" }, { quoted: msg });
-		}
-	});
+		})
+		.catch((err) => {
+			console.log(err);
+			sendMessageWTyping(from, { text: "Error!! Maybe private account or invalid URL." }, { quoted: msg });
+		});
 	// });
 };
+
+async function detectUrlType(url) {
+	try {
+		const res = await axios.get(url, {
+			responseType: "arraybuffer",
+			headers: { Range: "bytes=0-16383" },
+		});
+
+		const buffer = Buffer.from(res.data);
+		const type = await fileTypeFromBuffer(buffer);
+
+		if (!type) {
+			return { type: "unknown", reason: "no magic bytes detected" };
+		}
+
+		return {
+			ext: type.ext,
+			mime: type.mime,
+			detected: type.mime.startsWith("image/") ? "image" : type.mime.startsWith("video/") ? "video" : "other",
+		};
+	} catch (err) {
+		return { error: err.message };
+	}
+}
 
 export default () => ({
 	cmd: ["insta", "i"],

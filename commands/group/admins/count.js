@@ -18,9 +18,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				let mess =
 					"*Group:* " +
 					res.grpName +
-					"\n*Database From Nov 12, 2022* \n*Total :* " +
 					res.totalMsgCount +
-					" From Oct 19, 2022" +
+					"*Total Members:*" +
+					r[0].items.length +
 					"\n\n" +
 					readMore +
 					"\n";

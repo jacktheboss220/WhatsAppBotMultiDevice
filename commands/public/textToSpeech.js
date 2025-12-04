@@ -54,8 +54,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 
 	try {
-		// google-tts-api returns a Promise that resolves to a URL
-		const url = await tts(message, lang, 0); // message, language, slow (0 = false, 1 = true for slow)
+		const url = await tts(message, lang, 0);
 
 		if (!url) return sendMessageWTyping(from, { text: `❎ Error generating audio!` }, { quoted: msg });
 

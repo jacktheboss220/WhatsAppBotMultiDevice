@@ -1,6 +1,7 @@
 node_modules
 backups
 # package-lock.json
+.github/instructions/
 baileys_auth_info
 test.json
 .env

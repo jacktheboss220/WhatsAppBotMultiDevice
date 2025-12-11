@@ -20,6 +20,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			.get(`${baseURL}/joke/${categories}`)
 			.then((res) => {
 				let randomJoke = res.data;
+				let mess = "";
 				if (randomJoke.type == "single") {
 					mess = "Category => " + randomJoke.category + "\n\n" + randomJoke.joke;
 					sendMessageWTyping(from, { text: mess }, { quoted: msg });

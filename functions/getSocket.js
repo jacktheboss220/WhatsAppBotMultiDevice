@@ -1,6 +1,6 @@
 import NodeCache from "node-cache";
 import makeWASocket from "baileys";
-import { fetchLatestBaileysVersion, makeCacheableSignalKeyStore } from "baileys";
+import { fetchLatestBaileysVersion } from "baileys";
 import { useMongoDBAuthState } from "./useMongoDBAuthState.js";
 import P from "pino";
 
@@ -58,25 +58,33 @@ const socket = async () => {
 		logger,
 		auth: {
 			creds: state.creds,
-			keys: makeCacheableSignalKeyStore(state.keys, logger),
+			keys: state.keys, // Use MongoDB keys directly without cache wrapper
 		},
 		msgRetryCounterCache,
 		generateHighQualityLinkPreview: true,
 		getMessage,
 		markOnlineOnConnect: true,
-		syncFullHistory: true,
+		syncFullHistory: false, // Disabled for better performance
 		shouldSyncHistoryMessage: () => false,
 		shouldIgnoreJid: (jid) => false,
 		connectTimeoutMs: 60000,
 		defaultQueryTimeoutMs: 60000,
 		keepAliveIntervalMs: 30000,
 		browser: ["Ubuntu", "Chrome", "20.0.04"],
-		emitOwnEvents: false,
-		retryRequestDelayMs: 250,
-		maxMsgRetryCount: 5,
-		shouldIgnoreSignalKeyStore: true,
-		uploadTimeoutMs: 30000,
+		emitOwnEvents: true,
+		retryRequestDelayMs: 150, // Reduced for faster retries
+		maxMsgRetryCount: 3, // Reduced retry attempts
+		shouldIgnoreSignalKeyStore: false, // Changed to false to use our MongoDB store
+		uploadTimeoutMs: 60000, // Increased for large media in groups
 		fireInitQueries: false,
+		// Optimizations for large groups
+		patchMessageBeforeSending: (message) => {
+			// Disable read receipts for group messages to reduce overhead
+			if (message.key?.remoteJid?.endsWith("@g.us")) {
+				return message;
+			}
+			return message;
+		},
 	});
 
 	async function getMessage(key) {

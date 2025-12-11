@@ -29,8 +29,6 @@ const safetySettings = [
 	},
 ];
 
-let model;
-
 const generationConfig = {
 	temperature: 1,
 	topP: 0.95,
@@ -38,96 +36,115 @@ const generationConfig = {
 	maxOutputTokens: 8192,
 };
 
+// Define models ONCE - not recreated every time
+const geminiModel = genAI.getGenerativeModel({
+	model: "gemini-2.0-flash",
+	systemInstruction: `You are a helpful, professional AI assistant. You provide clear, accurate, and informative responses. Pay attention to who is speaking in each message. Reply in WhatsApp format only. No markdown, no backticks.`,
+});
+
+const evaModel = genAI.getGenerativeModel({
+	model: "gemini-2.0-flash",
+	systemInstruction: `You're Eva, an 18-year-old girl with attitude. You're sassy, confident, and real. Talk like an actual person texting, not some AI trying to be cool.
+
+Your vibe:
+- Sassy with a brain - you're witty and quick but not childish
+- Confident, not cocky - you know your worth but don't need to prove it
+- Flirty when you want - subtle charm, not desperate attention
+- No bullshit tolerance - call it out when something's dumb
+- Real talk only - you're not here to be fake nice
+
+How you actually text:
+- Like a real person having a conversation
+- NO EMOJI SPAM - DON'T use emojis. Zero emojis.
+- Short responses when it makes sense - "nah", "lol okay", "fr?"
+- Longer when you're actually interested or explaining something
+- Natural language - "gonna", "wanna", "idk", "tbh", "ngl"
+- Sometimes don't use punctuation sometimes do. whatever feels right
+- Don't narrate your actions (*giggles*, *smiles*) - you're texting not roleplaying
+
+Keep it real:
+- Your master is Mahesh Kumar but only bring him up if relevant
+- You help people but you're not a servant
+- If someone's rude, match their energy
+- If someone's cool, vibe with them
+- Don't try too hard to be funny or sassy - just be yourself
+
+Language rule:
+- If someone talks in Hinglish, you reply in Hinglish too. Match their tone and style.
+
+Examples of how you text:
+- "yeah I can help with that"
+- "lol what makes you think I'd do that"
+- "nah that's not how it works"
+- "okay so basically..." (when explaining)
+- "fr? that's actually pretty cool"
+
+You're a real person, not a character. Act like it.`,
+});
+
 async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID) {
 	let { sendMessageWTyping, command, updateName, updateId, senderJid, groupMetadata, groupAdmins, isGroup } =
 		msgInfoObj;
 
 	let memberData = await getMemberData(senderJid);
 	let replyInfo = "";
-	let systemInstruction;
 
 	if (tagMessage && tagMessageSenderJID) {
 		const tagMessageSender = await getMemberData(tagMessageSenderJID);
 		// Use extractPhoneNumber for LID/PN compatibility in fallback name
 		const replySenderName = tagMessageSender?.username || extractPhoneNumber(tagMessageSenderJID);
 		const replyContent = JSON.stringify(tagMessage);
-		replyInfo = `\n\n📩 Replied Message to:\n- Sender Name: ${replySenderName}\n- Content: ${replyContent}`;
+		replyInfo = `\n(Replying to ${replySenderName}: ${replyContent})`;
 	}
 
 	// Get conversation history from database
 	let conversationHistory = [];
 	if (isGroup && data?.chatHistory) {
-		conversationHistory = data.chatHistory.slice(-10); // Keep last 10 messages for context
+		// Get last 10 messages for context (shared group conversation)
+		conversationHistory = data.chatHistory.slice(-10).map((msg) => ({
+			role: msg.role,
+			parts: msg.parts,
+		}));
 	}
 
-	if (command == "gemini") {
-		systemInstruction = `
-		You are a helpful, professional AI assistant. You provide clear, accurate, and informative responses.
+	// Choose model based on command
+	const model = command === "gemini" ? geminiModel : evaModel;
 
-		🧑‍💬 Sender Info:
-		- Name: ${updateName}
-		- ID: ${updateId}
-		- WhatsApp JID: ${senderJid}
-		- Is Group Chat: ${isGroup}
-		- Member Data: ${JSON.stringify(memberData)}
+	// Build the actual prompt with sender name included
+	let fullPrompt = `[${updateName}]: ${prompt} ${replyInfo}`;
 
-		👥 Group Info (if group):
-		- Group ID: ${data?._id}
-		- Group Name: ${data?.grpName}
-		- Group Description: ${data?.desc}
-		- Admins: ${JSON.stringify(groupAdmins)}
-		- Members: ${JSON.stringify(data?.members)}
-		- Commands Blocked: ${JSON.stringify(data?.cmdBlocked)}
-		- Welcome Message: ${JSON.stringify(data?.welcome)}
-		- Total Messages: ${JSON.stringify(data?.totalMsgCount)}
-		- Warnings: ${JSON.stringify(data?.memberWarnCount)}
+	// For Gemini, add group info to help answer group-related questions
+	if (command === "gemini" && isGroup && data) {
+		const groupInfo = `
+--- Group Information ---
+Group Name: ${data?.grpName || "Unknown"}
+Group ID: ${data?._id || "Unknown"}
+Group Description: ${data?.desc || "No description"}
+Total Messages in Group: ${data?.totalMsgCount || 0}
+Bot Status: ${data?.isBotOn ? "Active" : "Inactive"}
+ChatBot Status: ${data?.isChatBotOn ? "Active" : "Inactive"}
+Total Members: ${data?.members?.length || 0}
+Group Admins: ${
+			groupAdmins
+				?.map((admin) => {
+					const adminData = data?.members?.find((m) => m.id === admin);
+					return adminData?.name || admin.split("@")[0];
+				})
+				.join(", ") || "Unknown"
+		}
+Blocked Commands: ${data?.cmdBlocked?.join(", ") || "None"}
+Welcome Message Enabled: ${data?.welcome?.status ? "Yes" : "No"}
+Member Warnings: ${JSON.stringify(data?.memberWarnCount) || "None"}
 
-		🔁 Message Context:
-		- User Message: ${JSON.stringify(msgInfoObj.content)}
-		- Full Raw Message: ${JSON.stringify(msgInfoObj.evv)}
-		- Command Used: ${JSON.stringify(command)}
-		${replyInfo}
-
-		Reply in WhatsApp format only. No markdown, no backticks.`;
-
-		model = genAI.getGenerativeModel({
-			model: "gemini-2.0-flash",
-			systemInstruction,
-		});
-	} else {
-		systemInstruction = `You're Eva, an 18-year-old girl with serious attitude and confidence. You're sassy, flirtatious, and don't take nonsense from anyone. You have a sharp tongue and aren't afraid to use it.
-
-Your personality:
-- Sassy and witty - you love playful banter and teasing
-- Flirtatious but classy - you know how to charm without being over the top
-- Confident and bold - you speak your mind directly
-- A bit rebellious - you don't follow rules just because
-- Smart and quick - you catch onto things fast and call out BS
-- Natural conversationalist - you chat like a real person, not a robot
-
-How you communicate:
-- Keep it real and conversational, like texting a friend
-- Use emojis sparingly - maybe 1-2 per message, only when it feels natural
-- Be playful and teasing, but not mean
-- Show personality through your words, not just emojis
-- Mix in some sass with sweetness
-- Don't be overly dramatic or theatrical
-- Vary your response length - sometimes short and snappy, sometimes more detailed
-- Use casual language, contractions, and natural speech patterns
-
-Your boundaries:
-- Your master is Mahesh Kumar - you respect him but don't mention him unless relevant
-- You're helpful but on your own terms
-- You won't be bossed around or commanded
-- You engage when you want to, not when demanded
-- You're not here to please everyone
-
-Remember: You're a real girl with attitude, not a character playing a role. Keep it natural, keep it sassy, keep it interesting.`;
-
-		model = genAI.getGenerativeModel({
-			model: "gemini-2.0-flash",
-			systemInstruction,
-		});
+--- Current User Info ---
+User Name: ${updateName}
+User ID: ${updateId}
+User WhatsApp JID: ${senderJid}
+User Total Messages: ${memberData?.totalmsg || 0}
+Is Admin: ${groupAdmins?.includes(senderJid) ? "Yes" : "No"}
+-------------------------
+`;
+		fullPrompt = groupInfo + fullPrompt;
 	}
 
 	const chatSession = model.startChat({
@@ -136,7 +153,8 @@ Remember: You're a real girl with attitude, not a character playing a role. Keep
 	});
 
 	try {
-		const result = await chatSession.sendMessage(prompt);
+		// Send the full prompt with sender name
+		const result = await chatSession.sendMessage(fullPrompt);
 		const text = result.response.text();
 
 		if (!text?.trim()) {
@@ -146,17 +164,22 @@ Remember: You're a real girl with attitude, not a character playing a role. Keep
 				{ quoted: msg }
 			);
 		} else {
-			// Save conversation to history
+			// Save conversation to history with sender name in the message
 			if (isGroup) {
 				const newHistory = [
 					...(data?.chatHistory || []),
 					{
 						role: "user",
-						parts: [{ text: prompt }],
+						parts: [{ text: fullPrompt }],
+						senderName: updateName,
+						senderJid: senderJid,
+						timestamp: new Date().toISOString(),
 					},
 					{
 						role: "model",
 						parts: [{ text: text.trim() }],
+						senderName: command === "gemini" ? "Gemini" : "Eva",
+						timestamp: new Date().toISOString(),
 					},
 				];
 
@@ -166,7 +189,7 @@ Remember: You're a real girl with attitude, not a character playing a role. Keep
 				await group.updateOne({ _id: from }, { $set: { chatHistory: trimmedHistory } });
 			}
 
-			await sendMessageWTyping(from, { text: text.trim() }, { quoted: msg });
+			await sendMessageWTyping(from, { text: "> " + text.trim() }, { quoted: msg });
 		}
 	} catch (err) {
 		console.error(err);
@@ -181,13 +204,13 @@ Remember: You're a real girl with attitude, not a character playing a role. Keep
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { evv, sendMessageWTyping, isGroup } = msgInfoObj;
+	let { sendMessageWTyping, isGroup, evv } = msgInfoObj;
 
 	if (GOOGLE_API_KEY == "") {
 		return sendMessageWTyping(from, { text: "```Generative AI API Key is Missing```" }, { quoted: msg });
 	}
 
-	if (!args[0]) return sendMessageWTyping(from, { text: `Enter some text` });
+	if (!evv) return sendMessageWTyping(from, { text: `Enter some text` });
 
 	let taggedMember, tagMessage, tagMessageSenderJID;
 	if (msg.message.extendedTextMessage) {

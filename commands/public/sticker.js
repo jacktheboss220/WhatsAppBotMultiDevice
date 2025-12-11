@@ -25,9 +25,8 @@ import { getMemberData, member } from "../../mongo-DB/membersDataDb.js";
 import { writeFile } from "fs/promises";
 import fs from "fs";
 
-const getRandom = (ext = "") => memoryManager.generateTempFileName(ext);
-
 const handler = async (sock, msg, from, args, msgInfoObj) => {
+	const getRandom = (ext = "") => memoryManager.generateTempFileName(ext);
 	const { senderJid, type, content, isGroup, sendMessageWTyping, evv } = msgInfoObj;
 	const memberData = await getMemberData(senderJid);
 

@@ -6,14 +6,13 @@ import notifyOwner from "./getOwnerSend.js";
 import { readFileEfficiently } from "./fileUtils.js";
 
 const prefix = process.env.PREFIX;
-const moderators = [...process.env.MODERATORS?.split(",")];
+const moderatos = [...process.env.MODERATORS?.split(",")];
 import getGroupAdmins from "./getGroupAdmins.js";
 import { stickerForward, forwardGroup } from "../functions/getStickerForward.js";
 import { createMembersData, getMemberData, member } from "../mongo-DB/membersDataDb.js";
 import { createGroupData, getGroupData, group } from "../mongo-DB/groupDataDb.js";
 import { commandsPublic, commandsMembers, commandsAdmins, commandsOwners } from "./getAddCommands.js";
 
-// Support both LID and PN formats for bot owner numbers
 // These will be used for permission checks
 const myNumber = [
 	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
@@ -41,6 +40,8 @@ const getCommand = async (sock, msg, cache) => {
 
 				const mediaTypes = ["sticker", "image", "audio", "video", "document"];
 				const messageType = Object.keys(msgObj)[0];
+				const isGroupChat = to.endsWith("@g.us");
+
 				if (mediaTypes.includes(messageType)) {
 					if (typeof msgObj[messageType] === "string") {
 						try {
@@ -52,24 +53,21 @@ const getCommand = async (sock, msg, cache) => {
 					}
 				}
 
-				// Only use presence updates for DMs, skip for groups to improve performance
-				const isGroupChat = to.endsWith("@g.us");
-
-				// Define the actual send function
 				const doSend = async () => {
 					if (!isGroupChat) {
-						// Reduced delays for DMs only
 						sock.presenceSubscribe(to).catch(() => {});
-						await new Promise((resolve) => setTimeout(resolve, 300));
+						await new Promise((resolve) => setTimeout(resolve, 200));
 						sock.sendPresenceUpdate("composing", to).catch(() => {});
-						await new Promise((resolve) => setTimeout(resolve, 800));
+						await new Promise((resolve) => setTimeout(resolve, 500));
 					}
 
 					try {
-						await sock.sendMessage(to, msgObj, {
+						const sendOptions = {
 							...messageOptions,
-							mediaUploadTimeoutMs: 1000 * 60 * 5, // Reduced to 5 minutes
-						});
+							mediaUploadTimeoutMs: isGroupChat ? 1000 * 60 * 10 : 1000 * 60 * 5, // 10min for groups, 5min for DMs
+						};
+
+						await sock.sendMessage(to, msgObj, sendOptions);
 					} catch (err) {
 						console.error("❌ Error sending message:", err.message);
 						throw err;
@@ -80,14 +78,11 @@ const getCommand = async (sock, msg, cache) => {
 					}
 				};
 
-				// Use queue for groups to prevent CPU overload
 				if (isGroupChat) {
-					// Priority: text=1, media=2 (lower number = higher priority)
 					const priority = mediaTypes.includes(messageType) ? 2 : 1;
 					await messageQueue.enqueue(to, doSend, priority);
 				} else {
-					// Send DMs directly without queueing
-					await doSend();
+					await messageQueue.enqueue(to, doSend, 0); // Highest priority for DMs
 				}
 			} catch (error) {
 				console.error("❌ Error in sendMessageWTyping:", error.message);
@@ -141,10 +136,14 @@ const getCommand = async (sock, msg, cache) => {
 		}
 
 		if (body[1] == " ") body = body[0] + body.slice(2);
-		const evv = body.trim().split(/ +/).slice(1).join(" ");
+		const isCmd = body.startsWith(prefix);
+		const evv = body
+			.trim()
+			.split(/ +/)
+			.slice(isCmd ? 1 : 0)
+			.join(" ");
 		const command = body.slice(1).trim().split(/ +/).shift().toLowerCase();
 		const args = body.trim().split(/ +/).slice(1);
-		const isCmd = body.startsWith(prefix);
 		//-------------------------------------------------------------------------------------------------------------//
 		if (!isCmd && type == "stickerMessage") return;
 		//-------------------------------------------------------------------------------------------------------------//
@@ -168,7 +167,6 @@ const getCommand = async (sock, msg, cache) => {
 		if (isGroup) {
 			groupMetadata = cache.get(from + ":groupMetadata");
 			if (!groupMetadata) {
-				// Fetch group metadata with a timeout to avoid blocking
 				try {
 					groupMetadata = await Promise.race([
 						sock.groupMetadata(from),
@@ -177,7 +175,6 @@ const getCommand = async (sock, msg, cache) => {
 						),
 					]);
 					cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
-					// Fire and forget DB write
 					createGroupData(from, groupMetadata).catch(() => {});
 				} catch (e) {
 					console.error("Group metadata fetch failed:", e.message);
@@ -186,7 +183,6 @@ const getCommand = async (sock, msg, cache) => {
 			}
 		}
 		if (isGroup && (type == "conversation" || type == "extendedTextMessage")) {
-			// Debounce group member updates to avoid DB overload
 			setTimeout(() => {
 				group
 					.updateOne(
@@ -217,7 +213,6 @@ const getCommand = async (sock, msg, cache) => {
 				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[0] ||
 				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[1]
 			) {
-				// Async file read for sticker
 				try {
 					const stickerBuffer = await readFileEfficiently("./media/tag.webp");
 					sock.sendMessage(from, { sticker: stickerBuffer }, { quoted: msg });
@@ -255,24 +250,53 @@ const getCommand = async (sock, msg, cache) => {
 				});
 			}
 		}
+		//-------------------------------------------------------------------------------------------------------------//
 		if (senderData?.isBlock) return;
-		if (type == "conversation" || type == "extendedTextMessage") {
-			if (body.split(" ")[0].toLowerCase() == "eva" || body.split(" ")[0].toLowerCase() == "gemini") {
-				const isChatBotOn = groupData ? groupData.isChatBotOn : false;
-				if (isChatBotOn) {
-					commandsPublic["eva"](sock, msg, from, args, {
-						evv,
-						sendMessageWTyping,
-						isGroup,
-					});
-				}
+		const groupAdmins = isGroup ? getGroupAdmins(groupMetadata.participants) : "";
+		const isGroupAdmin = groupAdmins?.includes(senderJid) || false;
+
+		//--------------------------------------------CHAT-BOT-FEATURE------------------------------------------------//
+		const isChatBotOn = groupData ? groupData.isChatBotOn : false;
+		if (isGroup && isChatBotOn && (type == "conversation" || type == "extendedTextMessage")) {
+			let isTaggedBot = false;
+			let tagMessage = null;
+			if (type == "extendedTextMessage") {
+				let tagMessageSenderJID = msg.message.extendedTextMessage.contextInfo.participant;
+				isTaggedBot = tagMessageSenderJID === botNumber[0] || tagMessageSenderJID === botNumber[1];
+				tagMessage = msg.message.extendedTextMessage.contextInfo.quotedMessage;
+			}
+			if (
+				body.split(" ")[0].toLowerCase() == "eva" ||
+				(isTaggedBot &&
+					Object.keys(tagMessage)[0] == "conversation" &&
+					tagMessage?.conversation.startsWith("> "))
+			) {
+				commandsPublic["eva"](sock, msg, from, args, {
+					sendMessageWTyping,
+					command,
+					updateName:
+						updateName == "" || updateName == null || updateName == undefined
+							? senderData?.username
+							: updateName,
+					updateId,
+					senderJid,
+					groupMetadata,
+					groupAdmins,
+					isGroup,
+					evv,
+					isOwner,
+				});
+				notifyOwner(
+					sock,
+					`[COMMAND] chat [FROM] ${senderJid} [name] ${msg.pushName} [IN] ${groupMetadata.subject}`,
+					msg
+				);
 			}
 		}
 		//---------------------------------------------------NO-CMD----------------------------------------------------//
 		if (!isCmd) return;
+		//-------------------------------------------------------------------------------------------------------------//
 		await sock.readMessages([msg.key]);
-		const groupAdmins = isGroup ? getGroupAdmins(groupMetadata.participants) : "";
-		const isGroupAdmin = groupAdmins?.includes(senderJid) || false;
 		const msgInfoObj = {
 			prefix,
 			type,
@@ -361,7 +385,7 @@ const getCommand = async (sock, msg, cache) => {
 					{ text: "```❎ This command is only applicable in Groups!```" },
 					{ quoted: msg }
 				);
-			} else if (isGroupAdmin || moderators.includes(senderNumber) || myNumber.includes(senderJid)) {
+			} else if (isGroupAdmin || moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
 				result = await commandsAdmins[command](sock, msg, from, args, msgInfoObj);
 			} else {
 				result = await sendMessageWTyping(
@@ -376,7 +400,7 @@ const getCommand = async (sock, msg, cache) => {
 		} else if (commandsOwners[command]) {
 			const t0 = Date.now();
 			let result;
-			if (moderators.includes(senderNumber) || myNumber.includes(senderJid)) {
+			if (moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
 				result = await commandsOwners[command](sock, msg, from, args, msgInfoObj);
 			} else {
 				result = await sendMessageWTyping(

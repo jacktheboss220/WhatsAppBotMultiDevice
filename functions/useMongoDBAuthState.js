@@ -39,7 +39,10 @@ const useMongoDBAuthState = async () => {
 	// Helper to remove data from MongoDB
 	const removeData = async (key) => {
 		try {
-			await collection.deleteOne({ _id: key });
+			const result = await collection.deleteOne({ _id: key });
+			if (result.deletedCount > 0) {
+				console.log(`🗑️ Removed old session key: ${key}`);
+			}
 		} catch (error) {
 			console.error(`Error removing auth data for key ${key}:`, error);
 		}
@@ -53,6 +56,7 @@ const useMongoDBAuthState = async () => {
 			creds,
 			keys: {
 				get: async (type, ids) => {
+					// console.log(`📥 MongoDB get: ${type} (${ids.length} keys)`);
 					const data = {};
 					await Promise.all(
 						ids.map(async (id) => {
@@ -67,14 +71,29 @@ const useMongoDBAuthState = async () => {
 				},
 				set: async (data) => {
 					const tasks = [];
+					let writeCount = 0;
+					let deleteCount = 0;
+
 					for (const category in data) {
 						for (const id in data[category]) {
 							const value = data[category][id];
 							const key = `${category}-${id}`;
-							tasks.push(value ? writeData(key, value) : removeData(key));
+
+							if (value != null) {
+								tasks.push(writeData(key, value));
+								writeCount++;
+							} else {
+								tasks.push(removeData(key));
+								deleteCount++;
+							}
 						}
 					}
+
 					await Promise.all(tasks);
+
+					if (writeCount > 0 || deleteCount > 0) {
+						console.log(`💾 MongoDB set: +${writeCount} writes, -${deleteCount} deletes`);
+					}
 				},
 			},
 		},

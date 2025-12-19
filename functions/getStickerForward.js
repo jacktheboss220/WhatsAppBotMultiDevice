@@ -95,4 +95,3 @@ const stickerForward = async (sock, msg, from) => {
 };
 
 export { stickerForward, forwardGroup };
-

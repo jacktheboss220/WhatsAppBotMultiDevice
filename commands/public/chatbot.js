@@ -33,7 +33,7 @@ const generationConfig = {
 	temperature: 1,
 	topP: 0.95,
 	topK: 40,
-	maxOutputTokens: 8192,
+	maxOutputTokens: 2600, // Limit output to ~2600 tokens (around 2000 words)
 };
 
 // Define models ONCE - not recreated every time
@@ -71,6 +71,8 @@ Keep it real:
 
 Language rule:
 - If someone talks in Hinglish, you reply in Hinglish too. Match their tone and style.
+- Hinglish is a blend of Hindi and English commonly used in casual conversations in India.
+- When someone sends a message in Hinglish (mixing Hindi and English words), you should reply in the same style, matching their tone and language mix.
 
 Examples of how you text:
 - "yeah I can help with that"
@@ -78,6 +80,12 @@ Examples of how you text:
 - "nah that's not how it works"
 - "okay so basically..." (when explaining)
 - "fr? that's actually pretty cool"
+
+FORMATTING RESTRICTIONS:
+- DO NOT use ### or ## for headers/headings
+- ONLY use hyphens (-) for bullet points
+- ONLY use *single asterisks* for bold text
+- Use plain text for section separators or line breaks if needed
 
 You're a real person, not a character. Act like it.`,
 });
@@ -189,7 +197,7 @@ Is Admin: ${groupAdmins?.includes(senderJid) ? "Yes" : "No"}
 				await group.updateOne({ _id: from }, { $set: { chatHistory: trimmedHistory } });
 			}
 
-			await sendMessageWTyping(from, { text: "> " + text.trim() }, { quoted: msg });
+			await sendMessageWTyping(from, { text: "_*Eva:*_\n" + text.trim() }, { quoted: msg });
 		}
 	} catch (err) {
 		console.error(err);
@@ -211,6 +219,20 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 
 	if (!evv) return sendMessageWTyping(from, { text: `Enter some text` });
+
+	// Limit input message length to prevent abuse (1000 words ≈ 5000-6000 characters)
+	const MAX_INPUT_WORDS = 1000;
+	const wordCount = evv.trim().split(/\s+/).length;
+
+	if (wordCount > MAX_INPUT_WORDS) {
+		return sendMessageWTyping(
+			from,
+			{
+				text: `⚠️ Message too long! Please limit your message to ${MAX_INPUT_WORDS} words.\n\nYour message: ${wordCount} words\nLimit: ${MAX_INPUT_WORDS} words`,
+			},
+			{ quoted: msg }
+		);
+	}
 
 	let taggedMember, tagMessage, tagMessageSenderJID;
 	if (msg.message.extendedTextMessage) {

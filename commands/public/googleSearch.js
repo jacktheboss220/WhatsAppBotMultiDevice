@@ -1,7 +1,7 @@
 import fs from "fs";
 import axios from "axios";
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
+const GOOGLE_API_KEY_SEARCH = process.env.GOOGLE_API_KEY_SEARCH || "";
 const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
 
 const baseURL = "https://www.googleapis.com/customsearch/v1";
@@ -11,7 +11,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, evv } = msgInfoObj;
 
 	// Check if API keys are missing
-	if (!GOOGLE_API_KEY || !SEARCH_ENGINE_KEY) {
+	if (!GOOGLE_API_KEY_SEARCH || !SEARCH_ENGINE_KEY) {
 		return sendMessageWTyping(
 			from,
 			{ text: "```Google API Key or Search Engine Key is Missing```" },
@@ -28,7 +28,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	let searchQuery = evv || msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation;
 
 	// Construct URL for Google Custom Search API
-	const urlToSearch = `${baseURL}?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_KEY}&q=${encodeURIComponent(searchQuery)}`;
+	const urlToSearch = `${baseURL}?key=${GOOGLE_API_KEY_SEARCH}&cx=${SEARCH_ENGINE_KEY}&q=${encodeURIComponent(
+		searchQuery
+	)}`;
 
 	try {
 		const response = await axios.get(urlToSearch);

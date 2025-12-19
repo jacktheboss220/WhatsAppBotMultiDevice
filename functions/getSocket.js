@@ -58,63 +58,55 @@ const socket = async () => {
 		logger,
 		auth: {
 			creds: state.creds,
-			keys: state.keys, // Use MongoDB keys directly without cache wrapper
+			keys: state.keys,
 		},
+
 		msgRetryCounterCache,
 		generateHighQualityLinkPreview: true,
+
 		getMessage,
 		markOnlineOnConnect: true,
-		syncFullHistory: false, // Disabled for better performance
+		syncFullHistory: false,
 		shouldSyncHistoryMessage: () => false,
-		shouldIgnoreJid: (jid) => false,
+
 		connectTimeoutMs: 60000,
 		defaultQueryTimeoutMs: 60000,
 		keepAliveIntervalMs: 30000,
+
 		browser: ["Ubuntu", "Chrome", "20.0.04"],
-		emitOwnEvents: true,
-		retryRequestDelayMs: 150, // Reduced for faster retries
-		maxMsgRetryCount: 3, // Reduced retry attempts
-		shouldIgnoreSignalKeyStore: false, // Changed to false to use our MongoDB store
-		uploadTimeoutMs: 60000, // Increased for large media in groups
+		emitOwnEvents: false, // IMPORTANT
+		retryRequestDelayMs: 150,
+		maxMsgRetryCount: 3,
+
+		uploadTimeoutMs: 60000,
 		fireInitQueries: false,
-		// Optimizations for large groups
-		patchMessageBeforeSending: (message) => {
-			// Disable read receipts for group messages to reduce overhead
-			if (message.key?.remoteJid?.endsWith("@g.us")) {
-				return message;
-			}
-			return message;
-		},
+
+		// keep this minimal
+		patchMessageBeforeSending: (msg) => msg,
 	});
 
 	async function getMessage(key) {
 		try {
-			// Try to get message from message cache first
 			const cacheKey = `${key.remoteJid}:${key.id}`;
 			if (messageCache.has(cacheKey)) {
 				logger.debug("Retrieved message from cache:", cacheKey);
 				return messageCache.get(cacheKey);
 			}
 
-			// Try to get from retry counter cache
 			if (msgRetryCounterCache.has(key.id)) {
 				logger.debug("Retrieved message from retry cache:", key.id);
-				return msgRetryCounterCache.get(key.id);
+				return undefined;
 			}
 
-			// Log the failed getMessage attempt with more context
 			logger.debug(
 				"getMessage called for key:" +
 					` ${key.id} in ${key.remoteJid} with fromMe: ${key.fromMe}` +
 					" but message not found in cache"
 			);
 
-			// Return undefined instead of empty message to prevent sending empty messages
-			// This is safer than returning an empty message object
 			return undefined;
 		} catch (error) {
 			logger.error("Error in getMessage function:", error);
-			// Return undefined on error instead of empty message
 			return undefined;
 		}
 	}
@@ -168,65 +160,6 @@ const socket = async () => {
 	// Clear interval on socket close
 	sock.ws.on("close", () => {
 		clearInterval(statsInterval);
-	});
-
-	// Handle LID mapping updates (new in Baileys 7.x)
-	// This event fires when Baileys discovers LID↔PN mappings
-	sock.ev.on("lid-mapping.update", async (update) => {
-		console.log("📋 LID mapping update received:", update);
-
-		try {
-			if (!update || Object.keys(update).length === 0) return;
-
-			console.log(`📋 LID mapping update: ${Object.keys(update).length} mappings received`);
-
-			// Import member collection dynamically to avoid circular dependencies
-			const { member } = await import("../mongo-DB/membersDataDb.js");
-			const { extractPhoneNumber } = await import("./lidUtils.js");
-
-			// Process each mapping
-			for (const [key, value] of Object.entries(update)) {
-				try {
-					// The update object contains mappings in the format:
-					// { "phoneNumber": "lid@lid" } or { "lid@lid": "phoneNumber" }
-					let phoneNumber, lid;
-
-					if (key.includes("@lid")) {
-						// key is LID, value is PN
-						lid = key;
-						phoneNumber = value;
-					} else {
-						// key is PN, value is LID
-						phoneNumber = key;
-						lid = value;
-					}
-
-					// Normalize the phone number JID
-					const pnJid = phoneNumber.includes("@") ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
-					const cleanPN = extractPhoneNumber(pnJid);
-
-					// Update database with the LID mapping
-					const result = await member.updateOne(
-						{ _id: pnJid },
-						{
-							$set: {
-								lid: lid,
-								phoneNumber: cleanPN,
-							},
-						},
-						{ upsert: false } // Don't create new documents, only update existing
-					);
-
-					if (result.modifiedCount > 0) {
-						console.log(`✅ Updated LID for ${cleanPN}: ${lid}`);
-					}
-				} catch (err) {
-					console.error(`❌ Error processing LID mapping for ${key}:`, err.message);
-				}
-			}
-		} catch (error) {
-			console.error("❌ Error handling LID mapping update:", error);
-		}
 	});
 
 	// Handle connection errors gracefully

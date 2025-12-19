@@ -141,7 +141,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["gen", "genimg", "imagen"],
-	desc: "Generate image from text prompt using Google Gemini Imagen API",
+	desc: "Generate image from text prompt using Google Gemini Imagen 4.0 API",
 	usage: "gen <ratio> <prompt>",
 	handler,
 });

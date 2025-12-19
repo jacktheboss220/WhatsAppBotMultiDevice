@@ -46,6 +46,7 @@
     "inshorts-api": "github:jacktheboss220/inshorts-api",
     "jsdom": "^26.0.0",
     "link-preview-js": "^3.0.13",
+    "mime": "^4.1.0",
     "mongodb": "^6.12.0",
     "node-cache": "^5.1.2",
     "openai": "^4.80.1",

@@ -1,111 +1,132 @@
 import { BufferJSON, initAuthCreds, proto } from "baileys";
 import mdClient from "../mongodb.js";
 
-/**
- * Custom MongoDB-based auth state implementation
- * Stores all authentication data in MongoDB instead of files
- */
+const FLUSH_INTERVAL_MS = 5000; // non-critical flush
+const MAX_BUFFER_SIZE = 500; // safety cap
+
 const useMongoDBAuthState = async () => {
-	const collectionName = "AuthState";
-	const collection = mdClient.db("MyBotDataDB").collection(collectionName);
+	const collection = mdClient.db("MyBotDataDB").collection("AuthState");
 
-	// Helper to write data to MongoDB
-	const writeData = async (key, data) => {
-		try {
-			await collection.updateOne(
-				{ _id: key },
-				{ $set: { value: JSON.stringify(data, BufferJSON.replacer) } },
-				{ upsert: true }
-			);
-		} catch (error) {
-			console.error(`Error writing auth data for key ${key}:`, error);
-		}
-	};
+	// in-memory buffer for non-critical writes
+	const buffer = new Map();
+	let flushTimer = null;
 
-	// Helper to read data from MongoDB
+	const CRITICAL_PREFIXES = ["creds", "session", "pre-key", "sender-key"];
+
+	const isCritical = (key) => CRITICAL_PREFIXES.some((p) => key.startsWith(p));
+
+	// ───────────────── READ ─────────────────
 	const readData = async (key) => {
-		try {
-			const doc = await collection.findOne({ _id: key });
-			if (doc?.value) {
-				return JSON.parse(doc.value, BufferJSON.reviver);
-			}
-			return null;
-		} catch (error) {
-			console.error(`Error reading auth data for key ${key}:`, error);
-			return null;
+		const doc = await collection.findOne({ _id: key });
+		if (!doc?.value) return null;
+		return JSON.parse(doc.value, BufferJSON.reviver);
+	};
+
+	// ───────────────── WRITE (critical) ─────────────────
+	const writeCriticalBulk = async (ops) => {
+		if (!ops.length) return;
+		await collection.bulkWrite(ops, { ordered: false });
+	};
+
+	// ───────────────── BUFFER (non-critical) ─────────────────
+	const bufferWrite = (key, value) => {
+		buffer.set(key, value);
+
+		if (buffer.size >= MAX_BUFFER_SIZE) {
+			flushBuffer().catch(() => {});
 		}
 	};
 
-	// Helper to remove data from MongoDB
-	const removeData = async (key) => {
-		try {
-			const result = await collection.deleteOne({ _id: key });
-			if (result.deletedCount > 0) {
-				console.log(`🗑️ Removed old session key: ${key}`);
-			}
-		} catch (error) {
-			console.error(`Error removing auth data for key ${key}:`, error);
+	const flushBuffer = async () => {
+		if (!buffer.size) return;
+
+		const ops = [];
+		for (const [key, value] of buffer) {
+			ops.push({
+				updateOne: {
+					filter: { _id: key },
+					update: {
+						$set: {
+							value: JSON.stringify(value, BufferJSON.replacer),
+						},
+					},
+					upsert: true,
+				},
+			});
 		}
+
+		buffer.clear();
+		await collection.bulkWrite(ops, { ordered: false });
 	};
 
-	// Initialize or load credentials
+	// background flush loop
+	flushTimer = setInterval(() => {
+		flushBuffer().catch(() => {});
+	}, FLUSH_INTERVAL_MS);
+
+	// ───────────────── CREDS ─────────────────
 	const creds = (await readData("creds")) || initAuthCreds();
 
+	// ───────────────── STATE ─────────────────
 	return {
 		state: {
 			creds,
 			keys: {
 				get: async (type, ids) => {
-					// console.log(`📥 MongoDB get: ${type} (${ids.length} keys)`);
 					const data = {};
-					await Promise.all(
-						ids.map(async (id) => {
-							let value = await readData(`${type}-${id}`);
-							if (type === "app-state-sync-key" && value) {
-								value = proto.Message.AppStateSyncKeyData.fromObject(value);
-							}
-							data[id] = value;
-						})
-					);
+					for (const id of ids) {
+						let value = await readData(`${type}-${id}`);
+						if (type === "app-state-sync-key" && value) {
+							value = proto.Message.AppStateSyncKeyData.fromObject(value);
+						}
+						data[id] = value;
+					}
 					return data;
 				},
+
 				set: async (data) => {
-					const tasks = [];
-					let writeCount = 0;
-					let deleteCount = 0;
+					const criticalOps = [];
 
 					for (const category in data) {
 						for (const id in data[category]) {
 							const value = data[category][id];
 							const key = `${category}-${id}`;
 
-							if (value != null) {
-								tasks.push(writeData(key, value));
-								writeCount++;
+							if (value == null) continue;
+
+							if (isCritical(key)) {
+								criticalOps.push({
+									updateOne: {
+										filter: { _id: key },
+										update: {
+											$set: {
+												value: JSON.stringify(value, BufferJSON.replacer),
+											},
+										},
+										upsert: true,
+									},
+								});
 							} else {
-								tasks.push(removeData(key));
-								deleteCount++;
+								bufferWrite(key, value);
 							}
 						}
 					}
 
-					await Promise.all(tasks);
-
-					if (writeCount > 0 || deleteCount > 0) {
-						console.log(`💾 MongoDB set: +${writeCount} writes, -${deleteCount} deletes`);
-					}
+					await writeCriticalBulk(criticalOps);
 				},
 			},
 		},
+
 		saveCreds: async () => {
-			await writeData("creds", creds);
+			await collection.updateOne(
+				{ _id: "creds" },
+				{ $set: { value: JSON.stringify(creds, BufferJSON.replacer) } },
+				{ upsert: true }
+			);
 		},
 	};
 };
 
-/**
- * Clear all auth state from MongoDB
- */
 const clearMongoDBAuthState = async () => {
 	try {
 		const collection = mdClient.db("MyBotDataDB").collection("AuthState");
@@ -118,9 +139,6 @@ const clearMongoDBAuthState = async () => {
 	}
 };
 
-/**
- * Get statistics about auth state storage
- */
 const getAuthStateStats = async () => {
 	try {
 		const collection = mdClient.db("MyBotDataDB").collection("AuthState");

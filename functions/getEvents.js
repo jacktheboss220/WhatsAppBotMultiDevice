@@ -7,58 +7,41 @@ const events = async (sock, startSock, cache) => {
 	sock.ev.process(async (event) => {
 		try {
 			if (event["messages.upsert"]) {
-				const upsert = event["messages.upsert"];
-				if (upsert.type === "notify") {
-					const validMessages = upsert.messages.filter(
+				const { type, messages } = event["messages.upsert"];
+				if (type === "notify") {
+					const validMessages = messages.filter(
 						(msg) =>
-						msg &&
-						msg.message &&
-						msg.key &&
-						msg.key.remoteJid &&
-						JSON.stringify(msg.message) !== "{}" &&
-						JSON.stringify(msg.message) !== "null" &&
-						JSON.stringify(msg.message) !== "undefined" &&
-						!(msg.key.fromMe || (sock.user && msg.key.participant === sock.user.id))
+							msg &&
+							msg.message &&
+							msg.key?.remoteJid &&
+							!msg.key.fromMe &&
+							Object.keys(msg.message).length > 0
 					);
 
-					await Promise.all(
-						validMessages.map(async (msg) => {
-							try {
-								await getCommand(sock, msg, cache);
-							} catch (msgError) {
-								console.error("Error processing individual message:", msgError);
-								console.error("Problematic message key:", msg.key);
-							}
-						})
-					);
+					for (const msg of validMessages) {
+						try {
+							await getCommand(sock, msg, cache);
+						} catch (err) {
+							console.error("Error processing message:", err);
+							console.error("Message key:", msg.key);
+						}
+					}
 				}
 			}
 
 			if (event["connection.update"]) {
-				try {
-					await getConnectionUpdate(startSock, event["connection.update"]);
-				} catch (connError) {
-					console.error("Error in connection update:", connError);
-				}
+				await getConnectionUpdate(startSock, event["connection.update"]);
 			}
 
 			if (event["group-participants.update"]) {
-				try {
-					await getGroupEvent(sock, event["group-participants.update"], cache);
-				} catch (groupError) {
-					console.error("Error in group event:", groupError);
-				}
+				await getGroupEvent(sock, event["group-participants.update"], cache);
 			}
 
 			if (event["call"]) {
-				try {
-					await getCallEvent(sock, event["call"]);
-				} catch (callError) {
-					console.error("Error in call event:", callError);
-				}
+				await getCallEvent(sock, event["call"]);
 			}
-		} catch (eventError) {
-			console.error("Error processing event:", eventError);
+		} catch (err) {
+			console.error("Error processing event:", err);
 			console.error("Event type:", Object.keys(event));
 		}
 	});

@@ -56,7 +56,7 @@ const getCommand = async (sock, msg, cache) => {
 				const doSend = async () => {
 					if (!isGroupChat) {
 						sock.presenceSubscribe(to).catch(() => {});
-						await new Promise((resolve) => setTimeout(resolve, 200));
+						await new Promise((resolve) => setTimeout(resolve, 300));
 						sock.sendPresenceUpdate("composing", to).catch(() => {});
 						await new Promise((resolve) => setTimeout(resolve, 500));
 					}
@@ -80,10 +80,12 @@ const getCommand = async (sock, msg, cache) => {
 
 				if (isGroupChat) {
 					const priority = mediaTypes.includes(messageType) ? 2 : 1;
-					await messageQueue.enqueue(to, doSend, priority);
+					messageQueue.enqueue(to, doSend, priority).catch(() => {});
+					return;
 				} else {
 					await messageQueue.enqueue(to, doSend, 0); // Highest priority for DMs
 				}
+				return;
 			} catch (error) {
 				console.error("❌ Error in sendMessageWTyping:", error.message);
 				throw error;
@@ -174,7 +176,7 @@ const getCommand = async (sock, msg, cache) => {
 							setTimeout(() => reject(new Error("Group metadata fetch timeout")), 2000)
 						),
 					]);
-					cache.set(from + ":groupMetadata", groupMetadata, 60 * 60);
+					cache.set(from + ":groupMetadata", groupMetadata, 10 * 60); // 10 min
 					createGroupData(from, groupMetadata).catch(() => {});
 				} catch (e) {
 					console.error("Group metadata fetch failed:", e.message);
@@ -269,7 +271,7 @@ const getCommand = async (sock, msg, cache) => {
 				body.split(" ")[0].toLowerCase() == "eva" ||
 				(isTaggedBot &&
 					Object.keys(tagMessage)[0] == "conversation" &&
-					tagMessage?.conversation.startsWith("> "))
+					tagMessage?.conversation.startsWith("_*Eva:*_"))
 			) {
 				commandsPublic["eva"](sock, msg, from, args, {
 					sendMessageWTyping,
@@ -296,7 +298,8 @@ const getCommand = async (sock, msg, cache) => {
 		//---------------------------------------------------NO-CMD----------------------------------------------------//
 		if (!isCmd) return;
 		//-------------------------------------------------------------------------------------------------------------//
-		await sock.readMessages([msg.key]);
+		sock.readMessages([msg.key]).catch(() => {});
+
 		const msgInfoObj = {
 			prefix,
 			type,

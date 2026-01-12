@@ -263,9 +263,9 @@ const getCommand = async (sock, msg, cache) => {
 			let isTaggedBot = false;
 			let tagMessage = null;
 			if (type == "extendedTextMessage") {
-				let tagMessageSenderJID = msg.message.extendedTextMessage.contextInfo.participant;
+				let tagMessageSenderJID = msg.message?.extendedTextMessage?.contextInfo?.participant;
 				isTaggedBot = tagMessageSenderJID === botNumber[0] || tagMessageSenderJID === botNumber[1];
-				tagMessage = msg.message.extendedTextMessage.contextInfo.quotedMessage;
+				tagMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 			}
 			if (
 				body.split(" ")[0].toLowerCase() == "eva" ||

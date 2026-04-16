@@ -33,7 +33,7 @@ const generationConfig = {
 	temperature: 1,
 	topP: 0.95,
 	topK: 40,
-	maxOutputTokens: 2600, // Limit output to ~2600 tokens (around 2000 words)
+	maxOutputTokens: 650, // Limit output to ~650 tokens (around 500 words max)
 };
 
 // Define models ONCE - not recreated every time
@@ -132,14 +132,13 @@ Total Messages in Group: ${data?.totalMsgCount || 0}
 Bot Status: ${data?.isBotOn ? "Active" : "Inactive"}
 ChatBot Status: ${data?.isChatBotOn ? "Active" : "Inactive"}
 Total Members: ${data?.members?.length || 0}
-Group Admins: ${
-			groupAdmins
+Group Admins: ${groupAdmins
 				?.map((admin) => {
 					const adminData = data?.members?.find((m) => m.id === admin);
 					return adminData?.name || admin.split("@")[0];
 				})
 				.join(", ") || "Unknown"
-		}
+			}
 Blocked Commands: ${data?.cmdBlocked?.join(", ") || "None"}
 Welcome Message Enabled: ${data?.welcome?.status ? "Yes" : "No"}
 Member Warnings: ${JSON.stringify(data?.memberWarnCount) || "None"}
@@ -220,8 +219,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	if (!evv) return sendMessageWTyping(from, { text: `Enter some text` });
 
-	// Limit input message length to prevent abuse (1000 words ≈ 5000-6000 characters)
-	const MAX_INPUT_WORDS = 1000;
+	// Limit input message length to prevent abuse (500 words ≈ 2500-3000 characters)
+	const MAX_INPUT_WORDS = 500;
 	const wordCount = evv.trim().split(/\s+/).length;
 
 	if (wordCount > MAX_INPUT_WORDS) {

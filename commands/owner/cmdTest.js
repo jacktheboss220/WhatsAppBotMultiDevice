@@ -4,17 +4,7 @@ import axios from "axios";
 import fs from "fs";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, evv, command } = msgInfoObj;
-
-	if (command === "mano" && args.length > 0) {
-		sock.groupParticipantsUpdate("19016677357-1630334490@g.us", ["91" + args[0] + "@s.whatsapp.net"], "add")
-			.then((res) => {
-				sendMessageWTyping(from, { text: JSON.stringify(res, null, 2) }, { quoted: msg });
-			})
-			.catch((err) => {
-				sendMessageWTyping(from, { text: JSON.stringify(err, null, 2) }, { quoted: msg });
-			});
-	}
+	const { sendMessageWTyping, evv } = msgInfoObj;
 
 	let taggedJid;
 	if (msg.message.extendedTextMessage) {
@@ -37,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 };
 
 export default () => ({
-	cmd: ["test", "code", "mano"],
+	cmd: ["test", "code"],
 	desc: "Test your code",
 	usage: "test | code",
 	handler,

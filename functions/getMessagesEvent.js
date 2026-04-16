@@ -12,6 +12,7 @@ import { stickerForward, forwardGroup } from "../functions/getStickerForward.js"
 import { createMembersData, getMemberData, member } from "../mongo-DB/membersDataDb.js";
 import { createGroupData, getGroupData, group } from "../mongo-DB/groupDataDb.js";
 import { commandsPublic, commandsMembers, commandsAdmins, commandsOwners } from "./getAddCommands.js";
+import { getBotData } from "../mongo-DB/botDataDb.js";
 
 // These will be used for permission checks
 const myNumber = [
@@ -22,6 +23,15 @@ const botNumber = [
 	process.env.BOT_NUMBER.split(",")[0] + "@s.whatsapp.net",
 	process.env.BOT_NUMBER.split(",")[1] + "@lid",
 ];
+
+// Cached tag sticker - loaded once at startup
+let _tagStickerBuffer = null;
+const getTagSticker = async () => {
+	if (!_tagStickerBuffer) {
+		_tagStickerBuffer = await readFileEfficiently("./media/tag.webp");
+	}
+	return _tagStickerBuffer;
+};
 
 const getCommand = async (sock, msg, cache) => {
 	const startTime = process.hrtime();
@@ -80,7 +90,7 @@ const getCommand = async (sock, msg, cache) => {
 
 				if (isGroupChat) {
 					const priority = mediaTypes.includes(messageType) ? 2 : 1;
-					messageQueue.enqueue(to, doSend, priority).catch(() => {});
+					messageQueue.enqueue(to, doSend, priority).catch((e) => console.error("[queue enqueue error]", e.message));
 					return;
 				} else {
 					await messageQueue.enqueue(to, doSend, 0); // Highest priority for DMs
@@ -123,6 +133,8 @@ const getCommand = async (sock, msg, cache) => {
 			"buttonsResponseMessage",
 			"templateButtonReplyMessage",
 			"listResponseMessage",
+			"stickerMessage",
+			"documentMessage",
 		];
 
 		if (!types.includes(type)) return;
@@ -147,8 +159,6 @@ const getCommand = async (sock, msg, cache) => {
 		const command = body.slice(1).trim().split(/ +/).shift().toLowerCase();
 		const args = body.trim().split(/ +/).slice(1);
 		//-------------------------------------------------------------------------------------------------------------//
-		if (!isCmd && type == "stickerMessage") return;
-		//-------------------------------------------------------------------------------------------------------------//
 		const isGroup = from.endsWith("@g.us");
 		const senderJid = isGroup ? msg.key.participant : msg.key.remoteJid;
 		const isOwner = myNumber.includes(senderJid);
@@ -156,13 +166,56 @@ const getCommand = async (sock, msg, cache) => {
 
 		const updateId = msg.key.fromMe ? botNumber[0] : senderJid;
 		const updateName = msg.key.fromMe ? sock.user.name : msg.pushName;
-		// Parallelize member update and creation
-		if (type == "conversation" || type == "extendedTextMessage") {
-			Promise.all([
-				member.updateOne({ _id: updateId }, { $inc: { totalmsg: 1 } }, { $set: { username: updateName } }),
+
+		// Determine media type field for counting
+		const mediaTypeField =
+			type === "conversation" || type === "extendedTextMessage" ? "texttotal" :
+			type === "imageMessage" ? "imagetotal" :
+			type === "videoMessage" ? "videototal" :
+			type === "stickerMessage" ? "stickertotal" :
+			type === "documentMessage" ? "pdftotal" : null;
+
+		if (mediaTypeField) {
+			await Promise.all([
+				member.updateOne(
+					{ _id: updateId },
+					{ $inc: { totalmsg: 1, [mediaTypeField]: 1 }, $set: { username: updateName } }
+				),
 				createMembersData(updateId, updateName),
-			]);
+			]).catch((e) => console.error("[member update error]", e.message));
+
+			if (isGroup) {
+				setImmediate(async () => {
+					try {
+						const r = await group.updateOne(
+							{ _id: from, "members.id": updateId },
+							{
+								$inc: { "members.$.count": 1, [`members.$.${mediaTypeField}`]: 1 },
+								$set: { "members.$.name": updateName },
+							}
+						);
+						if (r.matchedCount === 0) {
+							const newMember = {
+								id: updateId, name: updateName, count: 1,
+								texttotal: 0, imagetotal: 0, videototal: 0, stickertotal: 0, pdftotal: 0,
+							};
+							newMember[mediaTypeField] = 1;
+							await group.updateOne(
+								{ _id: from },
+								{ $push: { members: newMember } }
+							);
+						}
+						await group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } });
+					} catch (e) {
+						console.error("[group member update error]", e.message);
+					}
+				});
+			}
 		}
+
+		// Return early for non-command sticker and document messages (no further processing needed)
+		if (!isCmd && (type == "stickerMessage" || type == "documentMessage")) return;
+		//-------------------------------------------------------------------------------------------------------------//
 
 		let groupMetadata = "";
 		let groupData = "";
@@ -177,38 +230,12 @@ const getCommand = async (sock, msg, cache) => {
 						),
 					]);
 					cache.set(from + ":groupMetadata", groupMetadata, 10 * 60); // 10 min
-					createGroupData(from, groupMetadata).catch(() => {});
+					createGroupData(from, groupMetadata).catch((e) => console.error("[createGroupData error]", e.message));
 				} catch (e) {
 					console.error("Group metadata fetch failed:", e.message);
 					groupMetadata = { participants: [] };
 				}
 			}
-		}
-		if (isGroup && (type == "conversation" || type == "extendedTextMessage")) {
-			setTimeout(() => {
-				group
-					.updateOne(
-						{ _id: from, "members.id": updateId },
-						{
-							$inc: { "members.$.count": 1 },
-							$set: { "members.$.name": updateName },
-						}
-					)
-					.then((r) => {
-						if (r.matchedCount == 0) {
-							group
-								.updateOne(
-									{ _id: from },
-									{
-										$push: { members: { id: updateId, name: updateName, count: 1 } },
-									}
-								)
-								.catch(() => {});
-						}
-					})
-					.catch(() => {});
-				group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } }).catch(() => {});
-			}, 100);
 		}
 		if (msg.message.extendedTextMessage) {
 			if (
@@ -216,7 +243,7 @@ const getCommand = async (sock, msg, cache) => {
 				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[1]
 			) {
 				try {
-					const stickerBuffer = await readFileEfficiently("./media/tag.webp");
+					const stickerBuffer = await getTagSticker();
 					sock.sendMessage(from, { sticker: stickerBuffer }, { quoted: msg });
 				} catch (err) {
 					console.error("Failed to send tag sticker:", err.message);
@@ -290,7 +317,12 @@ const getCommand = async (sock, msg, cache) => {
 				});
 				notifyOwner(
 					sock,
-					`[COMMAND] chat [FROM] ${senderJid} [name] ${msg.pushName} [IN] ${groupMetadata.subject}`,
+					`🤖 <b>Command Used</b>\n` +
+					`━━━━━━━━━━━━━━\n` +
+					`📌 <b>Command:</b> <code>chat</code>\n` +
+					`👤 <b>User:</b> ${msg.pushName}\n` +
+					`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
+					`💬 <b>In:</b> ${groupMetadata.subject}`,
 					msg
 				);
 			}
@@ -331,16 +363,21 @@ const getCommand = async (sock, msg, cache) => {
 		);
 		notifyOwner(
 			sock,
-			"[COMMAND] " +
-				command +
-				" [FROM] " +
-				senderJid +
-				" [name] " +
-				msg.pushName +
-				" [IN] " +
-				(isGroup ? groupMetadata.subject : "Directs"),
+			`🤖 <b>Command Used</b>\n` +
+			`━━━━━━━━━━━━━━\n` +
+			`📌 <b>Command:</b> <code>${command}</code>\n` +
+			`👤 <b>User:</b> ${msg.pushName}\n` +
+			`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
+			`💬 <b>In:</b> ${isGroup ? groupMetadata.subject : "Direct Message"}`,
 			msg
 		);
+		if (command != "") {
+			const botData = await getBotData();
+			const globallyDisabled = botData?.disabledGlobally || [];
+			if (globallyDisabled.includes(command)) {
+				return sendMessageWTyping(from, { text: `🚫 This command is globally disabled.` }, { quoted: msg });
+			}
+		}
 		if (isGroup) {
 			let resBotOn = groupData ? await groupData.isBotOn : false;
 			if (resBotOn == false && !(command.startsWith("group") || command.startsWith("dev"))) {

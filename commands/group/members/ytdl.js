@@ -11,6 +11,7 @@ import {
 	delay,
 	checkYtDlpBinary,
 	isPyInstallerError,
+	getNextSharedAgent,
 } from "../../../functions/youtubeUtils.js";
 //-------------------------------------------------------------------------------------------------------------//
 
@@ -23,14 +24,6 @@ import youtubedl from "youtube-dl-exec";
 import ytdl from "@distube/ytdl-core";
 import path from "path";
 
-// Create multiple agents with different configurations to avoid bot detection
-const agents = [ytdl.createAgent(), ytdl.createAgent(), ytdl.createAgent()];
-
-let currentAgentIndex = 0;
-const getNextAgent = () => {
-	currentAgentIndex = (currentAgentIndex + 1) % agents.length;
-	return agents[currentAgentIndex];
-};
 
 const getRandom = (ext) => {
 	return memoryManager.generateTempFileName(ext);
@@ -131,7 +124,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			try {
 				await retryWithBackoff(
 					async () => {
-						const currentAgent = getNextAgent();
+						const currentAgent = getNextSharedAgent(ytdl);
 						const ytdlOptions = getYtdlCoreOptions(currentAgent);
 
 						videoInfo = await ytdl.getBasicInfo(URL, ytdlOptions);
@@ -205,7 +198,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					console.error("Audio file not found:", audioFile);
 					return;
 				}
-				const audioStats = fs.statSync(audioFile);
+				const audioStats = await fs.promises.stat(audioFile);
 				if (audioStats.size === 0) {
 					await sendMessageWTyping(from, { text: "❌ Audio file is empty." }, { quoted: msg });
 					console.error("Audio file is empty:", audioFile);
@@ -233,7 +226,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					console.error("Video file not found:", videoFile);
 					return;
 				}
-				const videoStats = fs.statSync(videoFile);
+				const videoStats = await fs.promises.stat(videoFile);
 				if (videoStats.size === 0) {
 					await sendMessageWTyping(from, { text: "❌ Video file is empty." }, { quoted: msg });
 					console.error("Video file is empty:", videoFile);
@@ -286,7 +279,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					await sendMessageWTyping(from, { text: "❌ Merged video file was not created." }, { quoted: msg });
 					return;
 				}
-				const mergedStats = fs.statSync(fileDown);
+				const mergedStats = await fs.promises.stat(fileDown);
 				if (mergedStats.size === 0) {
 					await sendMessageWTyping(from, { text: "❌ Merged video file is empty." }, { quoted: msg });
 					return;
@@ -372,7 +365,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			try {
 				await retryWithBackoff(
 					async () => {
-						const currentAgent = getNextAgent();
+						const currentAgent = getNextSharedAgent(ytdl);
 						const ytdlOptions = getYtdlCoreOptions(currentAgent);
 
 						// Get audio and video streams with memory management - upgraded quality
@@ -528,7 +521,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						console.error("File not found:", fileDown);
 						return;
 					}
-					const stats = fs.statSync(fileDown);
+					const stats = await fs.promises.stat(fileDown);
 					if (stats.size === 0) {
 						try {
 							await sendMessageWTyping(from, { text: "❌ Video file is empty." }, { quoted: msg });

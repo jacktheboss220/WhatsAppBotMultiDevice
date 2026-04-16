@@ -1,4 +1,9 @@
 node_modules
+dashboard/node_modules
+
+# React build output — Koyeb builds this itself via Dockerfile
+public/app/
+
 backups
 # package-lock.json
 .github/instructions/
@@ -9,7 +14,7 @@ test.json
 .vscode
 all.json
 common.json
-index.html
+/index.html
 test-index.js
 # assets
 baileys_store_multi.json
@@ -20,3 +25,4 @@ baileys_store_multi.json
 cookie.json
 # logs
 temp/
+performance-metrics.json

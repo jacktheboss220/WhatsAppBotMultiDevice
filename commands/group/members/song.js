@@ -13,16 +13,9 @@ import {
 	delay,
 	checkYtDlpBinary,
 	isPyInstallerError,
+	getNextSharedAgent,
 } from "../../../functions/youtubeUtils.js";
 
-// Create multiple agents with different configurations to avoid bot detection
-const agents = [ytdl.createAgent(), ytdl.createAgent(), ytdl.createAgent()];
-
-let currentAgentIndex = 0;
-const getNextAgent = () => {
-	currentAgentIndex = (currentAgentIndex + 1) % agents.length;
-	return agents[currentAgentIndex];
-};
 
 const getRandom = (ext) => {
 	return memoryManager.generateTempFileName(ext);
@@ -140,7 +133,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			try {
 				await retryWithBackoff(
 					async () => {
-						const currentAgent = getNextAgent();
+						const currentAgent = getNextSharedAgent(ytdl);
 						console.log(`Attempting ytdl with agent ${currentAgentIndex + 1}`);
 
 						const ytdlOptions = getYtdlCoreOptions(currentAgent);
@@ -195,7 +188,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			throw new Error("Invalid audio file generated");
 		}
 
-		const stats = fs.statSync(fileDown);
+		const stats = await fs.promises.stat(fileDown);
 		const fileSizeMB = stats.size / 1024 / 1024;
 
 		if (stats.size === 0) {

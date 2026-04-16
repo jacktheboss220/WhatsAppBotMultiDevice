@@ -4,16 +4,41 @@
  */
 
 class FileCache {
-	constructor(maxSize = 50 * 1024 * 1024) {
-		// 50MB max cache size
+	constructor(maxSize = 30 * 1024 * 1024) {
+		// Reduced to 30MB max cache size for better memory efficiency
 		this.cache = new Map();
 		this.maxSize = maxSize;
 		this.currentSize = 0;
+		this.maxAge = 20 * 60 * 1000; // 20 minutes max age (reduced from unlimited)
 		this.stats = {
 			hits: 0,
 			misses: 0,
 			evictions: 0,
 		};
+
+		// Periodic TTL-based cleanup to remove stale entries
+		this.cleanupInterval = setInterval(() => {
+			this.evictStaleEntries();
+		}, 300000); // Every 5 minutes
+	}
+
+	/**
+	 * Remove entries older than maxAge regardless of access patterns
+	 */
+	evictStaleEntries() {
+		const now = Date.now();
+		let evicted = 0;
+		for (const [key, entry] of this.cache.entries()) {
+			if (now - entry.lastAccess > this.maxAge) {
+				this.currentSize -= entry.size;
+				this.cache.delete(key);
+				this.stats.evictions++;
+				evicted++;
+			}
+		}
+		if (evicted > 0) {
+			console.log(`🧹 FileCache: evicted ${evicted} stale entries`);
+		}
 	}
 
 	/**

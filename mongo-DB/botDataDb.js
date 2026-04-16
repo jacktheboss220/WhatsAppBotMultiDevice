@@ -11,7 +11,10 @@ const createBotData = async () => {
 			await bot.insertOne({
 				_id: "bot",
 				youtube_session: "",
+				disabledGlobally: [],
 			});
+		} else if (!res.disabledGlobally) {
+			await bot.updateOne({ _id: "bot" }, { $set: { disabledGlobally: [] } });
 		}
 	} catch (err) {
 		console.log(err);

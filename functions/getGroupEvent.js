@@ -1,13 +1,12 @@
-import dotenv from "dotenv";
-dotenv.config();
-const myNumber = [
-	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
-	process.env.MY_NUMBER.split(",")[1] + "@lid",
-];
-
+import sendToTelegram, { escapeHtml } from "./telegramLogger.js";
 import { fake_quoted } from "./getFakeQuoted.js";
 import { getGroupData } from "../mongo-DB/groupDataDb.js";
 import { extractPhoneNumber, formatJIDForDisplay } from "./lidUtils.js";
+
+const getPhone = (p) =>
+	typeof p === "string"
+		? extractPhoneNumber(p)
+		: extractPhoneNumber(p?.id || p?.jid || p?.phoneNumber || "");
 
 const getGroupEvent = async (sock, events, cache) => {
 	let jid = events.id;
@@ -45,17 +44,24 @@ const getGroupEvent = async (sock, events, cache) => {
 				);
 			}
 		}
-		sock.sendMessage(myNumber[0], {
-			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
-				groupDataDB?.grpName
-			}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p.phoneNumber))}`,
-		});
+		const addedNumbers = events.participants.map((p) => `<code>${escapeHtml(getPhone(p))}</code>`).join(", ");
+		sendToTelegram(
+			`➕ <b>Group Update</b>\n` +
+			`━━━━━━━━━━━━━━\n` +
+			`🏠 <b>Group:</b> ${escapeHtml(groupDataDB?.grpName)}\n` +
+			`👤 <b>Joined:</b> ${addedNumbers}`
+		);
 	} else {
-		sock.sendMessage(myNumber[0], {
-			text: `*Action:* ${events.action}\n*Group:* ${jid}\n*Group Name:* ${
-				groupDataDB?.grpName
-			}\n*Participants:* ${events.participants.map((p) => extractPhoneNumber(p.phoneNumber))}`,
-		});
+		const actionEmoji = events.action === "remove" ? "➖" : events.action === "promote" ? "⬆️" : events.action === "demote" ? "⬇️" : "🔄";
+		const actionLabel = events.action === "remove" ? "Left / Removed" : events.action === "promote" ? "Promoted to Admin" : events.action === "demote" ? "Demoted from Admin" : escapeHtml(events.action);
+		const numbers = events.participants.map((p) => `<code>${escapeHtml(getPhone(p))}</code>`).join(", ");
+		sendToTelegram(
+			`${actionEmoji} <b>Group Update</b>\n` +
+			`━━━━━━━━━━━━━━\n` +
+			`🏠 <b>Group:</b> ${escapeHtml(groupDataDB?.grpName)}\n` +
+			`👤 <b>Member:</b> ${numbers}\n` +
+			`📋 <b>Action:</b> ${actionLabel}`
+		);
 	}
 	console.log(events);
 };

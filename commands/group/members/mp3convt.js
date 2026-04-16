@@ -37,7 +37,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					.sendMessage(
 						from,
 						{
-							audio: fs.readFileSync(path),
+							audio: await fs.promises.readFile(path),
 							mimetype: "audio/mpeg",
 							fileName: path,
 						},

@@ -10,7 +10,12 @@ const getCallEvent = async (sock, call) => {
 			await sock
 				.rejectCall(c.id, c.from)
 				.then(() => {
-					notifyOwner(sock, `Call from ${c.from} is ringing and rejected.`);
+					notifyOwner(sock,
+					`📞 <b>Incoming Call</b>\n` +
+					`━━━━━━━━━━━━━━\n` +
+					`📱 <b>From:</b> <code>${c.from}</code>\n` +
+					`🚫 <b>Status:</b> Rejected`
+				);
 				})
 				.catch((err) => {
 					console.error(`Failed to reject call from ${c.from}:`, err);

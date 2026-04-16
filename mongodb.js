@@ -25,6 +25,8 @@ const mdClient = new MongoClient(uri, {
 			await db.createCollection("AuthTable");
 			console.log("Created AuthTable collection");
 		}
+
+		await db.collection("Groups").createIndex({ "members.id": 1 }, { background: true, sparse: true });
 	} catch (err) {
 		console.error("Error connecting to MongoDB:", err);
 	}

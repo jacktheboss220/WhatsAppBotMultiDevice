@@ -8,6 +8,33 @@ class MessageQueue {
 		this.activeSends = 0;
 		this.batchSize = 5; // Process messages in batches
 		this.groupBatchDelay = 200; // Delay between batches for groups
+
+		// Periodic cleanup of empty queue entries to prevent memory leaks
+		this.cleanupInterval = setInterval(() => {
+			this.cleanupEmptyQueues();
+		}, 300000); // Every 5 minutes
+	}
+
+	/**
+	 * Clean up empty queue entries to prevent Map memory growth
+	 */
+	cleanupEmptyQueues() {
+		let cleaned = 0;
+		for (const [chatId, queue] of this.queues.entries()) {
+			if (queue.length === 0) {
+				this.queues.delete(chatId);
+				cleaned++;
+			}
+		}
+		for (const [chatId, status] of this.processing.entries()) {
+			if (!status && !this.queues.has(chatId)) {
+				this.processing.delete(chatId);
+				cleaned++;
+			}
+		}
+		if (cleaned > 0) {
+			console.log(`🧹 MessageQueue cleanup: removed ${cleaned} empty entries`);
+		}
 	}
 
 	/**

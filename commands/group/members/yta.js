@@ -25,7 +25,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						.sendMessage(
 							from,
 							{
-								audio: fs.readFileSync(sany),
+								audio: await fs.promises.readFile(sany),
 							},
 							{ quoted: msg }
 						)

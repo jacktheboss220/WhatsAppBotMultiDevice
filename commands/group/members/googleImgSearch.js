@@ -67,7 +67,7 @@ const sendImage = async (links, from, msg, { args, sendMessageWTyping }) => {
 	const url = links[random];
 	try {
 		await downloadImage(url, imageUrl);
-		await sendMessageWTyping(from, { image: fs.readFileSync(imageUrl) }, { quoted: msg });
+		await sendMessageWTyping(from, { image: await fs.promises.readFile(imageUrl) }, { quoted: msg });
 		fs.unlinkSync(imageUrl);
 	} catch (err) {
 		sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });

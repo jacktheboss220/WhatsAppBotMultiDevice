@@ -1,271 +1,469 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Eva - WhatsApp Bot</title>
-		<link rel="stylesheet" href="/style.css" />
-		<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-	</head>
-	<body>
-		<div class="container">
-			<!-- Header Section -->
-			<header class="header">
-				<div class="logo">
-					<h1>🤖 Eva Bot</h1>
-					<p class="tagline">Your Ultimate WhatsApp Assistant</p>
-				</div>
-			</header>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Eva Bot</title>
+	<link rel="icon" type="image/png" href="/favicon.png" />
+	<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+	<style>
+		:root {
+			--bg:         #080c14;
+			--card:       #0d1420;
+			--surface:    #121c2c;
+			--surface-hi: #182336;
+			--border:     rgba(255,255,255,0.07);
+			--border-hi:  rgba(255,255,255,0.13);
+			--accent:     #3b82f6;
+			--accent-dim: rgba(59,130,246,0.1);
+			--accent-bdr: rgba(59,130,246,0.35);
+			--success:    #10b981;
+			--success-dim:rgba(16,185,129,0.1);
+			--success-bdr:rgba(16,185,129,0.3);
+			--danger:     #ef4444;
+			--text:       #f1f5f9;
+			--soft:       #94a3b8;
+			--muted:      #4a5d72;
+		}
+		*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+		::-webkit-scrollbar { width:4px; }
+		::-webkit-scrollbar-thumb { background:var(--surface-hi); border-radius:4px; }
 
-			<!-- Connection Status Section -->
-			<section class="connection-section">
-				<h2>Bot Status</h2>
-				<div id="qrcode" class="qr-container">
-					<div class="loading">
-						<div class="spinner"></div>
-						<p>Initializing...</p>
-					</div>
-				</div>
-			</section>
+		body {
+			font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+			background:var(--bg);
+			color:var(--text);
+			min-height:100vh;
+			display:flex;
+			flex-direction:column;
+			align-items:center;
+			justify-content:center;
+			padding:24px;
+		}
 
-			<!-- Send Message Section -->
-			<section class="message-section">
-				<h2>Send a Test Message</h2>
-				<form id="sendForm">
-					<div class="form-group">
-						<input type="text" id="to" placeholder="Recipient number (e.g., 1234567890)" required />
-					</div>
-					<div class="form-group">
-						<input type="text" id="message" placeholder="Your message" required />
-					</div>
-					<button type="submit" class="btn-primary">Send Message</button>
-				</form>
-				<div id="status" class="status-message"></div>
-			</section>
+		/* ── Card ─────────────────────────────────────────────── */
+		.card {
+			background:var(--card);
+			border:1px solid var(--border);
+			border-radius:18px;
+			padding:26px;
+			width:100%;
+			max-width:440px;
+		}
 
-			<!-- Commands Section -->
-			<section class="commands-section">
-				<h2>📋 Available Commands</h2>
-				<div id="commands-container">
-					<div class="loading-commands">
-						<div class="spinner"></div>
-						<p>Loading commands...</p>
-					</div>
-				</div>
-			</section>
+		/* ── Brand ────────────────────────────────────────────── */
+		.brand {
+			display:flex; align-items:center; gap:13px;
+			padding-bottom:18px; margin-bottom:16px;
+			border-bottom:1px solid var(--border);
+		}
+		.logo { width:44px; height:44px; border-radius:11px; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
+		.brand h1 { font-size:1rem; font-weight:700; }
+		.brand p  { font-size:0.72rem; color:var(--muted); margin-top:3px; }
 
-			<!-- Footer -->
-			<footer class="footer">
-				<p>
-					Made with ❤️ by
-					<a href="http://github.com/jacktheboss220">jacktheboss220</a>
-				</p>
-				<p class="footer-links">
-					<a href="https://github.com/jacktheboss220/WhatsAppBotMultiDevice" target="_blank">GitHub</a>
-				</p>
-			</footer>
+		/* ── Status rows ──────────────────────────────────────── */
+		.status-row {
+			display:flex; align-items:center; justify-content:space-between;
+			padding:8px 0; font-size:0.8rem;
+			border-bottom:1px solid var(--border);
+		}
+		.status-row:last-of-type { border-bottom:none; }
+		.label { color:var(--muted); }
+		.value { color:var(--soft); font-weight:500; font-variant-numeric:tabular-nums; }
+		.dot { width:7px; height:7px; border-radius:50%; background:var(--danger); display:inline-block; margin-right:6px; transition:background .3s; }
+		.dot.on { background:var(--success); animation:pulse 2.5s ease-in-out infinite; }
+		@keyframes pulse {
+			0%,100% { box-shadow:0 0 0 0 rgba(16,185,129,.4); }
+			50%      { box-shadow:0 0 0 5px rgba(16,185,129,0); }
+		}
+
+		/* ── Divider ──────────────────────────────────────────── */
+		.divider { height:1px; background:var(--border); margin:18px 0; }
+
+		/* ────────────────────────────────────────────────────── */
+		/*  LOGIN SECTION  (shown only when not connected)       */
+		/* ────────────────────────────────────────────────────── */
+		#loginSection { display:block; }
+
+		.login-heading {
+			font-size:0.7rem; font-weight:700; color:var(--muted);
+			text-transform:uppercase; letter-spacing:.08em;
+			margin-bottom:12px;
+		}
+
+		/* ── Method selector ─────────────────────────────────── */
+		.method-bar {
+			display:grid; grid-template-columns:1fr 1fr; gap:6px;
+			background:var(--surface); border:1px solid var(--border);
+			border-radius:10px; padding:4px; margin-bottom:16px;
+		}
+		.method-btn {
+			padding:9px 8px;
+			border:none; border-radius:7px;
+			background:transparent; color:var(--soft);
+			font-size:0.81rem; font-weight:600;
+			cursor:pointer; transition:all .15s;
+			display:flex; align-items:center; justify-content:center; gap:7px;
+		}
+		.method-btn .m-icon { font-size:1.1rem; }
+		.method-btn:hover:not(.active) { color:var(--text); }
+		.method-btn.active {
+			background:var(--surface-hi); color:var(--text);
+			box-shadow:0 1px 4px rgba(0,0,0,.3);
+		}
+
+		/* ── QR panel ─────────────────────────────────────────── */
+		.qr-panel { display:none; flex-direction:column; align-items:center; }
+		.qr-panel.show { display:flex; }
+
+		.qr-frame {
+			background:var(--surface); border:1px solid var(--border);
+			border-radius:14px; padding:18px; text-align:center; width:100%;
+		}
+		/* placeholder while waiting for QR */
+		.qr-placeholder {
+			width:176px; height:176px; border-radius:10px;
+			background:var(--surface-hi);
+			display:flex; flex-direction:column;
+			align-items:center; justify-content:center; gap:12px;
+			margin:0 auto;
+		}
+		.spinner {
+			width:26px; height:26px; border-radius:50%;
+			border:2px solid var(--surface-hi);
+			border-top-color:var(--accent);
+			animation:spin .75s linear infinite;
+		}
+		@keyframes spin { to { transform:rotate(360deg); } }
+		.qr-placeholder p { font-size:0.74rem; color:var(--muted); }
+
+		#qrImg { display:none; width:176px; height:176px; border-radius:8px; background:#fff; padding:5px; }
+
+		.qr-hint {
+			font-size:0.72rem; color:var(--muted);
+			margin-top:10px; line-height:1.6; text-align:center;
+		}
+		.qr-steps {
+			display:flex; flex-direction:column; gap:5px;
+			margin-top:12px; text-align:left;
+		}
+		.qr-step {
+			display:flex; align-items:flex-start; gap:8px;
+			font-size:0.74rem; color:var(--soft);
+		}
+		.qr-step .num {
+			width:18px; height:18px; border-radius:50%;
+			background:var(--surface-hi); color:var(--muted);
+			font-size:0.65rem; font-weight:700;
+			display:flex; align-items:center; justify-content:center;
+			flex-shrink:0; margin-top:1px;
+		}
+
+		/* ── Pairing panel ────────────────────────────────────── */
+		.pair-panel { display:none; flex-direction:column; gap:12px; }
+		.pair-panel.show { display:flex; }
+
+		.field-label {
+			font-size:0.7rem; font-weight:700; color:var(--soft);
+			text-transform:uppercase; letter-spacing:.07em;
+			display:block; margin-bottom:6px;
+		}
+		.phone-row { display:flex; gap:8px; }
+		.phone-input {
+			flex:1; padding:10px 14px;
+			background:var(--surface); border:1px solid var(--border);
+			border-radius:10px; color:var(--text);
+			font-size:0.88rem; font-family:'JetBrains Mono',ui-monospace,monospace;
+			outline:none; transition:border-color .15s;
+		}
+		.phone-input:focus   { border-color:var(--accent-bdr); }
+		.phone-input::placeholder { color:var(--muted); }
+
+		.get-btn {
+			padding:10px 16px; border:none; border-radius:10px;
+			background:var(--accent); color:#fff;
+			font-size:0.82rem; font-weight:700; cursor:pointer;
+			transition:opacity .15s; white-space:nowrap;
+			display:flex; align-items:center; gap:6px; flex-shrink:0;
+		}
+		.get-btn:hover { opacity:.87; }
+		.get-btn:disabled { opacity:.42; cursor:not-allowed; }
+
+		.pair-hint {
+			font-size:0.72rem; color:var(--muted); line-height:1.6;
+		}
+		.pair-hint code {
+			background:var(--surface-hi); padding:1px 6px;
+			border-radius:4px; color:var(--soft); font-family:monospace;
+		}
+
+		/* Pairing code result box */
+		.code-box {
+			background:var(--accent-dim); border:1px solid var(--accent-bdr);
+			border-radius:12px; padding:16px 18px; text-align:center;
+		}
+		.code-label {
+			font-size:0.65rem; font-weight:700; color:var(--accent);
+			text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px;
+		}
+		.code-value {
+			font-size:2rem; font-weight:800; letter-spacing:.22em;
+			font-family:'JetBrains Mono',ui-monospace,monospace;
+			color:var(--text); cursor:pointer; user-select:all;
+			transition:opacity .15s;
+		}
+		.code-value:hover { opacity:.75; }
+		.code-sub { font-size:0.7rem; color:var(--soft); margin-top:7px; line-height:1.5; }
+
+		/* Error box */
+		.err-box {
+			background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.25);
+			color:#fca5a5; padding:10px 14px;
+			border-radius:8px; font-size:0.78rem;
+		}
+
+		/* ── Connected box ────────────────────────────────────── */
+		#connectedBox {
+			display:none; margin-top:16px;
+			padding:18px 16px; text-align:center;
+			background:var(--success-dim); border:1px solid var(--success-bdr);
+			border-radius:12px;
+		}
+		#connectedBox .icon { font-size:1.8rem; margin-bottom:6px; }
+		#connectedBox p    { font-size:0.85rem; color:var(--success); font-weight:600; }
+		#connectedBox small{ font-size:0.72rem; color:var(--muted); margin-top:3px; display:block; }
+
+		/* ── Admin link ───────────────────────────────────────── */
+		.admin-link {
+			display:flex; align-items:center; justify-content:center; gap:6px;
+			margin-top:16px; padding:10px;
+			background:var(--surface); border:1px solid var(--border);
+			border-radius:10px; color:var(--soft);
+			font-size:0.8rem; font-weight:500; text-decoration:none;
+			transition:border-color .15s, color .15s;
+		}
+		.admin-link:hover { border-color:var(--accent-bdr); color:var(--accent); }
+	</style>
+</head>
+<body>
+<div class="card">
+
+	<!-- Brand -->
+	<div class="brand">
+		<img src="/eva.jpg" alt="Eva" class="logo" />
+		<div>
+			<h1>Eva Bot</h1>
+			<p>WhatsApp Multi-Device Bot</p>
+		</div>
+	</div>
+
+	<!-- Live stats -->
+	<div class="status-row">
+		<span class="label">Connection</span>
+		<span id="connLabel" class="value"><span class="dot" id="dot"></span>Initializing…</span>
+	</div>
+	<div class="status-row">
+		<span class="label">Uptime</span>
+		<span class="value" id="uptimeVal">—</span>
+	</div>
+	<div class="status-row" style="border-bottom:none">
+		<span class="label">Server Time</span>
+		<span class="value" id="serverTime">—</span>
+	</div>
+
+	<div class="divider"></div>
+
+	<!-- ══ LOGIN SECTION ══════════════════════════════════════ -->
+	<div id="loginSection">
+		<p class="login-heading">Link Device</p>
+
+		<!-- Method switcher -->
+		<div class="method-bar">
+			<button class="method-btn active" id="btn-qr" onclick="setMethod('qr')">
+				<span class="m-icon">📷</span> Scan QR Code
+			</button>
+			<button class="method-btn" id="btn-pair" onclick="setMethod('pair')">
+				<span class="m-icon">📱</span> Phone Number
+			</button>
 		</div>
 
-		<script>
-			const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + window.location.host);
+		<!-- QR panel -->
+		<div class="qr-panel show" id="qrPanel">
+			<div class="qr-frame">
+				<div class="qr-placeholder" id="qrPlaceholder">
+					<div class="spinner"></div>
+					<p>Waiting for QR…</p>
+				</div>
+				<img id="qrImg" alt="QR Code" />
+			</div>
+			<div class="qr-steps">
+				<div class="qr-step"><span class="num">1</span><span>Open WhatsApp on your phone</span></div>
+				<div class="qr-step"><span class="num">2</span><span>Tap <strong>Linked Devices</strong> → <strong>Link a Device</strong></span></div>
+				<div class="qr-step"><span class="num">3</span><span>Point your camera at the QR code above</span></div>
+			</div>
+		</div>
 
-			// HTML escape function to prevent XSS and display issues
-			function escapeHtml(text) {
-				const map = {
-					"&": "&amp;",
-					"<": "&lt;",
-					">": "&gt;",
-					'"': "&quot;",
-					"'": "&#039;",
-					"`": "&#96;",
-				};
-				return text.replace(/[&<>"'`]/g, (m) => map[m]);
-			}
+		<!-- Pairing panel -->
+		<div class="pair-panel" id="pairPanel">
+			<div>
+				<label class="field-label" for="phoneInput">WhatsApp Number</label>
+				<div class="phone-row">
+					<input
+						class="phone-input" type="tel" id="phoneInput"
+						placeholder="919876543210"
+						autocomplete="tel"
+					/>
+					<button class="get-btn" id="getBtn" onclick="requestCode()">Get Code</button>
+				</div>
+			</div>
 
-			// Fetch and display commands
-			async function loadCommands() {
-				try {
-					const response = await fetch("/api/commands");
-					const data = await response.json();
-					displayCommands(data);
-				} catch (error) {
-					console.error("Error loading commands:", error);
-					document.getElementById("commands-container").innerHTML = `
-						<div class="error-message">
-							<p>❌ Failed to load commands</p>
-						</div>
-					`;
-				}
-			}
+			<p class="pair-hint">
+				Include country code, digits only — e.g. <code>919876543210</code> for India (+91).<br>
+				Then open WhatsApp → <strong>Linked Devices</strong> → <strong>Link a Device</strong> → <strong>Link with phone number</strong>.
+			</p>
 
-			function displayCommands(data) {
-				const container = document.getElementById("commands-container");
-				let html = "";
+			<div id="pairResult"></div>
 
-				// Public Commands
-				if (data.publicCommands && data.publicCommands.length > 0) {
-					html += `
-						<div class="command-category">
-							<h3 class="category-title">👥 Public Commands</h3>
-							<div class="commands-grid">
-								${data.publicCommands
-									.map(
-										(cmd) => `
-									<div class="command-card">
-										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
-										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
-										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
-									</div>
-								`
-									)
-									.join("")}
-							</div>
-						</div>
-					`;
-				}
+			<div class="qr-steps" style="margin-top:0">
+				<div class="qr-step"><span class="num">1</span><span>Enter your number above and tap <strong>Get Code</strong></span></div>
+				<div class="qr-step"><span class="num">2</span><span>Open WhatsApp → <strong>Linked Devices</strong> → <strong>Link a Device</strong></span></div>
+				<div class="qr-step"><span class="num">3</span><span>Tap <strong>Link with phone number</strong> and enter the code</span></div>
+			</div>
+		</div>
+	</div>
 
-				// Group Commands
-				if (data.groupCommands && data.groupCommands.length > 0) {
-					html += `
-						<div class="command-category">
-							<h3 class="category-title">👫 Group Commands</h3>
-							<div class="commands-grid">
-								${data.groupCommands
-									.map(
-										(cmd) => `
-									<div class="command-card group">
-										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
-										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
-										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
-									</div>
-								`
-									)
-									.join("")}
-							</div>
-						</div>
-					`;
-				}
+	<!-- Connected state -->
+	<div id="connectedBox">
+		<div class="icon">✅</div>
+		<p>Bot is connected to WhatsApp</p>
+		<small>Session is active — no action needed</small>
+	</div>
 
-				// Admin Commands
-				if (data.adminCommands && data.adminCommands.length > 0) {
-					html += `
-						<div class="command-category">
-							<h3 class="category-title">👑 Admin Commands</h3>
-							<div class="commands-grid">
-								${data.adminCommands
-									.map(
-										(cmd) => `
-									<div class="command-card admin">
-										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
-										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
-										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
-									</div>
-								`
-									)
-									.join("")}
-							</div>
-						</div>
-					`;
-				}
+	<a href="/admin" class="admin-link">Open Admin Panel →</a>
+</div>
 
-				// Owner Commands
-				if (data.ownerCommands && data.ownerCommands.length > 0) {
-					html += `
-						<div class="command-category">
-							<h3 class="category-title">👨‍💼 Owner Commands</h3>
-							<div class="commands-grid">
-								${data.ownerCommands
-									.map(
-										(cmd) => `
-									<div class="command-card owner">
-										<code class="command-name">${escapeHtml(cmd.cmd.join(", "))}</code>
-										<p class="command-desc">${escapeHtml(cmd.desc || "No description")}</p>
-										<p class="command-usage">Usage: <code>${escapeHtml(cmd.usage || cmd.cmd[0])}</code></p>
-									</div>
-								`
-									)
-									.join("")}
-							</div>
-						</div>
-					`;
-				}
+<script>
+// ── Method toggle ─────────────────────────────────────────────────────────────
+function setMethod(m) {
+	document.getElementById('btn-qr').classList.toggle('active',   m === 'qr')
+	document.getElementById('btn-pair').classList.toggle('active', m === 'pair')
+	document.getElementById('qrPanel').classList.toggle('show',    m === 'qr')
+	document.getElementById('pairPanel').classList.toggle('show',  m === 'pair')
+	if (m === 'pair') setTimeout(() => document.getElementById('phoneInput').focus(), 50)
+}
 
-				container.innerHTML = html;
-			}
+// ── Uptime / clock ────────────────────────────────────────────────────────────
+const t0 = Date.now()
+setInterval(() => {
+	const s  = Math.floor((Date.now() - t0) / 1000)
+	const h  = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60
+	document.getElementById('uptimeVal').textContent  = `${h}h ${m}m ${sec}s`
+	document.getElementById('serverTime').textContent = new Date().toLocaleTimeString()
+}, 1000)
 
-			// Load commands on page load
-			loadCommands();
+// ── Connection state ──────────────────────────────────────────────────────────
+let _connected = false
 
-			socket.onmessage = function (event) {
-				const qrCodeDiv = document.getElementById("qrcode");
-				const qrString = event.data;
+function setConn(on) {
+	if (_connected === on) return // no-op if already in this state
+	_connected = on
 
-				try {
-					const parsedData = JSON.parse(qrString);
-					if (parsedData.type === "qr") {
-						QRCode.toDataURL(parsedData.qr, function (err, url) {
-							if (err) {
-								console.error("QR Code generation failed", err);
-								qrCodeDiv.innerHTML = '<div class="error"><p>❌ QR Code generation failed</p></div>';
-								return;
-							}
-							qrCodeDiv.innerHTML = `
-								<div class="qr-box">
-									<p class="qr-instruction">Scan this QR code with WhatsApp</p>
-									<img src="${url}" alt="QR Code" />
-									<p class="qr-hint">Open WhatsApp → Settings → Linked Devices → Link a Device</p>
-								</div>
-							`;
-						});
-					} else if (parsedData.type === "status" && parsedData.status === "connected") {
-						qrCodeDiv.innerHTML = `
-							<div class="status-box connected">
-								<div class="status-icon">✅</div>
-								<h3>Bot is Running!</h3>
-								<p>Successfully connected to WhatsApp</p>
-							</div>
-						`;
-					} else if (parsedData.type === "success") {
-						qrCodeDiv.innerHTML = `
-							<div class="status-box connected">
-								<div class="status-icon">✅</div>
-								<p>${parsedData.success}</p>
-							</div>
-						`;
-					}
-				} catch (err) {
-					console.error("Error parsing WebSocket message:", err);
-				}
-			};
+	const dot   = document.getElementById('dot')
+	const label = document.getElementById('connLabel')
+	dot.className = 'dot' + (on ? ' on' : '')
+	label.innerHTML = `<span class="dot${on ? ' on' : ''}"></span>${on ? 'Connected' : 'Disconnected'}`
 
-			socket.onerror = function (error) {
-				const qrCodeDiv = document.getElementById("qrcode");
-				qrCodeDiv.innerHTML = `
-					<div class="status-box error">
-						<div class="status-icon">⚠️</div>
-						<h3>Connection Error</h3>
-						<p>Unable to connect to the bot server</p>
-					</div>
-				`;
-			};
+	document.getElementById('loginSection').style.display = on ? 'none'  : 'block'
+	document.getElementById('connectedBox').style.display = on ? 'block' : 'none'
+}
 
-			const form = document.getElementById("sendForm");
-			form.addEventListener("submit", (e) => {
-				e.preventDefault();
-				const to = document.getElementById("to").value;
-				const message = document.getElementById("message").value;
-				const statusDiv = document.getElementById("status");
+function showQR(qrData) {
+	setConn(false)
+	setMethod('qr')
+	QRCode.toDataURL(qrData, (err, url) => {
+		if (err) return
+		document.getElementById('qrPlaceholder').style.display = 'none'
+		const img = document.getElementById('qrImg')
+		img.src   = url
+		img.style.display = 'block'
+	})
+}
 
-				if (socket.readyState === WebSocket.OPEN) {
-					socket.send(JSON.stringify({ to, message }));
-					statusDiv.className = "status-message success";
-					statusDiv.textContent = "✅ Message sent successfully!";
-					form.reset();
-				} else {
-					statusDiv.className = "status-message error";
-					statusDiv.textContent = "❌ WebSocket connection not open. Please wait for the bot to connect.";
-				}
-			});
-		</script>
-	</body>
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host)
+
+ws.onmessage = ({ data }) => {
+	try {
+		const msg = JSON.parse(data)
+		if (msg.type === 'qr')                              showQR(msg.qr)
+		if (msg.type === 'status' && msg.status === 'connected')    setConn(true)
+		if (msg.type === 'status' && msg.status === 'disconnected') setConn(false)
+	} catch (_) {}
+}
+
+// ── Polling fallback ──────────────────────────────────────────────────────────
+// Polls /api/status every 3 s so the page always reflects real bot state,
+// even if the WebSocket message was sent before the browser connected.
+async function pollStatus() {
+	try {
+		const r    = await fetch('/api/status')
+		const data = await r.json()
+		setConn(!!data.connected)
+	} catch (_) {}
+}
+
+pollStatus() // check immediately on page load
+setInterval(pollStatus, 3000)
+
+// ── Pairing code ──────────────────────────────────────────────────────────────
+async function requestCode() {
+	const phone = document.getElementById('phoneInput').value.trim()
+	if (!phone) return showResult('<div class="err-box">Enter your phone number first.</div>')
+
+	const btn = document.getElementById('getBtn')
+	btn.disabled    = true
+	btn.textContent = 'Requesting…'
+	showResult('')
+
+	try {
+		const r    = await fetch('/api/pair', {
+			method:  'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body:    JSON.stringify({ phoneNumber: phone }),
+		})
+		const json = await r.json()
+
+		if (!r.ok || json.error) {
+			showResult(`<div class="err-box">${json.error || 'Failed to get code.'}</div>`)
+		} else {
+			showResult(`
+				<div class="code-box">
+					<p class="code-label">Enter this code in WhatsApp</p>
+					<p class="code-value" title="Click to copy" onclick="copyCode(this,'${json.code}')">${json.code}</p>
+					<p class="code-sub">WhatsApp → Linked Devices → Link a Device → Link with phone number</p>
+				</div>
+			`)
+		}
+	} catch (_) {
+		showResult('<div class="err-box">Network error — is the bot running?</div>')
+	} finally {
+		btn.disabled    = false
+		btn.textContent = 'Get Code'
+	}
+}
+
+function showResult(html) { document.getElementById('pairResult').innerHTML = html }
+
+function copyCode(el, code) {
+	navigator.clipboard.writeText(code).catch(() => {})
+	const orig = el.textContent
+	el.textContent = 'Copied!'
+	setTimeout(() => { el.textContent = orig }, 1600)
+}
+
+document.getElementById('phoneInput').addEventListener('keydown', e => {
+	if (e.key === 'Enter') requestCode()
+})
+</script>
+</body>
 </html>

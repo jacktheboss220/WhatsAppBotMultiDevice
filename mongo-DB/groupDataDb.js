@@ -35,7 +35,7 @@ const createGroupData = async (groupJid, groupMetadata) => {
 			);
 		}
 	} catch (err) {
-		console.log(err);
+		console.error("[groupDataDb error]", err.message);
 	}
 };
 
@@ -44,7 +44,7 @@ const getGroupData = async (groupJid) => {
 		const res = await group.findOne({ _id: groupJid });
 		return res;
 	} catch (err) {
-		console.log(err);
+		console.error("[groupDataDb error]", err.message);
 		return -1;
 	}
 };

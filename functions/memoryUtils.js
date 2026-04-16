@@ -14,17 +14,19 @@ class MemoryManager {
 	constructor() {
 		this.tempFiles = new Set();
 		this.activeStreams = new Set();
-		this.memoryThreshold = 512 * 1024 * 1024; // 512MB threshold
+		this.memoryThreshold = 400 * 1024 * 1024; // Reduced to 400MB threshold
+		this.maxTempFiles = 100; // Limit temp files tracked
+		this.maxActiveStreams = 50; // Limit active streams tracked
 
-		// Auto cleanup every 5 minutes
+		// Auto cleanup every 3 minutes (increased frequency)
 		this.cleanupInterval = setInterval(() => {
 			this.performGarbageCollection();
-		}, 300000);
+		}, 180000);
 
-		// Monitor memory usage
+		// Monitor memory usage every 30 seconds (increased frequency)
 		this.memoryCheckInterval = setInterval(() => {
 			this.checkMemoryUsage();
-		}, 60000);
+		}, 30000);
 	}
 
 	/**
@@ -32,12 +34,18 @@ class MemoryManager {
 	 * @param {string} filePath
 	 */
 	registerTempFile(filePath) {
+		// Cleanup if Set is getting too large
+		if (this.tempFiles.size >= this.maxTempFiles) {
+			console.log("🧹 TempFiles limit reached, performing cleanup...");
+			this.performGarbageCollection();
+		}
+
 		this.tempFiles.add(filePath);
 
-		// Auto-remove from set after 30 minutes
+		// Auto-remove from set after 15 minutes (reduced from 30)
 		setTimeout(() => {
 			this.tempFiles.delete(filePath);
-		}, 1800000);
+		}, 900000);
 	}
 
 	/**
@@ -45,6 +53,12 @@ class MemoryManager {
 	 * @param {Stream} stream
 	 */
 	registerStream(stream) {
+		// Cleanup if Set is getting too large
+		if (this.activeStreams.size >= this.maxActiveStreams) {
+			console.log("🧹 ActiveStreams limit reached, cleaning up closed streams...");
+			this.cleanupClosedStreams();
+		}
+
 		this.activeStreams.add(stream);
 
 		// Auto cleanup when stream ends
@@ -55,6 +69,17 @@ class MemoryManager {
 		stream.on("error", () => {
 			this.activeStreams.delete(stream);
 		});
+	}
+
+	/**
+	 * Clean up streams that are already closed/destroyed
+	 */
+	cleanupClosedStreams() {
+		for (const stream of this.activeStreams) {
+			if (stream.destroyed || stream.readableEnded || stream.writableEnded) {
+				this.activeStreams.delete(stream);
+			}
+		}
 	}
 
 	/**

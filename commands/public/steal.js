@@ -22,7 +22,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
 
 		const media = getRandom(".webp");
-		fs.writeFileSync(media, buffer);
+		await fs.promises.writeFile(media, buffer);
 
 		const packOrAuthor = args.includes("pack") || args.includes("author");
 

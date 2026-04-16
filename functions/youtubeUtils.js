@@ -239,8 +239,32 @@ function isPyInstallerError(error) {
 	);
 }
 
+
+/**
+ * Shared ytdl agent pool to avoid bot detection via agent rotation.
+ * Import createSharedAgentPool and getNextSharedAgent instead of
+ * duplicating agent arrays in each command file.
+ */
+let _sharedAgents = null;
+let _sharedAgentIndex = 0;
+
+function createSharedAgentPool(ytdl, size = 3) {
+	if (!_sharedAgents) {
+		_sharedAgents = Array.from({ length: size }, () => ytdl.createAgent());
+	}
+	return _sharedAgents;
+}
+
+function getNextSharedAgent(ytdl) {
+	if (!_sharedAgents) createSharedAgentPool(ytdl);
+	_sharedAgentIndex = (_sharedAgentIndex + 1) % _sharedAgents.length;
+	return _sharedAgents[_sharedAgentIndex];
+}
+
 export {
 	CONFIG,
+	createSharedAgentPool,
+	getNextSharedAgent,
 	getRotatingUserAgent,
 	getBrowserHeaders,
 	getYtDlpOptions,

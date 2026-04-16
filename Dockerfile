@@ -1,7 +1,6 @@
 FROM node:22-slim
 
-# Install system dependencies including yt-dlp
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     build-essential \
@@ -17,31 +16,30 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp (YouTube downloader - more reliable than ytdl-core)
-RUN wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp && \
-    chmod a+rx /usr/local/bin/yt-dlp && \
-    yt-dlp --version
+RUN wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+    -O /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp
 
-# Set environment variable to use default player client (avoids JS runtime requirement)
 ENV YTDL_EXTRACTOR_ARGS="youtube:player_client=default,web"
 
-# Set working directory
+# ── pnpm ─────────────────────────────────────────────────────────────────────
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile
 
-# Install Node.js dependencies
-RUN npm install --production
+COPY dashboard/package.json dashboard/package-lock.json* ./dashboard/
+RUN npm install --prefix dashboard --include=dev --no-audit
 
-# Copy application files
 COPY . .
 
-# Create necessary directories
+RUN cd dashboard && npm run build
+
 RUN mkdir -p temp
 
-# Expose the application port
+ENV NODE_ENV=production
+
 EXPOSE 8080
 
-# Start the application
 CMD ["node", "index.js"]

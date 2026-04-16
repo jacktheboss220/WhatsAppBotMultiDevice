@@ -124,6 +124,18 @@ const useMongoDBAuthState = async () => {
 				{ upsert: true }
 			);
 		},
+
+		// Cleanup function to prevent memory leaks on reconnection
+		cleanup: () => {
+			if (flushTimer) {
+				clearInterval(flushTimer);
+				flushTimer = null;
+			}
+			// Flush remaining buffer before clearing
+			flushBuffer().catch(() => {});
+			buffer.clear();
+			console.log("🧹 Auth state cleanup completed");
+		},
 	};
 };
 

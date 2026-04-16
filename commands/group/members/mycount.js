@@ -17,10 +17,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			let data = res.members.filter((element) => {
 				return element.id === senderJid;
 			});
+			const d = data[0];
 			sendMessageWTyping(
 				from,
 				{
-					text: `${data[0].name}'s Message Count In Group is ${data[0].count}`,
+					text: `*${d.name}'s Message Stats In This Group*\n\n` +
+						`Total: ${d.count || 0}\n` +
+						`💬 Text: ${d.texttotal || 0}\n` +
+						`🖼️ Image: ${d.imagetotal || 0}\n` +
+						`🎥 Video: ${d.videototal || 0}\n` +
+						`🎭 Sticker: ${d.stickertotal || 0}\n` +
+						`📄 PDF/Doc: ${d.pdftotal || 0}`,
 				},
 				{ quoted: msg }
 			);

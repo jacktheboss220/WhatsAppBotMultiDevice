@@ -94,8 +94,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			strokeWeight: 1,
 		};
 
-		memeMaker(options).then(() => {
-			sock.sendMessage(from, { image: fs.readFileSync(MemePath) }, { quoted: msg }).then(() => {
+		memeMaker(options).then(async () => {
+			sock.sendMessage(from, { image: await fs.promises.readFile(MemePath) }, { quoted: msg }).then(() => {
 				try {
 					fs.unlinkSync(MemePath);
 					fs.unlinkSync(media);

@@ -31,9 +31,9 @@ const getRemoveBg = async (Path) => {
 		},
 		encoding: null,
 	})
-		.then((response) => {
+		.then(async (response) => {
 			if (response.status != 200) return console.log("error");
-			fs.writeFileSync("./bg.png", response.data);
+			await fs.promises.writeFile("./bg.png", response.data);
 			console.log("DONE");
 		})
 		.catch((error) => {
@@ -64,10 +64,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		const media = getRandom(".jpeg");
 		await writeFile(media, buffer);
 		getRemoveBg(media)
-			.then(() => {
+			.then(async () => {
 				try {
 					sock.sendMessage(from, {
-						image: fs.readFileSync("./bg.png"),
+						image: await fs.promises.readFile("./bg.png"),
 						mimetype: "image/png",
 						caption: `*Sent by eva*`,
 					}).then(() => {

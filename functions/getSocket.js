@@ -6,32 +6,40 @@ import P from "pino";
 
 const logger = P({ level: "silent" }); // Set to "error" to allow essential logs but suppress debug spam
 
-// Optimized caches with memory management
+// Optimized caches with reduced memory footprint
 const msgRetryCounterCache = new NodeCache({
-	stdTTL: 300, // 5 minutes
-	checkperiod: 60,
-	maxKeys: 500,
+	stdTTL: 180, // Reduced to 3 minutes
+	checkperiod: 30,
+	maxKeys: 200, // Reduced from 500
 	useClones: false,
 });
 
 const messageCache = new NodeCache({
-	stdTTL: 180, // Reduced to 3 minutes for better memory management
+	stdTTL: 120, // Reduced to 2 minutes
 	checkperiod: 30,
-	maxKeys: 200, // Limit message cache size
+	maxKeys: 100, // Reduced from 200
 	useClones: false,
 });
 
+// Store interval references at module level to prevent accumulation on reconnect
+let cacheCleanupInterval = null;
+let statsInterval = null;
+let authStateCleanup = null;
+
+// Clear previous intervals if they exist
+if (cacheCleanupInterval) clearInterval(cacheCleanupInterval);
+
 // Cleanup old cache entries periodically
-setInterval(() => {
+cacheCleanupInterval = setInterval(() => {
 	const msgStats = messageCache.getStats();
 	const retryStats = msgRetryCounterCache.getStats();
 
-	if (msgStats.keys > 150) {
+	if (msgStats.keys > 80) {
 		messageCache.flushAll();
 		console.log("Message cache cleared");
 	}
 
-	if (retryStats.keys > 400) {
+	if (retryStats.keys > 150) {
 		msgRetryCounterCache.flushAll();
 		console.log("Retry counter cache cleared");
 	}
@@ -41,8 +49,21 @@ const socket = async () => {
 	const { version, isLatest } = await fetchLatestBaileysVersion();
 	console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}\n`);
 
+	// Cleanup previous auth state if exists (prevents memory leak on reconnect)
+	if (authStateCleanup) {
+		authStateCleanup();
+		authStateCleanup = null;
+	}
+
+	// Clear previous stats interval
+	if (statsInterval) {
+		clearInterval(statsInterval);
+		statsInterval = null;
+	}
+
 	// Use custom MongoDB auth state instead of file-based auth
-	const { state, saveCreds } = await useMongoDBAuthState();
+	const { state, saveCreds, cleanup } = await useMongoDBAuthState();
+	authStateCleanup = cleanup;
 
 	console.log("✅ Using MongoDB auth state");
 	if (state.creds?.me) {
@@ -146,8 +167,8 @@ const socket = async () => {
 		}
 	});
 
-	// Periodic auth state stats logging (every 5 minutes)
-	const statsInterval = setInterval(async () => {
+	// Periodic auth state stats logging (every 10 minutes - reduced frequency)
+	statsInterval = setInterval(async () => {
 		try {
 			const { getAuthStateStats } = await import("./useMongoDBAuthState.js");
 			const stats = await getAuthStateStats();
@@ -155,11 +176,22 @@ const socket = async () => {
 		} catch (error) {
 			console.error("Error getting auth state stats:", error);
 		}
-	}, 5 * 60 * 1000); // Every 5 minutes
+	}, 10 * 60 * 1000); // Every 10 minutes (reduced from 5)
 
-	// Clear interval on socket close
+	// Clear interval and cleanup on socket close
 	sock.ws.on("close", () => {
-		clearInterval(statsInterval);
+		if (statsInterval) {
+			clearInterval(statsInterval);
+			statsInterval = null;
+		}
+		if (authStateCleanup) {
+			authStateCleanup();
+			authStateCleanup = null;
+		}
+		// Clear caches on disconnect
+		messageCache.flushAll();
+		msgRetryCounterCache.flushAll();
+		console.log("🧹 Socket cleanup completed");
 	});
 
 	// Handle connection errors gracefully

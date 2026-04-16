@@ -13,6 +13,11 @@ const createMembersData = async (jid, name) => {
 				username: name,
 				isBlock: false,
 				totalmsg: 0,
+				texttotal: 0,
+				imagetotal: 0,
+				videototal: 0,
+				stickertotal: 0,
+				pdftotal: 0,
 				dmLimit: 99999,
 				warning: [],
 			});
@@ -27,7 +32,7 @@ const createMembersData = async (jid, name) => {
 			);
 		}
 	} catch (err) {
-		console.log(err);
+		console.error("[membersDataDb error]", err.message);
 	}
 };
 
@@ -37,7 +42,7 @@ const getMemberData = async (jid) => {
 		if (res) return res;
 		return -1;
 	} catch (err) {
-		console.log(err);
+		console.error("[membersDataDb error]", err.message);
 		return -1;
 	}
 };

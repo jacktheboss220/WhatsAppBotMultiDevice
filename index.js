@@ -1,9 +1,8 @@
 import startSock, { onNewSock } from "./connection.js";
 import getDate from "./functions/getDate.js";
-import memoryManager from "./functions/memoryUtils.js";
-import performanceMonitor from "./functions/performanceMonitor.js";
 import { normalizeJID } from "./functions/lidUtils.js";
 import adminRouter from "./routes/admin.js";
+import messageQueue from "./functions/messageQueue.js";
 
 import cors from "cors";
 import express from "express";
@@ -25,9 +24,14 @@ app.use(
 	})
 );
 
+if (!process.env.SESSION_SECRET) {
+	console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
+	process.exit(1);
+}
+
 app.use(
 	session({
-		secret: process.env.SESSION_SECRET || "eva-fallback-secret",
+		secret: process.env.SESSION_SECRET,
 		resave: false,
 		saveUninitialized: false,
 		cookie: { secure: false, httpOnly: true, maxAge: 8 * 60 * 60 * 1000 }, // 8 hours
@@ -198,7 +202,6 @@ async function startServer() {
 			}
 		} catch (error) {
 			console.error("Error sending message:", error);
-			performanceMonitor.incrementErrorCount();
 			return res.status(500).send({ message: "Failed to send message" });
 		}
 	});
@@ -206,12 +209,10 @@ async function startServer() {
 
 process.on("unhandledRejection", (reason, p) => {
 	console.error("Unhandled Rejection at: ", p, "reason:", reason);
-	performanceMonitor.incrementErrorCount();
 });
 
 process.on("uncaughtException", function (err) {
 	console.error("Uncaught Exception:", err);
-	performanceMonitor.incrementErrorCount();
 	gracefulShutdown("UNCAUGHT_EXCEPTION");
 });
 
@@ -220,8 +221,6 @@ function gracefulShutdown(signal) {
 	server.close(() => {
 		console.log("✅ HTTP server closed");
 		wss.clients.forEach((client) => client.close());
-		memoryManager.destroy();
-		performanceMonitor.saveMetrics();
 		console.log("✅ Graceful shutdown completed");
 		process.exit(0);
 	});
@@ -233,13 +232,3 @@ function gracefulShutdown(signal) {
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-if (process.env.NODE_ENV === "development") {
-	setInterval(() => {
-		const mem = process.memoryUsage();
-		if (mem.heapUsed > 1024 * 1024 * 1024) {
-			console.warn("⚠️  Potential memory leak detected");
-			performanceMonitor.triggerMemoryCleanup();
-		}
-	}, 120_000);
-}

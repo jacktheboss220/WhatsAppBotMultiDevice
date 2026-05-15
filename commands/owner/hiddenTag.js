@@ -23,7 +23,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			tempMess[Object.keys(tempMess)[0]]["caption"] = tempCaption.includes(prefix + "hidetag")
 				? tempCaption.split(prefix + "hidetag")[1].trim()
 				: tempCaption;
-			await sock.sendMessage(from, {
+			await sendMessageWTyping(from, {
 				forward: {
 					key: {
 						remoteJid: msg.key.remoteJid,

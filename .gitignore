@@ -1,9 +1,10 @@
 node_modules
 dashboard/node_modules
+.claude
 
 # React build output — Koyeb builds this itself via Dockerfile
 public/app/
-
+.pnpm-store/
 backups
 # package-lock.json
 .github/instructions/
@@ -12,6 +13,7 @@ test.json
 .env
 .idea
 .vscode
+.claude
 all.json
 common.json
 /index.html

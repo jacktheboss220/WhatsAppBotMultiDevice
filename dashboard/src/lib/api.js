@@ -32,9 +32,11 @@ export const toggleCommand = (cmd, disabled, aliases)     =>
   api.patch(`/api/admin/commands/${encodeURIComponent(cmd)}`, { disabled, aliases })
 
 // Groups
-export const getGroups     = ()            => api.get('/api/admin/groups')
-export const updateGroup   = (jid, update) =>
+export const getGroups           = ()            => api.get('/api/admin/groups')
+export const updateGroup         = (jid, update) =>
   api.patch(`/api/admin/groups/${encodeURIComponent(jid)}`, update)
+export const getGroupChatHistory = (jid, hours = 24) =>
+  api.get(`/api/admin/groups/${encodeURIComponent(jid)}/chat-history?hours=${hours}`)
 
 // Members
 export const getMembers  = (params) =>

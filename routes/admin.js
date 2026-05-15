@@ -138,18 +138,18 @@ router.get("/api/admin/analytics", requireAdmin, async (req, res) => {
 		// Message type aggregation
 		const typeBreakdown = members.reduce(
 			(acc, m) => {
-				acc.text += m.texttotal || 0;
-				acc.image += m.imagetotal || 0;
-				acc.video += m.videototal || 0;
+				acc.text    += m.texttotal    || 0;
+				acc.image   += m.imagetotal   || 0;
+				acc.video   += m.videototal   || 0;
 				acc.sticker += m.stickertotal || 0;
-				acc.pdf += m.pdftotal || 0;
+				acc.pdf     += m.pdftotal     || 0;
 				return acc;
 			},
 			{ text: 0, image: 0, video: 0, sticker: 0, pdf: 0 }
 		);
 
-		const totalMessages = Object.values(typeBreakdown).reduce((a, b) => a + b, 0);
-		const activeGroups = groups.filter(g => g.isBotOn).length;
+		const totalMessages  = Object.values(typeBreakdown).reduce((a, b) => a + b, 0);
+		const activeGroups   = groups.filter(g => g.isBotOn).length;
 		const blockedMembers = members.filter(m => m.isBlock).length;
 
 		res.json({
@@ -159,7 +159,7 @@ router.get("/api/admin/analytics", requireAdmin, async (req, res) => {
 			totalMessages,
 			activeGroups,
 			blockedMembers,
-			totalGroups: groups.length,
+			totalGroups:  groups.length,
 			totalMembers: members.length,
 		});
 	} catch (err) {
@@ -172,17 +172,17 @@ router.get("/api/admin/bot/health", requireAdmin, (req, res) => {
 	try {
 		const mem = process.memoryUsage();
 		res.json({
-			uptime: Math.floor(process.uptime()),
+			uptime:      Math.floor(process.uptime()),
 			memory: {
-				heapUsed: mem.heapUsed,
+				heapUsed:  mem.heapUsed,
 				heapTotal: mem.heapTotal,
-				rss: mem.rss,
-				external: mem.external,
+				rss:       mem.rss,
+				external:  mem.external,
 			},
-			connected: !!req.app.locals.sock,
+			connected:   !!req.app.locals.sock,
 			nodeVersion: process.version,
-			pid: process.pid,
-			platform: process.platform,
+			pid:         process.pid,
+			platform:    process.platform,
 		});
 	} catch (err) {
 		res.status(500).json({ error: err.message });
@@ -312,9 +312,9 @@ router.get("/api/admin/commands", requireAdmin, async (req, res) => {
 			list.map((c) => ({ ...c, type, disabledGlobally: c.cmd.some((k) => disabled.includes(k)) }));
 		res.json({
 			publicCommands: annotate(cmds.publicCommands, "public"),
-			groupCommands: annotate(cmds.groupCommands, "group"),
-			adminCommands: annotate(cmds.adminCommands, "admin"),
-			ownerCommands: annotate(cmds.ownerCommands, "owner"),
+			groupCommands:  annotate(cmds.groupCommands,  "group"),
+			adminCommands:  annotate(cmds.adminCommands,  "admin"),
+			ownerCommands:  annotate(cmds.ownerCommands,  "owner"),
 		});
 	} catch (err) {
 		res.status(500).json({ error: err.message });
@@ -372,6 +372,22 @@ router.get("/api/admin/groups/:jid/members", requireAdmin, async (req, res) => {
 	try {
 		const grp = await group.findOne({ _id: jid }, { projection: { members: 1 } });
 		res.json(grp?.members || []);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+});
+
+router.get("/api/admin/groups/:jid/chat-history", requireAdmin, async (req, res) => {
+	const jid = decodeURIComponent(req.params.jid);
+	const hours = Math.min(Math.max(parseInt(req.query.hours || 24), 1), 24);
+	try {
+		const chatLogs = mdClient.db("MyBotDataDB").collection("ChatLogs");
+		const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+		const messages = await chatLogs
+			.find({ groupJid: jid, timestamp: { $gte: since } })
+			.sort({ timestamp: 1 })
+			.toArray();
+		res.json(messages);
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}

@@ -30,20 +30,16 @@ const getRandom = (ext) => {
 
 import { delay } from "baileys";
 
-let down_meme = getRandom(".mp4");
-let down_gif = getRandom(".gif");
-
-const downloadMedia = async (url) => {
-	const writer = memoryManager.createOptimizedWriteStream(down_gif);
+const downloadMedia = async (url, filePath) => {
+	const writer = memoryManager.createOptimizedWriteStream(filePath);
 	const response = await axios({
 		url,
 		method: "GET",
 		responseType: "stream",
-		maxContentLength: 50 * 1024 * 1024, // 50MB limit
-		timeout: 30000, // 30 second timeout
+		maxContentLength: 50 * 1024 * 1024,
+		timeout: 30000,
 	});
 
-	// Register the response stream for monitoring
 	memoryManager.registerStream(response.data);
 	memoryManager.registerStream(writer);
 
@@ -51,52 +47,53 @@ const downloadMedia = async (url) => {
 	return new Promise((resolve, reject) => {
 		writer.on("finish", () => resolve("done"));
 		writer.on("error", (err) => {
-			memoryManager.safeUnlink(down_gif);
+			memoryManager.safeUnlink(filePath);
 			reject(err);
 		});
 		response.data.on("error", (err) => {
-			memoryManager.safeUnlink(down_gif);
+			memoryManager.safeUnlink(filePath);
 			reject(err);
 		});
 	});
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
+	const { sendMessageWTyping } = msgInfoObj;
+	const down_meme = getRandom(".mp4");
+	const down_gif = getRandom(".gif");
 	const memeURL = "https://meme-api.com/gimme";
 	await axios.get(`${memeURL}`).then((res) => {
 		let url = res.data.url;
 		if (url.includes("jpg") || url.includes("jpeg") || url.includes("png")) {
-			sock.sendMessage(from, { image: { url: res.data.url }, caption: `${res.data.title}` });
+			sendMessageWTyping(from, { image: { url: res.data.url }, caption: `${res.data.title}` });
 		} else {
-			outputOptions = [`-movflags faststart`, `-pix_fmt yuv420p`, `-vf`, `scale=trunc(iw/2)*2:trunc(ih/2)*2`];
-			downloadMedia(res.data.url)
+			const outputOptions = [`-movflags faststart`, `-pix_fmt yuv420p`, `-vf`, `scale=trunc(iw/2)*2:trunc(ih/2)*2`];
+			downloadMedia(res.data.url, down_gif)
 				.then(async (res1) => {
 					if (res1 == "done") {
-						const ffmpegProcess = ffmpeg(down_gif)
+						ffmpeg(down_gif)
 							.input(down_gif)
 							.addOutputOptions(outputOptions)
 							.save(down_meme)
 							.on("end", async () => {
 								try {
-									await delay(2000); // Reduced delay
+									await delay(2000);
 									const videoStream = memoryManager.createOptimizedReadStream(down_meme, {
 										autoDelete: true,
 									});
-									await sock.sendMessage(from, {
+									await sendMessageWTyping(from, {
 										video: videoStream,
 										caption: `${res.data.title}`,
 										gifPlayback: true,
 									});
 								} catch (streamError) {
 									console.error("Streaming error, using buffer:", streamError);
-									// Fallback to buffer method
-									await sock.sendMessage(from, {
+									await sendMessageWTyping(from, {
 										video: fs.readFileSync(down_meme),
 										caption: `${res.data.title}`,
 										gifPlayback: true,
 									});
 								} finally {
-									// Cleanup files
 									memoryManager.safeUnlink(down_gif);
 									memoryManager.safeUnlink(down_meme);
 								}

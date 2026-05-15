@@ -9,24 +9,6 @@ const cache = new NodeCache({
 	deleteOnExpire: true,
 });
 
-let cacheMonitorInterval = null;
-
-if (cacheMonitorInterval) {
-	clearInterval(cacheMonitorInterval);
-}
-
-// Monitor cache memory usage
-cacheMonitorInterval = setInterval(() => {
-	const stats = cache.getStats();
-	if (stats.keys > 250) {
-		// When approaching limit
-		cache.flushAll(); // Clear cache to prevent memory issues
-		console.log("Cache cleared due to high memory usage");
-	}
-}, 180000); // Check every 3 minutes
-
-// Cleanup sessions more frequently during session issues
-
 import socket from "./functions/getSocket.js";
 import events from "./functions/getEvents.js";
 
@@ -35,6 +17,8 @@ const MAX_CONNECTION_ATTEMPTS = 5;
 let lastConnectionTime = 0;
 const MIN_CONNECTION_INTERVAL = 10000; // 10 seconds minimum between attempts
 
+// ── Hook called every time a new socket is created (initial + every reconnect) ─
+// index.js registers this so it can always track the live sock reference.
 let _onNewSock = null;
 export const onNewSock = (fn) => { _onNewSock = fn; };
 
@@ -51,6 +35,7 @@ const startSock = async (reason = "initial") => {
 		if (connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
 			console.log("❌ Max connection attempts reached. Performing emergency cleanup and resetting...");
 			connectionAttempts = 0; // Reset after cleanup
+			// Wait longer before allowing reconnection
 			setTimeout(() => {
 				connectionAttempts = 0;
 			}, 60000); // 1 minute reset
@@ -61,9 +46,11 @@ const startSock = async (reason = "initial") => {
 		lastConnectionTime = now;
 		console.log(`🔄 Starting socket connection (attempt ${connectionAttempts}): ${reason}`);
 
+		// Perform comprehensive cleanup to prevent stale references
 
 		const sock = await socket();
 		if (sock) {
+			// Notify index.js FIRST so it can attach its listener before events() runs
 			if (_onNewSock) _onNewSock(sock);
 
 			events(sock, startSock, cache);

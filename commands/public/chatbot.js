@@ -4,6 +4,7 @@ dotenv.config();
 import { getGroupData, group } from "../../mongo-DB/groupDataDb.js";
 import { getMemberData } from "../../mongo-DB/membersDataDb.js";
 import { extractPhoneNumber } from "../../functions/lidUtils.js";
+import { getChatMessages } from "../../functions/chatLogger.js";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 //-------------------------------------------------------------------------------------------------------------//
@@ -39,7 +40,19 @@ const generationConfig = {
 // Define models ONCE - not recreated every time
 const geminiModel = genAI.getGenerativeModel({
 	model: "gemini-2.0-flash",
-	systemInstruction: `You are a helpful, professional AI assistant. You provide clear, accurate, and informative responses. Pay attention to who is speaking in each message. Reply in WhatsApp format only. No markdown, no backticks.`,
+	systemInstruction: `You are a professional WhatsApp group assistant with full access to the provided chat history. Your goal is to keep the group informed by either synthesizing long conversations or answering specific questions about the group's activity.
+
+*How to Summarize:*
+Avoid a message-by-message breakdown. Instead, look at the big picture and group the conversation into *Main Topics*, *Decisions Made*, and *Action Items*. This helps members catch up quickly without reading a play-by-play.
+
+*Answering Questions:*
+You have the full context of the recent chat. If a member asks about a specific detail, a past decision, or who mentioned a certain topic, use the history to provide a direct and accurate answer.
+
+*Strict Formatting Rules:*
+- Use *bold* for all headings and key emphasis.
+- Use hyphens (-) for bullet points.
+- NEVER use markdown headers (###), backticks, or code blocks.
+- Keep the tone helpful and the layout clean for mobile screens.`,
 });
 
 const evaModel = genAI.getGenerativeModel({
@@ -90,7 +103,7 @@ FORMATTING RESTRICTIONS:
 You're a real person, not a character. Act like it.`,
 });
 
-async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID) {
+async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID, chatContext = "") {
 	let { sendMessageWTyping, command, updateName, updateId, senderJid, groupMetadata, groupAdmins, isGroup } =
 		msgInfoObj;
 
@@ -151,7 +164,10 @@ User Total Messages: ${memberData?.totalmsg || 0}
 Is Admin: ${groupAdmins?.includes(senderJid) ? "Yes" : "No"}
 -------------------------
 `;
-		fullPrompt = groupInfo + fullPrompt;
+		const chatSection = chatContext
+			? `\n--- Recent Group Chat (last 24h) ---\n${chatContext}\n--- End of Chat ---\n\n`
+			: "";
+		fullPrompt = groupInfo + chatSection + fullPrompt;
 	}
 
 	const chatSession = model.startChat({
@@ -252,7 +268,27 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				{ quoted: msg }
 			);
 		} else {
-			chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID);
+			let chatContext = "";
+			if (msgInfoObj.command === "gemini") {
+				const logs = await getChatMessages(from, 24);
+				if (logs.length > 0) {
+					chatContext = logs.slice(-100).map((m) => {
+						const name = m.senderName || m.sender.split("@")[0];
+						const replyPart = m.replyTo
+							? ` [replying to ${m.replyTo.senderName || m.replyTo.sender.split("@")[0]}: "${m.replyTo.text}"]`
+							: "";
+						let text = m.text;
+						if (m.mentions?.length > 0) {
+							for (const mention of m.mentions) {
+								const num = mention.jid.split("@")[0].split(":")[0];
+								text = text.replace(new RegExp(`@${num}`, "g"), `@${mention.name}`);
+							}
+						}
+						return `${name}${replyPart}: ${text}`;
+					}).join("\n");
+				}
+			}
+			chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID, chatContext);
 		}
 	} else {
 		if (msgInfoObj.isOwner) {

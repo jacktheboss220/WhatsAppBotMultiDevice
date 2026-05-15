@@ -13,11 +13,11 @@
     "python": "3.9.x",
     "pnpm": ">=9.0.0"
   },
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.33.3",
   "scripts": {
     "build": "npm install --prefix dashboard && npm run build --prefix dashboard",
-    "start": "node --max-old-space-size=512 index.js",
-    "start:dev": "node --inspect --max-old-space-size=512 index.js",
+    "start": "node index.js",
+    "start:dev": "node --inspect index.js",
     "start:production": "node --max-old-space-size=1024 --optimize-for-size index.js"
   },
   "keywords": [],

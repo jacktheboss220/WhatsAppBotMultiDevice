@@ -58,16 +58,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 		if (!url) return sendMessageWTyping(from, { text: `❌ Error generating audio!` }, { quoted: msg });
 
-		await sock.sendMessage(
+		await sendMessageWTyping(
 			from,
 			{
 				audio: { url: url },
 				mimetype: "audio/mpeg",
 				fileName: "eva.mp3",
 			},
-			{
-				quoted: msg,
-			}
+			{ quoted: msg }
 		);
 	} catch (error) {
 		console.error("TTS Error:", error);

@@ -52,7 +52,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		writer.on("finish", () => {
 			console.log("Video downloaded successfully.");
 			url += "🎬 " + videoUrl + "\n\n";
-			sock.sendMessage(from, { video: fs.readFileSync(fileDown), mimetype: "video/mp4" }, { quoted: msg });
+			sendMessageWTyping(from, { video: fs.readFileSync(fileDown), mimetype: "video/mp4" }, { quoted: msg });
 			fs.unlinkSync(fileDown);
 		});
 

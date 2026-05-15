@@ -25,10 +25,12 @@ pids
 temp/*
 !temp/.gitkeep
 backups/*
+.pnpm-store/*
 !backups/.gitkeep
 
 # ── Auth / session (generated at runtime) ─────────────────────────────────────
 auth_info_baileys/
+test.js
 
 # ── Git ───────────────────────────────────────────────────────────────────────
 .git

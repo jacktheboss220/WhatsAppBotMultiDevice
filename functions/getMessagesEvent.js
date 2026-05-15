@@ -11,8 +11,9 @@ import getGroupAdmins from "./getGroupAdmins.js";
 import { stickerForward, forwardGroup } from "../functions/getStickerForward.js";
 import { createMembersData, getMemberData, member } from "../mongo-DB/membersDataDb.js";
 import { createGroupData, getGroupData, group } from "../mongo-DB/groupDataDb.js";
-import { commandsPublic, commandsMembers, commandsAdmins, commandsOwners } from "./getAddCommands.js";
+import { commandsPublic, commandsMembers, commandsAdmins, commandsOwners, commandsReadyPromise, commandsLoaded } from "./getAddCommands.js";
 import { getBotData } from "../mongo-DB/botDataDb.js";
+import { saveChatMessage } from "./chatLogger.js";
 
 // These will be used for permission checks
 const myNumber = [
@@ -34,6 +35,7 @@ const getTagSticker = async () => {
 };
 
 const getCommand = async (sock, msg, cache) => {
+	if (!commandsLoaded) await commandsReadyPromise;
 	const startTime = process.hrtime();
 
 	try {
@@ -213,6 +215,44 @@ const getCommand = async (sock, msg, cache) => {
 			}
 		}
 
+		// Log text messages to chat history for gemini summarization
+		// Skip: commands (prefix), eva triggers, bot's own messages
+		const isEvaTrigger = body.trim().split(" ")[0].toLowerCase() === "eva";
+		if (isGroup && body && !isCmd && !isEvaTrigger && !msg.key.fromMe && (type === "conversation" || type === "extendedTextMessage")) {
+			setImmediate(async () => {
+				try {
+					let replyTo = null;
+					const ctx = msg.message?.extendedTextMessage?.contextInfo;
+					if (ctx?.quotedMessage) {
+						const qText =
+							ctx.quotedMessage.conversation ||
+							ctx.quotedMessage.extendedTextMessage?.text ||
+							"";
+						const qSender = ctx.participant || "";
+						let qName = "";
+						if (qSender) {
+							const qMember = await getMemberData(qSender).catch(() => null);
+							qName = qMember?.username || "";
+						}
+						replyTo = { sender: qSender, senderName: qName, text: qText };
+					}
+					let mentions = [];
+					const mentionedJids = ctx?.mentionedJid || [];
+					if (mentionedJids.length > 0) {
+						mentions = await Promise.all(
+							mentionedJids.map(async (jid) => {
+								const memberData = await getMemberData(jid).catch(() => null);
+								return { jid, name: memberData?.username || jid.split("@")[0] };
+							})
+						);
+					}
+					await saveChatMessage(from, senderJid, updateName || msg.pushName || "", body, replyTo, mentions);
+				} catch (e) {
+					console.error("[chatLogger error]", e.message);
+				}
+			});
+		}
+
 		// Return early for non-command sticker and document messages (no further processing needed)
 		if (!isCmd && (type == "stickerMessage" || type == "documentMessage")) return;
 		//-------------------------------------------------------------------------------------------------------------//
@@ -238,13 +278,12 @@ const getCommand = async (sock, msg, cache) => {
 			}
 		}
 		if (msg.message.extendedTextMessage) {
-			if (
-				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[0] ||
-				msg.message.extendedTextMessage.contextInfo?.mentionedJid == botNumber[1]
-			) {
+			const rawMentioned = msg.message.extendedTextMessage.contextInfo?.mentionedJid;
+			const mentioned = Array.isArray(rawMentioned) ? rawMentioned : rawMentioned ? [rawMentioned] : [];
+			if (mentioned.includes(botNumber[0]) || mentioned.includes(botNumber[1])) {
 				try {
 					const stickerBuffer = await getTagSticker();
-					sock.sendMessage(from, { sticker: stickerBuffer }, { quoted: msg });
+					sendMessageWTyping(from, { sticker: stickerBuffer }, { quoted: msg });
 				} catch (err) {
 					console.error("Failed to send tag sticker:", err.message);
 				}
@@ -478,7 +517,7 @@ const getCommand = async (sock, msg, cache) => {
 		if (sock && sock.user && msg && msg.key && msg.key.remoteJid) {
 			setTimeout(async () => {
 				try {
-					await sock.sendMessage(msg.key.remoteJid, {
+					await sendMessageWTyping(msg.key.remoteJid, {
 						text: "❌ Sorry, I encountered an error processing your message. Please try again in a moment.",
 					});
 				} catch (sendError) {

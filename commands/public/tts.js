@@ -38,7 +38,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		});
 		await sticker.build();
 		const stickerBuffer = await sticker.get();
-		await sock.sendMessage(from, { sticker: Buffer.from(stickerBuffer) }, { quoted: msg });
+		await sendMessageWTyping(from, { sticker: Buffer.from(stickerBuffer) }, { quoted: msg });
 		fs.unlinkSync(filename); // Clean up after sending
 	});
 };

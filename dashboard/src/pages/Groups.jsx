@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
-import { getGroups, updateGroup } from '../lib/api.js'
+import { getGroups, updateGroup, getGroupChatHistory } from '../lib/api.js'
 import { useToast } from '../App.jsx'
 
 const SORTS = [
@@ -18,63 +18,228 @@ const TOGGLES = [
   { field: 'is91Only',        label: 'India-Only (+91)' },
 ]
 
-function GroupCard({ grp, onUpdate, onAddBlock, onRemoveBlock }) {
-  const addRef = useRef()
+const HOUR_TABS = [1, 6, 12, 24]
+
+function fmtTime(ts) {
+  const d = new Date(ts)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+    ' · ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+}
+
+function ChatHistoryModal({ grp, onClose }) {
+  const [hours, setHours]     = useState(24)
+  const [logs, setLogs]       = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(null)
+  const bottomRef             = useRef()
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    getGroupChatHistory(grp._id, hours)
+      .then(data => { setLogs(data); setLoading(false) })
+      .catch(e  => { setError(e.message); setLoading(false) })
+  }, [grp._id, hours])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [logs])
 
   return (
-    <div className="grp-card">
-      <div className="grp-header">
-        <div style={{ minWidth: 0 }}>
-          <h3>{grp.grpName || 'Unnamed Group'}</h3>
-          <div className="jid">{grp._id}</div>
-        </div>
-        <span className={`badge ${grp.isBotOn ? 'badge-on' : 'badge-off'}`} style={{ flexShrink: 0 }}>
-          {grp.isBotOn ? 'ON' : 'OFF'}
-        </span>
-      </div>
-
-      {grp.desc && <p className="grp-desc">{grp.desc}</p>}
-
-      <div className="toggle-grid">
-        {TOGGLES.map(({ field, label }) => (
-          <div key={field} className="toggle-row">
-            <span>{label}</span>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={!!grp[field]}
-                onChange={e => onUpdate(grp._id, field, e.target.checked)}
-              />
-              <span className="slider" />
-            </label>
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.6)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{
+        background: 'var(--card)',
+        borderRadius: '12px',
+        width: '100%',
+        maxWidth: '640px',
+        maxHeight: '85vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '16px 20px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '15px' }}>{grp.grpName || 'Unnamed Group'}</div>
+            <div style={{ fontSize: '12px', opacity: 0.5, marginTop: '2px' }}>Chat History</div>
           </div>
-        ))}
-      </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: '20px', lineHeight: 1, opacity: 0.6, color: 'inherit',
+              padding: '4px 8px',
+            }}
+          >✕</button>
+        </div>
 
-      <div className="blocked-section">
-        <p className="blocked-label">Blocked Commands <span className="count">{(grp.cmdBlocked || []).length}</span></p>
-        <div className="chips-row">
-          {(grp.cmdBlocked || []).map(cmd => (
-            <span key={cmd} className="chip-cmd">
-              {cmd}
-              <button onClick={() => onRemoveBlock(grp._id, cmd)} title="Unblock">✕</button>
-            </span>
+        {/* Hour filter tabs */}
+        <div style={{
+          display: 'flex', gap: '6px', padding: '10px 16px',
+          borderBottom: '1px solid var(--border)', flexShrink: 0,
+        }}>
+          {HOUR_TABS.map(h => (
+            <button
+              key={h}
+              onClick={() => setHours(h)}
+              style={{
+                padding: '4px 12px', borderRadius: '20px', fontSize: '13px',
+                border: '1px solid var(--border)', cursor: 'pointer',
+                background: hours === h ? 'var(--accent)' : 'transparent',
+                color: hours === h ? '#fff' : 'inherit',
+                fontWeight: hours === h ? 600 : 400,
+              }}
+            >
+              Last {h}h
+            </button>
           ))}
-          <div className="add-blocked">
-            <input ref={addRef} type="text" placeholder="add command…" />
-            <button className="btn-sm" onClick={() => {
-              const v = addRef.current?.value?.trim().toLowerCase()
-              if (v) { onAddBlock(grp._id, v); addRef.current.value = '' }
-            }}>Add</button>
-          </div>
+          <span style={{ marginLeft: 'auto', fontSize: '12px', opacity: 0.5, alignSelf: 'center' }}>
+            {logs.length} messages
+          </span>
         </div>
-      </div>
 
-      <div className="grp-meta">
-        <span>💬 {grp.totalMsgCount || 0} messages</span>
-        <span>👥 {(grp.members || []).length} members</span>
+        {/* Message list */}
+        <div style={{ overflowY: 'auto', flex: 1, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>
+              <span className="spinner" />
+            </div>
+          ) : error ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--danger, #e74c3c)' }}>
+              {error}
+            </div>
+          ) : logs.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>
+              No messages in the last {hours}h
+            </div>
+          ) : (
+            logs.map((m, i) => {
+              const name = m.senderName || m.sender?.split('@')[0] || 'Unknown'
+              return (
+                <div key={m._id || i} style={{
+                  background: 'var(--bg)',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  borderLeft: '3px solid var(--accent)',
+                }}>
+                  {m.replyTo && (
+                    <div style={{
+                      fontSize: '12px', opacity: 0.6,
+                      borderLeft: '2px solid var(--border)',
+                      paddingLeft: '8px', marginBottom: '4px',
+                      fontStyle: 'italic',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      ↩ {m.replyTo.senderName || m.replyTo.sender?.split('@')[0] || '?'}: {m.replyTo.text}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                    <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--accent)', flexShrink: 0 }}>
+                      {name}
+                    </span>
+                    <span style={{ fontSize: '11px', opacity: 0.45, flexShrink: 0 }}>
+                      {fmtTime(m.timestamp)}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '14px', marginTop: '2px', wordBreak: 'break-word' }}>
+                    {m.text}
+                  </div>
+                </div>
+              )
+            })
+          )}
+          <div ref={bottomRef} />
+        </div>
       </div>
     </div>
+  )
+}
+
+function GroupCard({ grp, onUpdate, onAddBlock, onRemoveBlock }) {
+  const addRef = useRef()
+  const [showHistory, setShowHistory] = useState(false)
+
+  return (
+    <>
+      <div className="grp-card">
+        <div className="grp-header">
+          <div style={{ minWidth: 0 }}>
+            <h3>{grp.grpName || 'Unnamed Group'}</h3>
+            <div className="jid">{grp._id}</div>
+          </div>
+          <span className={`badge ${grp.isBotOn ? 'badge-on' : 'badge-off'}`} style={{ flexShrink: 0 }}>
+            {grp.isBotOn ? 'ON' : 'OFF'}
+          </span>
+        </div>
+
+        {grp.desc && <p className="grp-desc">{grp.desc}</p>}
+
+        <div className="toggle-grid">
+          {TOGGLES.map(({ field, label }) => (
+            <div key={field} className="toggle-row">
+              <span>{label}</span>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={!!grp[field]}
+                  onChange={e => onUpdate(grp._id, field, e.target.checked)}
+                />
+                <span className="slider" />
+              </label>
+            </div>
+          ))}
+        </div>
+
+        <div className="blocked-section">
+          <p className="blocked-label">Blocked Commands <span className="count">{(grp.cmdBlocked || []).length}</span></p>
+          <div className="chips-row">
+            {(grp.cmdBlocked || []).map(cmd => (
+              <span key={cmd} className="chip-cmd">
+                {cmd}
+                <button onClick={() => onRemoveBlock(grp._id, cmd)} title="Unblock">✕</button>
+              </span>
+            ))}
+            <div className="add-blocked">
+              <input ref={addRef} type="text" placeholder="add command…" />
+              <button className="btn-sm" onClick={() => {
+                const v = addRef.current?.value?.trim().toLowerCase()
+                if (v) { onAddBlock(grp._id, v); addRef.current.value = '' }
+              }}>Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grp-meta">
+          <span>💬 {grp.totalMsgCount || 0} messages</span>
+          <span>👥 {(grp.members || []).length} members</span>
+          <button
+            className="btn-sm"
+            onClick={() => setShowHistory(true)}
+            style={{ marginLeft: 'auto' }}
+          >
+            📋 Chat History
+          </button>
+        </div>
+      </div>
+
+      {showHistory && (
+        <ChatHistoryModal grp={grp} onClose={() => setShowHistory(false)} />
+      )}
+    </>
   )
 }
 

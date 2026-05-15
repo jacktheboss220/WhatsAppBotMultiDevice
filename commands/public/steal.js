@@ -42,7 +42,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 								: "jacktheboss220",
 							media
 					  );
-			await sock.sendMessage(from, { sticker: Buffer.from(webpWithMetadata) }, { quoted: msg });
+			await sendMessageWTyping(from, { sticker: Buffer.from(webpWithMetadata) }, { quoted: msg });
 		} catch (error) {
 			console.error("Error setting metadata:", error);
 			return sendMessageWTyping(from, { text: `❌ *Error setting metadata*` }, { quoted: msg });

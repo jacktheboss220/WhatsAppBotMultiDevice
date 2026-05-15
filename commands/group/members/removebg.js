@@ -63,27 +63,24 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		}
 		const media = getRandom(".jpeg");
 		await writeFile(media, buffer);
-		getRemoveBg(media)
-			.then(async () => {
-				try {
-					sock.sendMessage(from, {
-						image: await fs.promises.readFile("./bg.png"),
-						mimetype: "image/png",
-						caption: `*Sent by eva*`,
-					}).then(() => {
-						try {
-							fs.unlinkSync(media);
-							fs.unlinkSync("./bg.png");
-						} catch {}
-					});
-				} catch (err) {
-					sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-				}
-			})
-			.catch((err) => {
-				console.log("Status : ", err.status);
+		try {
+			await getRemoveBg(media);
+			try {
+				await sendMessageWTyping(from, {
+					image: await fs.promises.readFile("./bg.png"),
+					mimetype: "image/png",
+					caption: `*Sent by eva*`,
+				}, { quoted: msg });
+			} catch (err) {
 				sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-			});
+			} finally {
+				try { fs.unlinkSync(media); } catch {}
+				try { fs.unlinkSync("./bg.png"); } catch {}
+			}
+		} catch (err) {
+			console.log("Status : ", err.status);
+			sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+		}
 	} else {
 		sendMessageWTyping(from, { text: `*Reply to image only*` }, { quoted: msg });
 	}

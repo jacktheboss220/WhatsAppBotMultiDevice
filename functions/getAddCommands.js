@@ -86,24 +86,21 @@ const addCommands = async () => {
 	console.log("🎉 All commands loaded successfully!");
 };
 
-// Await the command loading to ensure they're ready before export
-addCommands();
+let commandsLoaded = false;
+const commandsReadyPromise = addCommands().then(() => { commandsLoaded = true; });
 
-const cmdToText = () => {
+const cmdToText = async () => {
 	let adminCommands = [];
 	let publicCommands = [];
 	let groupCommands = [];
 	let ownerCommands = [];
 	let directCommands = [];
-
-	return new Promise(async (resolve, reject) => {
-		await loadCommands(mainPath + "public/", {}, directCommands);
-		await loadCommands(mainPath + "public/", {}, publicCommands);
-		await loadCommands(mainPath + "group/members/", {}, groupCommands);
-		await loadCommands(mainPath + "group/admins/", {}, adminCommands);
-		await loadCommands(mainPath + "owner/", {}, ownerCommands);
-		resolve({ publicCommands, groupCommands, adminCommands, ownerCommands, directCommands });
-	});
+	await loadCommands(mainPath + "public/", {}, directCommands);
+	await loadCommands(mainPath + "public/", {}, publicCommands);
+	await loadCommands(mainPath + "group/members/", {}, groupCommands);
+	await loadCommands(mainPath + "group/admins/", {}, adminCommands);
+	await loadCommands(mainPath + "owner/", {}, ownerCommands);
+	return { publicCommands, groupCommands, adminCommands, ownerCommands, directCommands };
 };
 
-export { commandsPublic, commandsMembers, commandsAdmins, commandsOwners, cmdToText };
+export { commandsPublic, commandsMembers, commandsAdmins, commandsOwners, cmdToText, commandsReadyPromise, commandsLoaded };

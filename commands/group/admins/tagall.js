@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				: tempCaption;
 			// Use extractPhoneNumber for LID/PN compatibility
 			const tags = groupMetadata.participants.map((i) => "👉🏻 @" + extractPhoneNumber(i.id)).join("\n");
-			const tt = await sock.sendMessage(from, {
+			await sendMessageWTyping(from, {
 				forward: {
 					key: {
 						remoteJid: msg.key.remoteJid,
@@ -42,14 +42,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				},
 				contextInfo: { forwardingScore: 0, isForwarded: false },
 			});
-			await sendMessageWTyping(
-				from,
-				{
-					text: `👥 *Total Members:* ${groupMetadata.participants.length}\n\n${tags}`,
-					mentions: [...groupMetadata.participants.map((e) => e.id)],
-				},
-				{ quoted: tt }
-			);
+			await sendMessageWTyping(from, {
+				text: `👥 *Total Members:* ${groupMetadata.participants.length}\n\n${tags}`,
+				mentions: [...groupMetadata.participants.map((e) => e.id)],
+			});
 		} else {
 			let message = msg.message.conversation ?? "";
 			message = message.includes(prefix + "tagall") ? message.split(prefix + "tagall")[1].trim() : message;

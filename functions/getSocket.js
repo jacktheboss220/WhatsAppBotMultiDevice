@@ -21,29 +21,7 @@ const messageCache = new NodeCache({
 	useClones: false,
 });
 
-// Store interval references at module level to prevent accumulation on reconnect
-let cacheCleanupInterval = null;
-let statsInterval = null;
 let authStateCleanup = null;
-
-// Clear previous intervals if they exist
-if (cacheCleanupInterval) clearInterval(cacheCleanupInterval);
-
-// Cleanup old cache entries periodically
-cacheCleanupInterval = setInterval(() => {
-	const msgStats = messageCache.getStats();
-	const retryStats = msgRetryCounterCache.getStats();
-
-	if (msgStats.keys > 80) {
-		messageCache.flushAll();
-		console.log("Message cache cleared");
-	}
-
-	if (retryStats.keys > 150) {
-		msgRetryCounterCache.flushAll();
-		console.log("Retry counter cache cleared");
-	}
-}, 120000); // Every 2 minutes
 
 const socket = async () => {
 	const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -53,12 +31,6 @@ const socket = async () => {
 	if (authStateCleanup) {
 		authStateCleanup();
 		authStateCleanup = null;
-	}
-
-	// Clear previous stats interval
-	if (statsInterval) {
-		clearInterval(statsInterval);
-		statsInterval = null;
 	}
 
 	// Use custom MongoDB auth state instead of file-based auth
@@ -167,23 +139,8 @@ const socket = async () => {
 		}
 	});
 
-	// Periodic auth state stats logging (every 10 minutes - reduced frequency)
-	statsInterval = setInterval(async () => {
-		try {
-			const { getAuthStateStats } = await import("./useMongoDBAuthState.js");
-			const stats = await getAuthStateStats();
-			console.log(`📊 Auth state: ${stats.total} documents in MongoDB`, stats.byType);
-		} catch (error) {
-			console.error("Error getting auth state stats:", error);
-		}
-	}, 10 * 60 * 1000); // Every 10 minutes (reduced from 5)
-
 	// Clear interval and cleanup on socket close
 	sock.ws.on("close", () => {
-		if (statsInterval) {
-			clearInterval(statsInterval);
-			statsInterval = null;
-		}
 		if (authStateCleanup) {
 			authStateCleanup();
 			authStateCleanup = null;

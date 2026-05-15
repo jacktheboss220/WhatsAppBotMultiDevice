@@ -12,7 +12,8 @@ let ffmpegPath1 = process.env.FFMPEG_PATH;
 if (!ffmpegPath1) {
 	try {
 		const { default: ffmpegStatic } = await import("ffmpeg-static");
-		ffmpegPath1 = ffmpegStatic || "ffmpeg";
+		const { existsSync } = await import("fs");
+		ffmpegPath1 = (ffmpegStatic && existsSync(ffmpegStatic)) ? ffmpegStatic : "ffmpeg";
 	} catch (err) {
 		ffmpegPath1 = "ffmpeg";
 	}

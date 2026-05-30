@@ -90,6 +90,18 @@ A feature-rich WhatsApp bot with a modern React/Vite admin dashboard. Supports d
 |       -warn        |       Give a warning to a member        |     `-warn @mention`      |            ✔            |
 |      -unwarn       |     Remove a warning from a member      |    `-unwarn @mention`     |            ✔            |
 |      -tagall       | Send an attendance alert to all members |     `-tagall message`     |            ✔            |
+|    -ref_delete     |    Delete a company (Admin only)       |      `-ref_delete Google`  |            ✔            |
+|    -ref_update     |  Update a company name (Admin only)    | `-ref_update Google Alphabet` |         ✔            |
+|   -warning set     |       Set warning limit for group        |     `-warning set 3`      |            ✔            |
+|  -welcome msg      |     Set custom welcome message          | `-welcome msg Welcome!`   |            ✔            |
+
+<br>
+
+| **Referral Commands** |             **Explanation**             |        **Example**        | **Working/Not Working** |
+| :------------------: | :-------------------------------------: | :-----------------------: | :---------------------: |
+|       -reg_ref       |  Register yourself with a company       |      `-reg_ref Google`     |            ✔            |
+|       -ref_list      |  View all companies and registered users |        `-ref_list`         |            ✔            |
+|     -update_ref      |     Update your company registration     |   `-update_ref Microsoft`   |            ✔            |
 
 ---
 

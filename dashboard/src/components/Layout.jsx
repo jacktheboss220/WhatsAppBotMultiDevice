@@ -10,7 +10,9 @@ const NAV = [
   { to: '/groups',    icon: '👥', label: 'Groups' },
   { to: '/members',   icon: '👤', label: 'Members' },
   { to: '/analytics', icon: '📊', label: 'Analytics' },
+  { to: '/dm',        icon: '✉️', label: 'Direct Message' },
   { to: '/broadcast', icon: '📢', label: 'Broadcast' },
+  { to: '/logs',      icon: '📋', label: 'Logs' },
   { to: '/health',    icon: '💚', label: 'Bot Health' },
 ]
 

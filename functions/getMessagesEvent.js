@@ -11,7 +11,14 @@ import getGroupAdmins from "./getGroupAdmins.js";
 import { stickerForward, forwardGroup } from "../functions/getStickerForward.js";
 import { createMembersData, getMemberData, member } from "../mongo-DB/membersDataDb.js";
 import { createGroupData, getGroupData, group } from "../mongo-DB/groupDataDb.js";
-import { commandsPublic, commandsMembers, commandsAdmins, commandsOwners, commandsReadyPromise, commandsLoaded } from "./getAddCommands.js";
+import {
+	commandsPublic,
+	commandsMembers,
+	commandsAdmins,
+	commandsOwners,
+	commandsReadyPromise,
+	commandsLoaded,
+} from "./getAddCommands.js";
 import { getBotData } from "../mongo-DB/botDataDb.js";
 import { saveChatMessage } from "./chatLogger.js";
 
@@ -92,7 +99,9 @@ const getCommand = async (sock, msg, cache) => {
 
 				if (isGroupChat) {
 					const priority = mediaTypes.includes(messageType) ? 2 : 1;
-					messageQueue.enqueue(to, doSend, priority).catch((e) => console.error("[queue enqueue error]", e.message));
+					messageQueue
+						.enqueue(to, doSend, priority)
+						.catch((e) => console.error("[queue enqueue error]", e.message));
 					return;
 				} else {
 					await messageQueue.enqueue(to, doSend, 0); // Highest priority for DMs
@@ -171,17 +180,23 @@ const getCommand = async (sock, msg, cache) => {
 
 		// Determine media type field for counting
 		const mediaTypeField =
-			type === "conversation" || type === "extendedTextMessage" ? "texttotal" :
-			type === "imageMessage" ? "imagetotal" :
-			type === "videoMessage" ? "videototal" :
-			type === "stickerMessage" ? "stickertotal" :
-			type === "documentMessage" ? "pdftotal" : null;
+			type === "conversation" || type === "extendedTextMessage"
+				? "texttotal"
+				: type === "imageMessage"
+					? "imagetotal"
+					: type === "videoMessage"
+						? "videototal"
+						: type === "stickerMessage"
+							? "stickertotal"
+							: type === "documentMessage"
+								? "pdftotal"
+								: null;
 
 		if (mediaTypeField) {
 			await Promise.all([
 				member.updateOne(
 					{ _id: updateId },
-					{ $inc: { totalmsg: 1, [mediaTypeField]: 1 }, $set: { username: updateName } }
+					{ $inc: { totalmsg: 1, [mediaTypeField]: 1 }, $set: { username: updateName } },
 				),
 				createMembersData(updateId, updateName),
 			]).catch((e) => console.error("[member update error]", e.message));
@@ -194,18 +209,21 @@ const getCommand = async (sock, msg, cache) => {
 							{
 								$inc: { "members.$.count": 1, [`members.$.${mediaTypeField}`]: 1 },
 								$set: { "members.$.name": updateName },
-							}
+							},
 						);
 						if (r.matchedCount === 0) {
 							const newMember = {
-								id: updateId, name: updateName, count: 1,
-								texttotal: 0, imagetotal: 0, videototal: 0, stickertotal: 0, pdftotal: 0,
+								id: updateId,
+								name: updateName,
+								count: 1,
+								texttotal: 0,
+								imagetotal: 0,
+								videototal: 0,
+								stickertotal: 0,
+								pdftotal: 0,
 							};
 							newMember[mediaTypeField] = 1;
-							await group.updateOne(
-								{ _id: from },
-								{ $push: { members: newMember } }
-							);
+							await group.updateOne({ _id: from }, { $push: { members: newMember } });
 						}
 						await group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } });
 					} catch (e) {
@@ -218,16 +236,21 @@ const getCommand = async (sock, msg, cache) => {
 		// Log text messages to chat history for gemini summarization
 		// Skip: commands (prefix), eva triggers, bot's own messages
 		const isEvaTrigger = body.trim().split(" ")[0].toLowerCase() === "eva";
-		if (isGroup && body && !isCmd && !isEvaTrigger && !msg.key.fromMe && (type === "conversation" || type === "extendedTextMessage")) {
+		if (
+			isGroup &&
+			body &&
+			!isCmd &&
+			!isEvaTrigger &&
+			!msg.key.fromMe &&
+			(type === "conversation" || type === "extendedTextMessage")
+		) {
 			setImmediate(async () => {
 				try {
 					let replyTo = null;
 					const ctx = msg.message?.extendedTextMessage?.contextInfo;
 					if (ctx?.quotedMessage) {
 						const qText =
-							ctx.quotedMessage.conversation ||
-							ctx.quotedMessage.extendedTextMessage?.text ||
-							"";
+							ctx.quotedMessage.conversation || ctx.quotedMessage.extendedTextMessage?.text || "";
 						const qSender = ctx.participant || "";
 						let qName = "";
 						if (qSender) {
@@ -243,7 +266,7 @@ const getCommand = async (sock, msg, cache) => {
 							mentionedJids.map(async (jid) => {
 								const memberData = await getMemberData(jid).catch(() => null);
 								return { jid, name: memberData?.username || jid.split("@")[0] };
-							})
+							}),
 						);
 					}
 					await saveChatMessage(from, senderJid, updateName || msg.pushName || "", body, replyTo, mentions);
@@ -266,11 +289,13 @@ const getCommand = async (sock, msg, cache) => {
 					groupMetadata = await Promise.race([
 						sock.groupMetadata(from),
 						new Promise((_, reject) =>
-							setTimeout(() => reject(new Error("Group metadata fetch timeout")), 2000)
+							setTimeout(() => reject(new Error("Group metadata fetch timeout")), 2000),
 						),
 					]);
 					cache.set(from + ":groupMetadata", groupMetadata, 10 * 60); // 10 min
-					createGroupData(from, groupMetadata).catch((e) => console.error("[createGroupData error]", e.message));
+					createGroupData(from, groupMetadata).catch((e) =>
+						console.error("[createGroupData error]", e.message),
+					);
 				} catch (e) {
 					console.error("Group metadata fetch failed:", e.message);
 					groupMetadata = { participants: [] };
@@ -357,12 +382,12 @@ const getCommand = async (sock, msg, cache) => {
 				notifyOwner(
 					sock,
 					`🤖 <b>Command Used</b>\n` +
-					`━━━━━━━━━━━━━━\n` +
-					`📌 <b>Command:</b> <code>chat</code>\n` +
-					`👤 <b>User:</b> ${msg.pushName}\n` +
-					`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
-					`💬 <b>In:</b> ${groupMetadata.subject}`,
-					msg
+						`━━━━━━━━━━━━━━\n` +
+						`📌 <b>Command:</b> <code>chat</code>\n` +
+						`👤 <b>User:</b> ${msg.pushName}\n` +
+						`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
+						`💬 <b>In:</b> ${groupMetadata.subject}`,
+					msg,
 				);
 			}
 		}
@@ -398,17 +423,17 @@ const getCommand = async (sock, msg, cache) => {
 			"[name]",
 			msg.pushName,
 			"[IN]",
-			isGroup ? groupMetadata.subject : "Directs"
+			isGroup ? groupMetadata.subject : "Directs",
 		);
 		notifyOwner(
 			sock,
 			`🤖 <b>Command Used</b>\n` +
-			`━━━━━━━━━━━━━━\n` +
-			`📌 <b>Command:</b> <code>${command}</code>\n` +
-			`👤 <b>User:</b> ${msg.pushName}\n` +
-			`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
-			`💬 <b>In:</b> ${isGroup ? groupMetadata.subject : "Direct Message"}`,
-			msg
+				`━━━━━━━━━━━━━━\n` +
+				`📌 <b>Command:</b> <code>${command}</code>\n` +
+				`👤 <b>User:</b> ${msg.pushName}\n` +
+				`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
+				`💬 <b>In:</b> ${isGroup ? groupMetadata.subject : "Direct Message"}`,
+			msg,
 		);
 		if (command != "") {
 			const botData = await getBotData();
@@ -434,6 +459,17 @@ const getCommand = async (sock, msg, cache) => {
 				}
 			}
 		}
+		// Track command usage for admin dashboard
+		const { pushActivity, cmdUsage } = await import("./adminEvents.js");
+		if (commandsPublic[command] || commandsMembers[command] || commandsAdmins[command] || commandsOwners[command]) {
+			cmdUsage.set(command, (cmdUsage.get(command) || 0) + 1);
+			pushActivity("command_used", {
+				cmd: command,
+				from: senderJid,
+				name: msg.pushName || senderJid.split("@")[0],
+				group: isGroup ? groupMetadata?.subject || "Group" : "DM",
+			});
+		}
 		if (commandsPublic[command]) {
 			const t0 = Date.now();
 			const result = await commandsPublic[command](sock, msg, from, args, msgInfoObj);
@@ -449,7 +485,7 @@ const getCommand = async (sock, msg, cache) => {
 				result = await sendMessageWTyping(
 					from,
 					{ text: "```❎ This command is only applicable in Groups!```" },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			}
 			const t1 = Date.now();
@@ -462,7 +498,7 @@ const getCommand = async (sock, msg, cache) => {
 				result = await sendMessageWTyping(
 					from,
 					{ text: "```❎ This command is only applicable in Groups!```" },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			} else if (isGroupAdmin || moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
 				result = await commandsAdmins[command](sock, msg, from, args, msgInfoObj);
@@ -470,7 +506,7 @@ const getCommand = async (sock, msg, cache) => {
 				result = await sendMessageWTyping(
 					from,
 					{ text: "```🤭 kya matlab tum admin nhi ho.```" },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			}
 			const t1 = Date.now();
@@ -485,7 +521,7 @@ const getCommand = async (sock, msg, cache) => {
 				result = await sendMessageWTyping(
 					from,
 					{ text: "```🤭 kya matlab tum mere owner nhi ho.```" },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			}
 			const t1 = Date.now();
@@ -495,7 +531,7 @@ const getCommand = async (sock, msg, cache) => {
 			return sendMessageWTyping(
 				from,
 				{ text: "```" + msg.pushName + " !!Use " + prefix + "help ```" },
-				{ quoted: msg }
+				{ quoted: msg },
 			);
 		}
 	} catch (error) {
@@ -511,8 +547,8 @@ const getCommand = async (sock, msg, cache) => {
 					messageType: Object.keys(msg?.message || {})[0],
 				},
 				null,
-				2
-			)
+				2,
+			),
 		);
 		if (sock && sock.user && msg && msg.key && msg.key.remoteJid) {
 			setTimeout(async () => {

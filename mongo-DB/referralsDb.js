@@ -31,17 +31,14 @@ const createReferral = async (companyName, userJid, userName) => {
 			if (userFoundIn._id === lowerName) {
 				return { created: false, reason: "already_registered" };
 			}
-			await referrals.updateOne(
-				{ _id: userFoundIn._id },
-				{ $pull: { users: { jid: userJid } } }
-			);
+			await referrals.updateOne({ _id: userFoundIn._id }, { $pull: { users: { jid: userJid } } });
 		}
 
 		let existing = await referrals.findOne({ _id: lowerName });
 		if (existing) {
 			await referrals.updateOne(
 				{ _id: lowerName },
-				{ $push: { users: { jid: userJid, name: userName, timestamp: new Date() } } }
+				{ $push: { users: { jid: userJid, name: userName, timestamp: new Date() } } },
 			);
 		} else {
 			await referrals.insertOne({
@@ -80,7 +77,7 @@ const updateReferral = async (companyName, newCompanyName) => {
 					_id: newCompanyName.toLowerCase(),
 					companyName: newCompanyName,
 				},
-			}
+			},
 		);
 		return { success: true };
 	} catch (err) {
@@ -132,16 +129,13 @@ const updateUserRef = async (userJid, newCompanyName) => {
 			return { success: false, reason: "same_company" };
 		}
 
-		await referrals.updateOne(
-			{ _id: oldCompany._id },
-			{ $pull: { users: { jid: userJid } } }
-		);
+		await referrals.updateOne({ _id: oldCompany._id }, { $pull: { users: { jid: userJid } } });
 
 		let newCompany = await referrals.findOne({ _id: newCompanyName.toLowerCase() });
 		if (newCompany) {
 			await referrals.updateOne(
 				{ _id: newCompanyName.toLowerCase() },
-				{ $push: { users: { jid: userJid, name: userFound.name, timestamp: new Date() } } }
+				{ $push: { users: { jid: userJid, name: userFound.name, timestamp: new Date() } } },
 			);
 		} else {
 			await referrals.insertOne({
@@ -158,4 +152,13 @@ const updateUserRef = async (userJid, newCompanyName) => {
 	}
 };
 
-export { getReferralData, createReferral, getAllReferrals, updateReferral, deleteReferral, searchReferrals, updateUserRef, referrals };
+export {
+	getReferralData,
+	createReferral,
+	getAllReferrals,
+	updateReferral,
+	deleteReferral,
+	searchReferrals,
+	updateUserRef,
+	referrals,
+};

@@ -1,8 +1,8 @@
 /**
  * View MongoDB Auth State Statistics Script
- * 
+ *
  * This script shows statistics about the authentication data stored in MongoDB.
- * 
+ *
  * Usage: node scripts/viewAuthStats.js
  */
 

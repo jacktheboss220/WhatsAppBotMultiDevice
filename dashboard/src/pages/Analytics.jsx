@@ -1,26 +1,64 @@
 import { useEffect, useState } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie, Legend,
-} from 'recharts'
+  Chart as ChartJS,
+  ArcElement,
+  RadialLinearScale,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+import { PolarArea, Bar } from 'react-chartjs-2'
 import { getAnalytics } from '../lib/api.js'
 
-const CHART_TOOLTIP = {
-  contentStyle: {
-    background: '#0d1420',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 8,
-    color: '#f1f5f9',
-    fontSize: 12,
-    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-  },
-  itemStyle:    { color: '#e2e8f0' },
-  labelStyle:   { color: '#94a3b8', marginBottom: 4 },
-  wrapperStyle: { outline: 'none' },
-  cursor:       { fill: 'rgba(255,255,255,0.04)' },
+ChartJS.register(ArcElement, RadialLinearScale, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
+
+const PIE_COLORS  = ['#0ea5e9', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+const BAR_COLORS  = ['#0ea5e9', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#eff6ff',
+                     '#0ea5e9', '#60a5fa', '#93c5fd', '#bfdbfe']
+
+const TOOLTIP = {
+  backgroundColor: '#0d1420',
+  borderColor: 'rgba(255,255,255,0.12)',
+  borderWidth: 1,
+  titleColor: '#94a3b8',
+  bodyColor: '#e2e8f0',
+  padding: 10,
+  cornerRadius: 8,
+  boxWidth: 8,
+  boxHeight: 8,
 }
-const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
-const BAR_COLORS = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#eff6ff']
+
+const POLAR_OPTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 10, padding: 14 } },
+    tooltip: { ...TOOLTIP, callbacks: { label: ctx => ` ${ctx.parsed.r.toLocaleString()} Messages` } },
+  },
+  scales: {
+    r: {
+      grid: { color: 'rgba(255,255,255,0.07)' },
+      ticks: { color: '#4b5d72', font: { size: 9 }, backdropColor: 'transparent', maxTicksLimit: 4 },
+      angleLines: { color: 'rgba(255,255,255,0.07)' },
+    },
+  },
+}
+
+const BAR_OPTS = {
+  indexAxis: 'y',
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: { ...TOOLTIP, callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} msgs` } },
+  },
+  scales: {
+    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#4b5d72', font: { size: 11 } }, border: { display: false } },
+    y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } }, border: { display: false } },
+  },
+}
 
 function Stat({ label, value, color }) {
   return (
@@ -59,6 +97,26 @@ export default function Analytics() {
     { name: 'PDF',     value: typeBreakdown.pdf },
   ].filter(d => d.value > 0)
 
+  const polarData = {
+    labels: typeData.map(d => d.name),
+    datasets: [{
+      data: typeData.map(d => d.value),
+      backgroundColor: PIE_COLORS.map(c => c + 'bb'),
+      borderColor: PIE_COLORS,
+      borderWidth: 1.5,
+    }],
+  }
+
+  const groupBarData = {
+    labels: topGroups.map(g => g.name),
+    datasets: [{ data: topGroups.map(g => g.messages), backgroundColor: BAR_COLORS, borderRadius: 4, barThickness: 18 }],
+  }
+
+  const memberBarData = {
+    labels: topMembers.map(m => m.name),
+    datasets: [{ data: topMembers.map(m => m.messages), backgroundColor: '#10b981', borderRadius: 4, barThickness: 18 }],
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -68,30 +126,22 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* Summary stats */}
       <div className="stats-grid" style={{ marginBottom: 20 }}>
-        <Stat label="Total Messages"  value={totalMessages} color="var(--accent)" />
-        <Stat label="Active Groups"   value={activeGroups}  color="var(--success)" />
-        <Stat label="Blocked Members" value={blockedMembers} color="var(--danger)" />
+        <Stat label="Total Messages"  value={totalMessages} color="#3b82f6" />
+        <Stat label="Active Groups"   value={activeGroups}  color="#10b981" />
+        <Stat label="Blocked Members" value={blockedMembers} color="#ef4444" />
         <Stat label="Total Groups"    value={totalGroups} />
         <Stat label="Total Members"   value={totalMembers} />
         <Stat label="Avg Msgs/Member" value={totalMembers ? Math.round(totalMessages / totalMembers) : 0} />
       </div>
 
-      {/* Type breakdown + Top groups */}
       <div className="charts-row" style={{ marginBottom: 14 }}>
         <div className="chart-card">
           <p className="chart-title">Message Type Distribution</p>
           {typeData.length ? (
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie data={typeData} cx="50%" cy="46%" innerRadius={65} outerRadius={100} dataKey="value" paddingAngle={3}>
-                  {typeData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip {...CHART_TOOLTIP} formatter={v => [v.toLocaleString(), 'Messages']} />
-                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <div style={{ height: 'clamp(260px, 32vh, 560px)' }}>
+              <PolarArea data={polarData} options={POLAR_OPTS} />
+            </div>
           ) : <p className="empty-state">No message data yet.</p>}
         </div>
 
@@ -109,8 +159,8 @@ export default function Analytics() {
               return (
                 <div key={label}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
-                    <span style={{ color: 'var(--text-soft)' }}>{icon} {label}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{value.toLocaleString()} ({pct}%)</span>
+                    <span style={{ color: '#94a3b8' }}>{icon} {label}</span>
+                    <span style={{ color: '#4b5d72' }}>{value.toLocaleString()} ({pct}%)</span>
                   </div>
                   <div className="progress-bar">
                     <div className="progress-fill" style={{ width: `${pct}%`, background: PIE_COLORS[i] }} />
@@ -122,35 +172,21 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* Top Groups */}
       <div className="chart-card" style={{ marginBottom: 14 }}>
         <p className="chart-title">Top 10 Groups by Messages</p>
         {topGroups.length ? (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={topGroups} layout="vertical" margin={{ left: 0, right: 24 }}>
-              <XAxis type="number" tick={{ fill: '#4b5d72', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip {...CHART_TOOLTIP} formatter={v => [v.toLocaleString(), 'Messages']} />
-              <Bar dataKey="messages" radius={[0, 4, 4, 0]} maxBarSize={20}>
-                {topGroups.map((_, i) => <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ height: `clamp(${Math.max(topGroups.length * 38 + 24, 300)}px, 42vh, 700px)` }}>
+            <Bar data={groupBarData} options={BAR_OPTS} />
+          </div>
         ) : <p className="empty-state">No group data yet.</p>}
       </div>
 
-      {/* Top Members */}
       <div className="chart-card">
         <p className="chart-title">Top 10 Members by Messages</p>
         {topMembers.length ? (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={topMembers} layout="vertical" margin={{ left: 0, right: 24 }}>
-              <XAxis type="number" tick={{ fill: '#4b5d72', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip {...CHART_TOOLTIP} formatter={v => [v.toLocaleString(), 'Messages']} />
-              <Bar dataKey="messages" fill="var(--success)" radius={[0, 4, 4, 0]} maxBarSize={20} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ height: `clamp(${Math.max(topMembers.length * 38 + 24, 300)}px, 42vh, 700px)` }}>
+            <Bar data={memberBarData} options={BAR_OPTS} />
+          </div>
         ) : <p className="empty-state">No member data yet.</p>}
       </div>
     </div>

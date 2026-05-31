@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { getCommands, toggleCommand } from '../lib/api.js'
+import { getCommands, toggleCommand, getCommandStats } from '../lib/api.js'
 import { useToast } from '../App.jsx'
 
 const TYPE_FILTERS = ['all', 'public', 'group', 'admin', 'owner']
@@ -7,18 +7,22 @@ const TYPE_FILTERS = ['all', 'public', 'group', 'admin', 'owner']
 export default function Commands() {
   const toast = useToast()
   const [all,     setAll]     = useState([])
+  const [stats,   setStats]   = useState({})
   const [loading, setLoading] = useState(true)
   const [filter,  setFilter]  = useState('all')
   const [search,  setSearch]  = useState('')
 
   useEffect(() => {
-    getCommands()
-      .then(d => setAll([
-        ...(d.publicCommands || []).map(c => ({ ...c, type: 'public' })),
-        ...(d.groupCommands  || []).map(c => ({ ...c, type: 'group' })),
-        ...(d.adminCommands  || []).map(c => ({ ...c, type: 'admin' })),
-        ...(d.ownerCommands  || []).map(c => ({ ...c, type: 'owner' })),
-      ]))
+    Promise.all([getCommands(), getCommandStats().catch(() => ({ stats: {} }))])
+      .then(([d, s]) => {
+        setStats(s.stats || {})
+        setAll([
+          ...(d.publicCommands || []).map(c => ({ ...c, type: 'public' })),
+          ...(d.groupCommands  || []).map(c => ({ ...c, type: 'group' })),
+          ...(d.adminCommands  || []).map(c => ({ ...c, type: 'admin' })),
+          ...(d.ownerCommands  || []).map(c => ({ ...c, type: 'owner' })),
+        ])
+      })
       .catch(() => toast('Failed to load commands', false))
       .finally(() => setLoading(false))
   }, [])
@@ -52,6 +56,7 @@ export default function Commands() {
 
   const enabledCount  = all.filter(c => !c.disabledGlobally).length
   const disabledCount = all.filter(c =>  c.disabledGlobally).length
+  const maxUses = Math.max(1, ...Object.values(stats))
 
   return (
     <div>
@@ -95,16 +100,28 @@ export default function Commands() {
                   <th>Type</th>
                   <th>Description</th>
                   <th>Usage</th>
+                  <th>Uses</th>
                   <th>Enabled</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map(c => (
+                {rows.map(c => {
+                  const uses = c.cmd.reduce((acc, k) => acc + (stats[k] || 0), 0)
+                  const pct  = Math.round((uses / maxUses) * 100)
+                  return (
                   <tr key={c.cmd[0]} className={c.disabledGlobally ? 'row-disabled' : ''}>
                     <td><strong style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{c.cmd.join(', ')}</strong></td>
                     <td><span className={`badge badge-${c.type}`}>{c.type}</span></td>
                     <td style={{ color: 'var(--text-soft)', maxWidth: 280 }}>{c.desc || '—'}</td>
                     <td><code>{c.usage || c.cmd[0]}</code></td>
+                    <td style={{ minWidth: 80 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div className="progress-bar" style={{ flex: 1, height: 4 }}>
+                          <div className="progress-fill" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
+                        </div>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', minWidth: 24, textAlign: 'right' }}>{uses || 0}</span>
+                      </div>
+                    </td>
                     <td>
                       <label className="toggle">
                         <input
@@ -116,7 +133,7 @@ export default function Commands() {
                       </label>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           ) : (

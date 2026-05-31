@@ -9,6 +9,8 @@ import Members from './pages/Members.jsx'
 import Analytics from './pages/Analytics.jsx'
 import Broadcast from './pages/Broadcast.jsx'
 import Health from './pages/Health.jsx'
+import Logs from './pages/Logs.jsx'
+import DirectMessage from './pages/DirectMessage.jsx'
 
 // ── Contexts ───────────────────────────────────────────────────────────────────
 export const ToastCtx = createContext(null)
@@ -80,6 +82,8 @@ export default function App() {
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="broadcast" element={<Broadcast />} />
                     <Route path="health" element={<Health />} />
+                    <Route path="logs" element={<Logs />} />
+                    <Route path="dm" element={<DirectMessage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Layout>

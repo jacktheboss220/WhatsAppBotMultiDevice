@@ -6,44 +6,33 @@ services:
         container_name: whatsapp-bot
         restart: unless-stopped
         ports:
-            - "8080:8080"
-        # Environment variables will be set in the Koyeb dashboard, not from .env
-        # env_file:
-        #   - .env
+            - "${PORT:-8080}:${PORT:-8080}"
+        env_file:
+            - .env
         environment:
+            # These override .env if set — safe defaults for Docker
             - NODE_ENV=production
-            - PORT=8080
+            - PORT=${PORT:-8080}
+            - FFMPEG_PATH=ffmpeg
+            - YTDL_EXTRACTOR_ARGS=youtube:player_client=default,web
         volumes:
-            # Persist temporary files
-            # For persistent storage, use Koyeb's volume feature or cloud storage
-            # - ./temp:/app/temp
-            # Persist performance metrics
-            - ./performance-metrics.json:/app/performance-metrics.json
+            - bot-temp:/app/temp
+            - bot-metrics:/app/performance-metrics.json
         networks:
             - bot-network
-        # Optional: Add memory limits
         mem_limit: 1g
         mem_reservation: 512m
-
-    # Optional: Add MongoDB if you don't have an external instance
-    # Uncomment the section below if you need a local MongoDB
-    # mongodb:
-    #   image: mongo:latest
-    #   container_name: whatsapp-bot-mongodb
-    #   restart: unless-stopped
-    #   ports:
-    #     - "27017:27017"
-    #   environment:
-    #     - MONGO_INITDB_ROOT_USERNAME=admin
-    #     - MONGO_INITDB_ROOT_PASSWORD=changeme
-    #   volumes:
-    #     - mongodb-data:/data/db
-    #   networks:
-    #     - bot-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
 
 networks:
     bot-network:
         driver: bridge
-# Uncomment if using local MongoDB
-# volumes:
-#   mongodb-data:
+
+volumes:
+    bot-temp:
+    bot-metrics:

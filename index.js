@@ -3,6 +3,17 @@ import getDate from "./functions/getDate.js";
 import { normalizeJID } from "./functions/lidUtils.js";
 import adminRouter from "./routes/admin.js";
 import messageQueue from "./functions/messageQueue.js";
+import { pushLog, subscribe as subscribeAdminEvents, getLogs, getActivity } from "./functions/adminEvents.js";
+
+// ── Console interceptor — feeds log ring buffer ───────────────────────────────
+const _log   = console.log.bind(console);
+const _info  = console.info.bind(console);
+const _warn  = console.warn.bind(console);
+const _error = console.error.bind(console);
+console.log   = (...a) => { _log(...a);   pushLog('info',  ...a) };
+console.info  = (...a) => { _info(...a);  pushLog('info',  ...a) };
+console.warn  = (...a) => { _warn(...a);  pushLog('warn',  ...a) };
+console.error = (...a) => { _error(...a); pushLog('error', ...a) };
 
 import cors from "cors";
 import express from "express";
@@ -11,6 +22,8 @@ import bodyParser from "body-parser";
 import { WebSocketServer, WebSocket } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,8 +38,8 @@ app.use(
 );
 
 if (!process.env.SESSION_SECRET) {
-	console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
-	process.exit(1);
+  console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
+  process.exit(1);
 }
 
 app.use(
@@ -37,6 +50,24 @@ app.use(
 		cookie: { secure: false, httpOnly: true, maxAge: 8 * 60 * 60 * 1000 }, // 8 hours
 	})
 );
+
+// ── Passport / Google OAuth ────────────────────────────────────────────────────
+const baseUrl = (process.env.HOST_URL || "http://localhost:8000").replace(/\/$/, "");
+passport.use(
+	new GoogleStrategy(
+		{
+			clientID:     process.env.GOOGLE_CLIENT_ID,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+			callbackURL:  `${baseUrl}/auth/google/callback`,
+		},
+		(_accessToken, _refreshToken, profile, done) => done(null, profile)
+	)
+);
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(
@@ -89,9 +120,11 @@ const wss = new WebSocketServer({
 	perMessageDeflate: true,
 });
 
+// ── Bot connection state ───────────────────────────────────────────────────────
+// Persists across sock reconnections via the onNewSock hook in connection.js
 let botConnected = false;
-let lastQR = null;   // Last QR code received; replayed to late-joining browser clients
-let lastQRTimer = null;   // Timer to clear lastQR after it expires (~60 s)
+let lastQR       = null;   // Last QR code received; replayed to late-joining browser clients
+let lastQRTimer  = null;   // Timer to clear lastQR after it expires (~60 s)
 
 function broadcast(payload) {
 	const msg = JSON.stringify(payload);
@@ -100,6 +133,9 @@ function broadcast(payload) {
 	});
 }
 
+// ── Called for every new sock — including reconnects ─────────────────────────
+// This is the fix for the stale-sock bug: we always attach our listener to
+// whichever sock is currently live, and always keep app.locals.sock current.
 function handleNewSock(sock) {
 	app.locals.sock = sock; // always up-to-date reference for admin routes
 
@@ -129,12 +165,19 @@ function handleNewSock(sock) {
 	});
 }
 
+// Register hook before calling startSock so it fires for the very first sock too
 onNewSock(handleNewSock);
 
+// Forward admin events (logs, activity) to all connected WS clients
+subscribeAdminEvents(event => broadcast(event));
+
+// Expose startSock so admin routes can trigger a reconnect without restarting the process
 app.locals.reconnect = () => startSock("manual-reconnect");
 
 // ── WebSocket server ──────────────────────────────────────────────────────────
 wss.on("connection", (ws) => {
+	// Tell newly connected browser clients the current state immediately.
+	// Also check sock.user as a live fallback in case botConnected is stale.
 	const isConnected = botConnected || app.locals.sock?.user != null;
 	if (isConnected) {
 		botConnected = true; // sync flag
@@ -144,11 +187,15 @@ wss.on("connection", (ws) => {
 		ws.send(JSON.stringify({ type: "qr", qr: lastQR }));
 	}
 
+	// Replay recent logs + activity to newly connected clients
+	ws.send(JSON.stringify({ type: 'log_snapshot',      logs:     getLogs(100) }));
+	ws.send(JSON.stringify({ type: 'activity_snapshot', activity: getActivity() }));
+
 	const heartbeat = setInterval(() => {
 		if (ws.readyState === WebSocket.OPEN) ws.ping();
 	}, 30_000);
 
-	ws.on("pong", () => { });
+	ws.on("pong", () => {});
 
 	ws.on("message", async (raw) => {
 		try {
@@ -161,8 +208,10 @@ wss.on("connection", (ws) => {
 				ws.send(JSON.stringify({ type: "error", error: "Message too long" }));
 				return;
 			}
+			// Always use the live sock reference (fixes stale-sock bug for messages too)
 			const sock = app.locals.sock;
-			await sock.sendMessage(to + "@s.whatsapp.net", { text: message });
+			const jid = to + "@s.whatsapp.net";
+			await messageQueue.enqueue(jid, () => sock.sendMessage(jid, { text: message }), 0);
 			console.log("Message sent to", to, ":", message);
 			ws.send(JSON.stringify({ type: "success", success: "Message sent" }));
 		} catch (err) {
@@ -178,10 +227,12 @@ wss.on("connection", (ws) => {
 // ── Bot start ─────────────────────────────────────────────────────────────────
 async function startServer() {
 	await startSock("start");
+	// handleNewSock() is called by the onNewSock hook inside connection.js,
+	// so app.locals.sock and connection.update listener are both set up there.
+
 	app.post("/send", async (req, res) => {
 		const { to, message } = req.body;
 		if (!to || !message) {
-			performanceMonitor.incrementErrorCount();
 			return res.status(400).send({ message: "Invalid request" });
 		}
 
@@ -189,16 +240,14 @@ async function startServer() {
 			const sock = app.locals.sock; // live reference
 			if (Array.isArray(to)) {
 				const jids = await Promise.all(to.map((r) => normalizeJID(sock, r)));
-				await Promise.all(jids.map((jid) => sock.sendMessage(jid, { text: message })));
-				console.log("Message sent to multiple recipients");
-				performanceMonitor.incrementCommandCount();
-				return res.send({ message: "Messages sent" });
+				await Promise.all(jids.map((jid) => messageQueue.enqueue(jid, () => sock.sendMessage(jid, { text: message }), 0)));
+				console.log("Message queued for multiple recipients");
+				return res.send({ message: "Messages queued" });
 			} else {
 				const recipientJid = await normalizeJID(sock, to);
-				await sock.sendMessage(recipientJid, { text: message });
-				console.log("Message sent to", to, ":", message);
-				performanceMonitor.incrementCommandCount();
-				return res.send({ message: "Message sent" });
+				await messageQueue.enqueue(recipientJid, () => sock.sendMessage(recipientJid, { text: message }), 0);
+				console.log("Message queued for:", to);
+				return res.send({ message: "Message queued" });
 			}
 		} catch (error) {
 			console.error("Error sending message:", error);
@@ -231,4 +280,4 @@ function gracefulShutdown(signal) {
 }
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGINT",  () => gracefulShutdown("SIGINT"));

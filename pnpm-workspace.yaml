@@ -1,0 +1,11 @@
+packages:
+  - dashboard
+
+allowBuilds:
+  "@google/genai": false
+  baileys: false
+  esbuild: true
+  ffmpeg-static: false
+  protobufjs: false
+  sharp: false
+  youtube-dl-exec: false

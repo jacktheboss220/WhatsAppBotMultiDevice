@@ -22,8 +22,8 @@ function requireAdmin(req, res, next) {
 router.get("/api/status", (req, res) => {
 	const sock = req.app.locals.sock;
 	res.json({
-		connected: !!sock?.user,
-		registered: !!sock?.authState?.creds?.registered,
+		connected: !!(sock?.user),
+		registered: !!(sock?.authState?.creds?.registered),
 	});
 });
 
@@ -37,15 +37,12 @@ router.post("/api/pair", async (req, res) => {
 	if (!sock) return res.status(503).json({ error: "Bot is not ready yet. Try again in a moment." });
 
 	if (sock.authState?.creds?.registered) {
-		return res
-			.status(400)
-			.json({ error: "Bot is already logged in. Use the admin panel to manage the connection." });
+		return res.status(400).json({ error: "Bot is already logged in. Use the admin panel to manage the connection." });
 	}
 
 	try {
 		const clean = String(phoneNumber).replace(/\D/g, "");
-		if (clean.length < 7)
-			return res.status(400).json({ error: "Invalid phone number — include country code, digits only." });
+		if (clean.length < 7) return res.status(400).json({ error: "Invalid phone number — include country code, digits only." });
 		const code = await sock.requestPairingCode(clean);
 		res.json({ ok: true, code });
 	} catch (err) {
@@ -56,8 +53,9 @@ router.post("/api/pair", async (req, res) => {
 // ── JSON auth endpoints (used by React app) ────────────────────────────────────
 
 router.get("/api/admin/me", (req, res) => {
-	if (req.session?.isAdmin) return res.json({ authenticated: true });
-	res.status(401).json({ authenticated: false });
+	const googleAuthEnabled = !!req.app.locals.googleAuthEnabled;
+	if (req.session?.isAdmin) return res.json({ authenticated: true, googleAuthEnabled });
+	res.status(401).json({ authenticated: false, googleAuthEnabled });
 });
 
 router.post("/api/admin/login", (req, res) => {
@@ -95,21 +93,24 @@ router.post("/admin/logout", (req, res) => {
 	req.session.destroy(() => res.redirect("/admin/login"));
 });
 
-// ── Google OAuth ───────────────────────────────────────────────────────────────
-router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// ── Google OAuth (only when credentials are configured) ────────────────────────
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+	router.get(
+		"/auth/google",
+		passport.authenticate("google", { scope: ["profile", "email"] })
+	);
 
-router.get(
-	"/auth/google/callback",
-	passport.authenticate("google", {
-		failureRedirect: "/admin/#/login?error=google_failed",
-		failureMessage: true,
-	}),
-	(req, res) => {
-		const email = req.user?.emails?.[0]?.value || "";
-		const allowed = (process.env.GOOGLE_ALLOWED_EMAILS || "").split(",").map((e) => e.trim());
-		if (!allowed.includes(email)) {
-			req.logout(() => {});
-			return res.status(401).send(`<!DOCTYPE html>
+	router.get("/auth/google/callback",
+		passport.authenticate("google", {
+			failureRedirect: "/admin/#/login?error=google_failed",
+			failureMessage: true,
+		}),
+		(req, res) => {
+			const email = req.user?.emails?.[0]?.value || "";
+			const allowed = (process.env.GOOGLE_ALLOWED_EMAILS || "").split(",").map(e => e.trim());
+			if (!allowed.includes(email)) {
+				req.logout(() => {});
+				return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -138,11 +139,12 @@ router.get(
   </div>
 </body>
 </html>`);
+			}
+			req.session.isAdmin = true;
+			res.redirect("/admin/");
 		}
-		req.session.isAdmin = true;
-		res.redirect("/admin/");
-	},
-);
+	);
+}
 
 // ── API: Stats ─────────────────────────────────────────────────────────────────
 router.get("/api/admin/stats", requireAdmin, async (req, res) => {
@@ -176,7 +178,7 @@ router.get("/api/admin/analytics", requireAdmin, async (req, res) => {
 		const topGroups = [...groups]
 			.sort((a, b) => (b.totalMsgCount || 0) - (a.totalMsgCount || 0))
 			.slice(0, 10)
-			.map((g) => ({
+			.map(g => ({
 				name: (g.grpName || g._id).slice(0, 22),
 				messages: g.totalMsgCount || 0,
 				active: g.isBotOn,
@@ -186,7 +188,7 @@ router.get("/api/admin/analytics", requireAdmin, async (req, res) => {
 		const topMembers = [...members]
 			.sort((a, b) => (b.totalmsg || 0) - (a.totalmsg || 0))
 			.slice(0, 10)
-			.map((m) => ({
+			.map(m => ({
 				name: (m.username || m._id.split("@")[0]).slice(0, 22),
 				messages: m.totalmsg || 0,
 			}));
@@ -194,19 +196,19 @@ router.get("/api/admin/analytics", requireAdmin, async (req, res) => {
 		// Message type aggregation
 		const typeBreakdown = members.reduce(
 			(acc, m) => {
-				acc.text += m.texttotal || 0;
-				acc.image += m.imagetotal || 0;
-				acc.video += m.videototal || 0;
+				acc.text    += m.texttotal    || 0;
+				acc.image   += m.imagetotal   || 0;
+				acc.video   += m.videototal   || 0;
 				acc.sticker += m.stickertotal || 0;
-				acc.pdf += m.pdftotal || 0;
+				acc.pdf     += m.pdftotal     || 0;
 				return acc;
 			},
-			{ text: 0, image: 0, video: 0, sticker: 0, pdf: 0 },
+			{ text: 0, image: 0, video: 0, sticker: 0, pdf: 0 }
 		);
 
-		const totalMessages = Object.values(typeBreakdown).reduce((a, b) => a + b, 0);
-		const activeGroups = groups.filter((g) => g.isBotOn).length;
-		const blockedMembers = members.filter((m) => m.isBlock).length;
+		const totalMessages  = Object.values(typeBreakdown).reduce((a, b) => a + b, 0);
+		const activeGroups   = groups.filter(g => g.isBotOn).length;
+		const blockedMembers = members.filter(m => m.isBlock).length;
 
 		res.json({
 			topGroups,
@@ -215,7 +217,7 @@ router.get("/api/admin/analytics", requireAdmin, async (req, res) => {
 			totalMessages,
 			activeGroups,
 			blockedMembers,
-			totalGroups: groups.length,
+			totalGroups:  groups.length,
 			totalMembers: members.length,
 		});
 	} catch (err) {
@@ -228,17 +230,17 @@ router.get("/api/admin/bot/health", requireAdmin, (req, res) => {
 	try {
 		const mem = process.memoryUsage();
 		res.json({
-			uptime: Math.floor(process.uptime()),
+			uptime:      Math.floor(process.uptime()),
 			memory: {
-				heapUsed: mem.heapUsed,
+				heapUsed:  mem.heapUsed,
 				heapTotal: mem.heapTotal,
-				rss: mem.rss,
-				external: mem.external,
+				rss:       mem.rss,
+				external:  mem.external,
 			},
-			connected: !!req.app.locals.sock,
+			connected:   !!req.app.locals.sock,
 			nodeVersion: process.version,
-			pid: process.pid,
-			platform: process.platform,
+			pid:         process.pid,
+			platform:    process.platform,
 		});
 	} catch (err) {
 		res.status(500).json({ error: err.message });
@@ -258,23 +260,22 @@ router.post("/api/admin/broadcast", requireAdmin, async (req, res) => {
 		let jids = targetJids;
 		if (!Array.isArray(jids) || jids.length === 0) {
 			const activeGroups = await group.find({ isBotOn: true }, { projection: { _id: 1 } }).toArray();
-			jids = activeGroups.map((g) => g._id);
+			jids = activeGroups.map(g => g._id);
 		}
 
-		let sent = 0,
-			failed = 0;
+		let sent = 0, failed = 0;
 		for (const jid of jids) {
 			try {
 				await sock.sendMessage(jid, { text: message.trim() });
 				sent++;
 				// Small delay to avoid rate limiting
-				await new Promise((r) => setTimeout(r, 400));
+				await new Promise(r => setTimeout(r, 400));
 			} catch (_) {
 				failed++;
 			}
 		}
 
-		pushActivity("broadcast_sent", { sent, failed, total: jids.length, preview: message.trim().slice(0, 60) });
+		pushActivity('broadcast_sent', { sent, failed, total: jids.length, preview: message.trim().slice(0, 60) });
 		res.json({ ok: true, sent, failed, total: jids.length });
 	} catch (err) {
 		res.status(500).json({ error: err.message });
@@ -306,10 +307,7 @@ router.post("/api/admin/restart", requireAdmin, (req, res) => {
 	setTimeout(async () => {
 		const { spawn } = await import("child_process");
 		const child = spawn(process.execPath, process.argv.slice(1), {
-			cwd: process.cwd(),
-			env: process.env,
-			stdio: "inherit",
-			detached: true,
+			cwd: process.cwd(), env: process.env, stdio: "inherit", detached: true,
 		});
 		child.unref();
 		process.exit(0);
@@ -358,11 +356,7 @@ router.post("/api/admin/clear-auth", requireAdmin, async (req, res) => {
 	try {
 		const authCollection = mdClient.db("MyBotDataDB").collection("AuthState");
 		const result = await authCollection.deleteMany({});
-		res.json({
-			ok: true,
-			deleted: result.deletedCount,
-			message: "Auth cleared. Restart the bot to get a new QR code or pairing code.",
-		});
+		res.json({ ok: true, deleted: result.deletedCount, message: "Auth cleared. Restart the bot to get a new QR code or pairing code." });
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}
@@ -377,9 +371,9 @@ router.get("/api/admin/commands", requireAdmin, async (req, res) => {
 			list.map((c) => ({ ...c, type, disabledGlobally: c.cmd.some((k) => disabled.includes(k)) }));
 		res.json({
 			publicCommands: annotate(cmds.publicCommands, "public"),
-			groupCommands: annotate(cmds.groupCommands, "group"),
-			adminCommands: annotate(cmds.adminCommands, "admin"),
-			ownerCommands: annotate(cmds.ownerCommands, "owner"),
+			groupCommands:  annotate(cmds.groupCommands,  "group"),
+			adminCommands:  annotate(cmds.adminCommands,  "admin"),
+			ownerCommands:  annotate(cmds.ownerCommands,  "owner"),
 		});
 	} catch (err) {
 		res.status(500).json({ error: err.message });
@@ -395,7 +389,7 @@ router.patch("/api/admin/commands/:cmd", requireAdmin, async (req, res) => {
 			await bot.updateOne(
 				{ _id: "bot" },
 				{ $setOnInsert: { youtube_session: "" }, $addToSet: { disabledGlobally: { $each: allKeys } } },
-				{ upsert: true },
+				{ upsert: true }
 			);
 		} else {
 			await bot.updateOne({ _id: "bot" }, { $pullAll: { disabledGlobally: allKeys } });
@@ -470,12 +464,7 @@ router.get("/api/admin/members", requireAdmin, async (req, res) => {
 	const sortDir = order === "asc" ? 1 : -1;
 	try {
 		const [members, total] = await Promise.all([
-			member
-				.find(query)
-				.sort({ [sortField]: sortDir })
-				.skip(skip)
-				.limit(parseInt(limit))
-				.toArray(),
+			member.find(query).sort({ [sortField]: sortDir }).skip(skip).limit(parseInt(limit)).toArray(),
 			member.countDocuments(query),
 		]);
 		res.json({ members, total, page: parseInt(page), limit: parseInt(limit) });
@@ -490,19 +479,16 @@ router.patch("/api/admin/members/:jid", requireAdmin, async (req, res) => {
 	try {
 		if (action === "block") {
 			await member.updateOne({ _id: jid }, { $set: { isBlock: true } });
-			pushActivity("member_blocked", { jid });
+			pushActivity('member_blocked', { jid });
 		} else if (action === "unblock") {
 			await member.updateOne({ _id: jid }, { $set: { isBlock: false } });
-			pushActivity("member_unblocked", { jid });
+			pushActivity('member_unblocked', { jid });
 		} else if (action === "resetWarnings") {
 			await member.updateOne({ _id: jid }, { $set: { warning: [] } });
 		} else if (action === "resetMsgCount") {
-			await member.updateOne(
-				{ _id: jid },
-				{
-					$set: { totalmsg: 0, texttotal: 0, imagetotal: 0, videototal: 0, stickertotal: 0, pdftotal: 0 },
-				},
-			);
+			await member.updateOne({ _id: jid }, {
+				$set: { totalmsg: 0, texttotal: 0, imagetotal: 0, videototal: 0, stickertotal: 0, pdftotal: 0 },
+			});
 		} else {
 			return res.status(400).json({ error: "Unknown action" });
 		}

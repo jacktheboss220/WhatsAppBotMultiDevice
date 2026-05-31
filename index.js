@@ -6,9 +6,9 @@ import messageQueue from "./functions/messageQueue.js";
 import { pushLog, subscribe as subscribeAdminEvents, getLogs, getActivity } from "./functions/adminEvents.js";
 
 // ── Console interceptor — feeds log ring buffer ───────────────────────────────
-const _log   = console.log.bind(console);
-const _info  = console.info.bind(console);
-const _warn  = console.warn.bind(console);
+const _log = console.log.bind(console);
+const _info = console.info.bind(console);
+const _warn = console.warn.bind(console);
 const _error = console.error.bind(console);
 console.log   = (...a) => { _log(...a);   pushLog('info',  ...a) };
 console.info  = (...a) => { _info(...a);  pushLog('info',  ...a) };
@@ -34,12 +34,12 @@ app.use(
 	cors({
 		credentials: true,
 		optionsSuccessStatus: 200,
-	})
+	}),
 );
 
 if (!process.env.SESSION_SECRET) {
-  console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
-  process.exit(1);
+	console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
+	process.exit(1);
 }
 
 app.use(
@@ -48,33 +48,41 @@ app.use(
 		resave: false,
 		saveUninitialized: false,
 		cookie: { secure: false, httpOnly: true, maxAge: 8 * 60 * 60 * 1000 }, // 8 hours
-	})
+	}),
 );
 
 // ── Passport / Google OAuth ────────────────────────────────────────────────────
 const baseUrl = (process.env.HOST_URL || "http://localhost:8000").replace(/\/$/, "");
-passport.use(
-	new GoogleStrategy(
-		{
-			clientID:     process.env.GOOGLE_CLIENT_ID,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-			callbackURL:  `${baseUrl}/auth/google/callback`,
-		},
-		(_accessToken, _refreshToken, profile, done) => done(null, profile)
-	)
-);
+const googleAuthEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+
+if (googleAuthEnabled) {
+	passport.use(
+		new GoogleStrategy(
+			{
+				clientID: process.env.GOOGLE_CLIENT_ID,
+				clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+				callbackURL: `${baseUrl}/auth/google/callback`,
+			},
+			(_accessToken, _refreshToken, profile, done) => done(null, profile),
+		),
+	);
+} else {
+	console.log("Google OAuth disabled — GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set.");
+}
+
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.locals.googleAuthEnabled = googleAuthEnabled;
 
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(
 	express.static(path.join(__dirname, "public"), {
 		maxAge: "1d",
 		etag: false,
-	})
+	}),
 );
 
 // Serve the React dashboard build (public/app/) at /admin
@@ -169,7 +177,7 @@ function handleNewSock(sock) {
 onNewSock(handleNewSock);
 
 // Forward admin events (logs, activity) to all connected WS clients
-subscribeAdminEvents(event => broadcast(event));
+subscribeAdminEvents((event) => broadcast(event));
 
 // Expose startSock so admin routes can trigger a reconnect without restarting the process
 app.locals.reconnect = () => startSock("manual-reconnect");
@@ -188,8 +196,8 @@ wss.on("connection", (ws) => {
 	}
 
 	// Replay recent logs + activity to newly connected clients
-	ws.send(JSON.stringify({ type: 'log_snapshot',      logs:     getLogs(100) }));
-	ws.send(JSON.stringify({ type: 'activity_snapshot', activity: getActivity() }));
+	ws.send(JSON.stringify({ type: "log_snapshot", logs: getLogs(100) }));
+	ws.send(JSON.stringify({ type: "activity_snapshot", activity: getActivity() }));
 
 	const heartbeat = setInterval(() => {
 		if (ws.readyState === WebSocket.OPEN) ws.ping();
@@ -280,4 +288,4 @@ function gracefulShutdown(signal) {
 }
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT",  () => gracefulShutdown("SIGINT"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

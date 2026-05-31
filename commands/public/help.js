@@ -12,7 +12,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	const { publicCommands, groupCommands, adminCommands, ownerCommands, directCommands } = await cmdToText();
 
-	const adminCmd = adminCommands.filter((cmd) => cmd.cmd.includes("admin"));
+	const adminCmd = adminCommands.filter((cmd) => cmd.cmd.includes("admin") || cmd.cmd.some(c => c.startsWith("ref_") || c.startsWith("warning") || c.startsWith("welcome")));
 	const ownerCmd = ownerCommands.filter((cmd) => cmd.cmd.includes("owner"));
 
 	const help = `

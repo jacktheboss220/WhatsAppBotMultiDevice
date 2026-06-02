@@ -6,7 +6,7 @@ A feature-rich WhatsApp bot with a modern React/Vite admin dashboard. Supports d
 
 ## Table of Contents
 
-- [Commands List](#commands-list)
+- [Commands List](#commanjds-list)
 - [Running Locally](#running-the-whatsapp-bot-locally)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)

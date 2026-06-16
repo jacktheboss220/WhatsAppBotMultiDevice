@@ -20,7 +20,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		return sendMessageWTyping(
 			from,
 			{ text: `❌ Wrong URL! Only Instagram posted videos, tv and reels can be downloaded.` },
-			{ quoted: msg }
+			{ quoted: msg },
 		);
 
 	if (urlInstagram.includes("?")) urlInstagram = urlInstagram.split("/?")[0];
@@ -74,7 +74,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						sock.sendMessage(
 							from,
 							{ document: { url: url }, mimetype: detected.mime, fileName: `file.${detected.ext}` },
-							{ quoted: msg }
+							{ quoted: msg },
 						);
 					}
 					await new Promise((resolve) => setTimeout(resolve, 1000));

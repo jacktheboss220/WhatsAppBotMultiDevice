@@ -1,14 +1,14 @@
-import { extractPhoneNumber } from "../../../functions/lidUtils.js";
+import { extractPhoneNumber } from "../../../utils/lid.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { botNumber, sendMessageWTyping, groupAdmins } = msgInfoObj;
+	let { botNumber, sendMessageWTyping, groupAdmins, extendedMessageOriginal } = msgInfoObj;
 
 	try {
-		if (!msg.message.extendedTextMessage) {
+		if (!extendedMessageOriginal) {
 			return sendMessageWTyping(from, { text: `❌ Reply on a message to delete.` }, { quoted: msg });
 		}
 
-		const participant = msg.message.extendedTextMessage.contextInfo.participant;
+		const participant = extendedMessageOriginal.participant;
 		// Use extractPhoneNumber for LID/PN compatibility
 		if (
 			!(
@@ -27,8 +27,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		let options = {
 			remoteJid: from,
 			fromMe: false,
-			id: msg.message.extendedTextMessage.contextInfo.stanzaId,
-			participant: msg.message.extendedTextMessage.contextInfo.participant,
+			id: extendedMessageOriginal.stanzaId,
+			participant: extendedMessageOriginal.participant,
 		};
 
 		if (

@@ -7,8 +7,8 @@
  * Usage: node scripts/clearAuthState.js
  */
 
-import { clearMongoDBAuthState, getAuthStateStats } from "../functions/useMongoDBAuthState.js";
-import mdClient from "../mongodb.js";
+import { clearMongoDBAuthState, getAuthStateStats } from "../core/auth.js";
+import mdClient from "../db/client.js";
 import readline from "readline";
 
 const rl = readline.createInterface({

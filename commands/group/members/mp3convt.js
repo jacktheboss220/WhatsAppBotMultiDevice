@@ -9,10 +9,10 @@ const getRandom = (ext) => {
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { type, content, sendMessageWTyping } = msgInfoObj;
+	const { type, content, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
 
-	if (msg.message.extendedTextMessage) {
-		msg["message"] = msg.message.extendedTextMessage.contextInfo.quotedMessage;
+	if (extendedMessageOriginal) {
+		msg["message"] = extendedMessageOriginal.quotedMessage;
 	}
 
 	const isMedia = type === "imageMessage" || type === "videoMessage";

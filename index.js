@@ -1,23 +1,55 @@
 import startSock, { onNewSock } from "./connection.js";
-import getDate from "./functions/getDate.js";
-import { normalizeJID } from "./functions/lidUtils.js";
+import { initBullQueue } from "./queue/bullQueue.js";
+import { startReminderScheduler } from "./utils/reminderScheduler.js";
+import getDate from "./utils/date.js";
+import { normalizeJID } from "./utils/lid.js";
 import adminRouter from "./routes/admin.js";
-import messageQueue from "./functions/messageQueue.js";
-import { pushLog, subscribe as subscribeAdminEvents, getLogs, getActivity } from "./functions/adminEvents.js";
+import messageQueue from "./queue/messageQueue.js";
+import { pushLog, subscribe as subscribeAdminEvents, getLogs, getActivity } from "./notify/adminEvents.js";
 
-// ── Console interceptor — feeds log ring buffer ───────────────────────────────
-const _log = console.log.bind(console);
-const _info = console.info.bind(console);
-const _warn = console.warn.bind(console);
+// ── Console interceptor — feeds log ring buffer + deduplication ──────────────
+const _log   = console.log.bind(console);
+const _info  = console.info.bind(console);
+const _warn  = console.warn.bind(console);
 const _error = console.error.bind(console);
-console.log   = (...a) => { _log(...a);   pushLog('info',  ...a) };
-console.info  = (...a) => { _info(...a);  pushLog('info',  ...a) };
+
+const _SESSION_SPAM = ['Closing session:', 'Removing old closed session:'];
+const _DEDUP_ONCE   = new Set(); // messages shown only once per run
+
+function _dedup(msg) {
+	const ONCE_PREFIXES = [
+		'IMPORTANT! Eviction policy',  // BullMQ Redis warning (prints 3x)
+	];
+	const key = ONCE_PREFIXES.find(p => msg.startsWith(p));
+	if (!key) return false;
+	if (_DEDUP_ONCE.has(key)) return true; // suppress
+	_DEDUP_ONCE.add(key);
+	return false; // allow first occurrence
+}
+
+// Suppress "Credentials saved to MongoDB" within 10s of startup (creds flush storm)
+let _startupTime = Date.now();
+function _suppressStartupNoise(msg) {
+	if (msg === '💾 Credentials saved to MongoDB' && Date.now() - _startupTime < 10000) return true;
+	return false;
+}
+
+console.log   = (...a) => {
+	const s = String(a[0]);
+	if (_dedup(s) || _suppressStartupNoise(s)) return;
+	_log(...a); pushLog('info', ...a);
+};
+console.info  = (...a) => {
+	if (_SESSION_SPAM.some(s => String(a[0]).startsWith(s))) return;
+	_info(...a); pushLog('info', ...a);
+};
 console.warn  = (...a) => { _warn(...a);  pushLog('warn',  ...a) };
 console.error = (...a) => { _error(...a); pushLog('error', ...a) };
 
 import cors from "cors";
 import express from "express";
 import session from "express-session";
+import MongoStore from "connect-mongo";
 import bodyParser from "body-parser";
 import { WebSocketServer, WebSocket } from "ws";
 import path from "path";
@@ -34,12 +66,12 @@ app.use(
 	cors({
 		credentials: true,
 		optionsSuccessStatus: 200,
-	}),
+	})
 );
 
 if (!process.env.SESSION_SECRET) {
-	console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
-	process.exit(1);
+  console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
+  process.exit(1);
 }
 
 app.use(
@@ -47,8 +79,9 @@ app.use(
 		secret: process.env.SESSION_SECRET,
 		resave: false,
 		saveUninitialized: false,
-		cookie: { secure: false, httpOnly: true, maxAge: 8 * 60 * 60 * 1000 }, // 8 hours
-	}),
+		store: MongoStore.create({ mongoUrl: process.env.MONGODB_KEY, ttl: 8 * 60 * 60 }),
+		cookie: { secure: false, httpOnly: true, maxAge: 8 * 60 * 60 * 1000 },
+	})
 );
 
 // ── Passport / Google OAuth ────────────────────────────────────────────────────
@@ -59,12 +92,12 @@ if (googleAuthEnabled) {
 	passport.use(
 		new GoogleStrategy(
 			{
-				clientID: process.env.GOOGLE_CLIENT_ID,
+				clientID:     process.env.GOOGLE_CLIENT_ID,
 				clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-				callbackURL: `${baseUrl}/auth/google/callback`,
+				callbackURL:  `${baseUrl}/auth/google/callback`,
 			},
-			(_accessToken, _refreshToken, profile, done) => done(null, profile),
-		),
+			(_accessToken, _refreshToken, profile, done) => done(null, profile)
+		)
 	);
 } else {
 	console.log("Google OAuth disabled — GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set.");
@@ -82,7 +115,7 @@ app.use(
 	express.static(path.join(__dirname, "public"), {
 		maxAge: "1d",
 		etag: false,
-	}),
+	})
 );
 
 // Serve the React dashboard build (public/app/) at /admin
@@ -113,8 +146,11 @@ app.get("/admin/*", (req, res, next) => {
 });
 
 const server = app.listen(port, () => {
-	console.log("\nWeb-server running!\n" + getDate());
-	console.log(`Memory usage at startup: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+	const mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+	_log(`\n${"═".repeat(50)}`);
+	_log(`  Eva Bot  ·  ${getDate()}`);
+	_log(`  Port: ${port}  ·  Heap: ${mem}MB`);
+	_log(`${"═".repeat(50)}\n`);
 	startServer();
 });
 
@@ -177,7 +213,7 @@ function handleNewSock(sock) {
 onNewSock(handleNewSock);
 
 // Forward admin events (logs, activity) to all connected WS clients
-subscribeAdminEvents((event) => broadcast(event));
+subscribeAdminEvents(event => broadcast(event));
 
 // Expose startSock so admin routes can trigger a reconnect without restarting the process
 app.locals.reconnect = () => startSock("manual-reconnect");
@@ -196,8 +232,8 @@ wss.on("connection", (ws) => {
 	}
 
 	// Replay recent logs + activity to newly connected clients
-	ws.send(JSON.stringify({ type: "log_snapshot", logs: getLogs(100) }));
-	ws.send(JSON.stringify({ type: "activity_snapshot", activity: getActivity() }));
+	ws.send(JSON.stringify({ type: 'log_snapshot',      logs:     getLogs(100) }));
+	ws.send(JSON.stringify({ type: 'activity_snapshot', activity: getActivity() }));
 
 	const heartbeat = setInterval(() => {
 		if (ws.readyState === WebSocket.OPEN) ws.ping();
@@ -234,7 +270,9 @@ wss.on("connection", (ws) => {
 
 // ── Bot start ─────────────────────────────────────────────────────────────────
 async function startServer() {
+	await initBullQueue().catch((err) => console.error("BullMQ init failed, falling back to in-memory queue:", err.message));
 	await startSock("start");
+	startReminderScheduler();
 	// handleNewSock() is called by the onNewSock hook inside connection.js,
 	// so app.locals.sock and connection.update listener are both set up there.
 
@@ -288,4 +326,4 @@ function gracefulShutdown(signal) {
 }
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGINT",  () => gracefulShutdown("SIGINT"));

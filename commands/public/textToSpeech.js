@@ -1,17 +1,17 @@
 import tts from "google-tts-api";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { prefix, sendMessageWTyping, evv, content } = msgInfoObj;
+	const { prefix, sendMessageWTyping, evv, content, extendedMessageOriginal } = msgInfoObj;
 	let lang = "en";
 	let message = "";
 
 	// Check if there's text in args or quoted message
 	if (args.length > 0 && args[0] !== "hin") {
 		message = evv; // Use the full text after command
-	} else if (msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo?.quotedMessage) {
+	} else if (extendedMessageOriginal?.quotedMessage) {
 		message =
-			msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation ||
-			msg.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage?.text ||
+			extendedMessageOriginal.quotedMessage.conversation ||
+			extendedMessageOriginal.quotedMessage.extendedTextMessage?.text ||
 			"";
 	} else if (evv) {
 		message = evv;
@@ -24,10 +24,10 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			message = evv.split("hin")[1].trim();
 		} else {
 			// If "hin" is specified but no text follows, check quoted message
-			if (msg.message.extendedTextMessage && msg.message.extendedTextMessage.contextInfo?.quotedMessage) {
+			if (extendedMessageOriginal?.quotedMessage) {
 				message =
-					msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation ||
-					msg.message.extendedTextMessage.contextInfo.quotedMessage.extendedTextMessage?.text ||
+					extendedMessageOriginal.quotedMessage.conversation ||
+					extendedMessageOriginal.quotedMessage.extendedTextMessage?.text ||
 					"";
 			}
 		}

@@ -1,15 +1,15 @@
 import { config } from "dotenv";
 config();
-import { extractPhoneNumber } from "../../../functions/lidUtils.js";
+import { extractPhoneNumber } from "../../../utils/lid.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { prefix, sendMessageWTyping, groupMetadata, type, content } = msgInfoObj;
-	if (msg.message.extendedTextMessage) {
+	const { prefix, sendMessageWTyping, groupMetadata, type, content, extendedMessageOriginal } = msgInfoObj;
+	if (extendedMessageOriginal) {
 		let temp =
-			msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text ||
-			msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation ||
+			extendedMessageOriginal?.quotedMessage?.extendedTextMessage?.text ||
+			extendedMessageOriginal?.quotedMessage?.conversation ||
 			msg.message?.conversation;
-		msg["message"] = msg.message.extendedTextMessage.contextInfo.quotedMessage;
+		msg["message"] = extendedMessageOriginal.quotedMessage;
 		msg["message"]["conversation"] = temp;
 	}
 

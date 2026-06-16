@@ -4,20 +4,18 @@ const myNumber = [
 	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
 ];
-import { member } from "../../mongo-DB/membersDataDb.js";
-import { extractPhoneNumber, normalizeJID } from "../../functions/lidUtils.js";
+import { member } from "../../db/members.js";
+import { extractPhoneNumber, normalizeJID } from "../../utils/lid.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { command, botNumber, sendMessageWTyping } = msgInfoObj;
+	const { command, botNumber, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
 
-	if (!msg.message.extendedTextMessage)
+	if (!extendedMessageOriginal)
 		return sendMessageWTyping(from, { text: "❌ Tag / mentioned!" }, { quoted: msg });
 
 	let taggedJid;
 
-	taggedJid = msg.message.extendedTextMessage
-		? msg.message.extendedTextMessage.contextInfo.participant
-		: msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+	taggedJid = extendedMessageOriginal.participant || extendedMessageOriginal.mentionedJid?.[0];
 
 	const targetNumber = extractPhoneNumber(taggedJid);
 

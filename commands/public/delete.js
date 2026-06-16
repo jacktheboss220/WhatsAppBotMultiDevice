@@ -1,18 +1,18 @@
-import { extractPhoneNumber } from "../../functions/lidUtils.js";
+﻿import { extractPhoneNumber } from "../../utils/lid.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { botNumber, sendMessageWTyping, groupAdmins, senderJid } = msgInfoObj;
+	const { botNumber, sendMessageWTyping, groupAdmins, senderJid, extendedMessageOriginal } = msgInfoObj;
 
 	try {
 		// Check if the message is a reply
-		if (!msg.message.extendedTextMessage) {
+		if (!extendedMessageOriginal) {
 			return sendMessageWTyping(from, { text: `❌ Tag a message to delete.` }, { quoted: msg });
 		}
 
 		// Check if the sender is authorized to delete messages
 		const senderIsAdmin = groupAdmins.includes(senderJid);
 		const isBotAdmin = groupAdmins.includes(botNumber[0]) || groupAdmins.includes(botNumber[1]);
-		const participant = msg.message.extendedTextMessage.contextInfo.participant;
+		const participant = extendedMessageOriginal.participant;
 		// Use extractPhoneNumber for LID/PN compatibility
 		const isBotMessage =
 			extractPhoneNumber(participant) === extractPhoneNumber(botNumber[0]) ||
@@ -23,7 +23,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				return sendMessageWTyping(
 					from,
 					{ text: `❌ Only admins can delete others' messages.` },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			}
 
@@ -31,7 +31,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				return sendMessageWTyping(
 					from,
 					{ text: `❌ Bot needs to be admin to delete others' messages.` },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			}
 		}
@@ -40,8 +40,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		const options = {
 			remoteJid: from,
 			fromMe: false,
-			id: msg.message.extendedTextMessage.contextInfo.stanzaId,
-			participant: msg.message.extendedTextMessage.contextInfo.participant,
+			id: extendedMessageOriginal.stanzaId,
+			participant: extendedMessageOriginal.participant,
 		};
 
 		// If the message is from the bot, delete its own message

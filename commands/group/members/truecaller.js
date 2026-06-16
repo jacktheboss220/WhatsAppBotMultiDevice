@@ -2,19 +2,20 @@ import dotenv from "dotenv";
 dotenv.config();
 const TRUECALLER_ID = process.env.TRUECALLER_ID || "";
 import truecallerjs from "truecallerjs";
-import { extractPhoneNumber } from "../../../functions/lidUtils.js";
+import { extractPhoneNumber } from "../../../utils/lid.js";
+import { escapeHtml } from "../../../notify/telegram.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { evv, sendMessageWTyping, notifyOwner } = msgInfoObj;
+	let { evv, sendMessageWTyping, notifyOwner, extendedMessageOriginal } = msgInfoObj;
 
 	if (!TRUECALLER_ID) return sendMessageWTyping(from, { text: "```Truecaller ID is Missing```" }, { quoted: msg });
 
 	let number;
-	if (msg.message.extendedTextMessage?.contextInfo?.participant?.length > 0) {
+	if (extendedMessageOriginal?.participant?.length > 0) {
 		// Use extractPhoneNumber for LID/PN compatibility
-		number = extractPhoneNumber(msg.message.extendedTextMessage.contextInfo.participant);
-	} else if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-		number = extractPhoneNumber(msg.message.extendedTextMessage.contextInfo.mentionedJid[0]);
+		number = extractPhoneNumber(extendedMessageOriginal.participant);
+	} else if (extendedMessageOriginal?.mentionedJid?.length > 0) {
+		number = extractPhoneNumber(extendedMessageOriginal.mentionedJid[0]);
 	} else {
 		if (!args[0]) return sendMessageWTyping(from, { text: `❌ Give number or tag on message` }, { quoted: msg });
 		number = evv.replace(/\s*/g, "");
@@ -43,8 +44,17 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const email = response.getEmailId();
 
 	const message = `🔍 *Truecaller Result*\n\n👤 *Name:* ${name}\n📱 *Number:* ${e164Format}\n🏙️ *City:* ${city || "N/A"}\n🌍 *Country:* ${countryCode}\n📡 *Carrier:* ${carrier} _(${numberType})_\n📧 *Email:* ${email || "N/A"}`;
+	const telegramMessage =
+		`🔍 <b>Truecaller Result</b>\n` +
+		`━━━━━━━━━━━━━━\n` +
+		`👤 <b>Name:</b> ${escapeHtml(name)}\n` +
+		`📱 <b>Number:</b> <code>${escapeHtml(e164Format)}</code>\n` +
+		`🏙️ <b>City:</b> ${escapeHtml(city || "N/A")}\n` +
+		`🌍 <b>Country:</b> ${escapeHtml(countryCode)}\n` +
+		`📡 <b>Carrier:</b> ${escapeHtml(carrier)} (${escapeHtml(numberType)})\n` +
+		`📧 <b>Email:</b> ${escapeHtml(email || "N/A")}`;
 
-	notifyOwner(sock, message, msg);
+	notifyOwner(sock, telegramMessage, msg);
 	sendMessageWTyping(from, { text: message }, { quoted: msg });
 };
 

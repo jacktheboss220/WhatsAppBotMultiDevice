@@ -1,8 +1,9 @@
-import sendToTelegram, { escapeHtml } from "./telegramLogger.js";
-import { fake_quoted } from "./getFakeQuoted.js";
-import { getGroupData } from "../mongo-DB/groupDataDb.js";
-import { extractPhoneNumber, formatJIDForDisplay } from "./lidUtils.js";
-import messageQueue from "./messageQueue.js";
+import sendToTelegram, { escapeHtml } from "../notify/telegram.js";
+import notifyOwner from "../notify/owner.js";
+import { fake_quoted } from "../utils/fakeQuoted.js";
+import { getGroupData } from "../db/groupData.js";
+import { extractPhoneNumber, formatJIDForDisplay } from "../utils/lid.js";
+import messageQueue from "../queue/messageQueue.js";
 
 const getPhone = (p) =>
 	typeof p === "string"
@@ -46,7 +47,7 @@ const getGroupEvent = async (sock, events, cache) => {
 			}
 		}
 		const addedNumbers = events.participants.map((p) => `<code>${escapeHtml(getPhone(p))}</code>`).join(", ");
-		sendToTelegram(
+		notifyOwner(null,
 			`➕ <b>Group Update</b>\n` +
 			`━━━━━━━━━━━━━━\n` +
 			`🏠 <b>Group:</b> ${escapeHtml(groupDataDB?.grpName)}\n` +
@@ -56,7 +57,7 @@ const getGroupEvent = async (sock, events, cache) => {
 		const actionEmoji = events.action === "remove" ? "➖" : events.action === "promote" ? "⬆️" : events.action === "demote" ? "⬇️" : "🔄";
 		const actionLabel = events.action === "remove" ? "Left / Removed" : events.action === "promote" ? "Promoted to Admin" : events.action === "demote" ? "Demoted from Admin" : escapeHtml(events.action);
 		const numbers = events.participants.map((p) => `<code>${escapeHtml(getPhone(p))}</code>`).join(", ");
-		sendToTelegram(
+		notifyOwner(null,
 			`${actionEmoji} <b>Group Update</b>\n` +
 			`━━━━━━━━━━━━━━\n` +
 			`🏠 <b>Group:</b> ${escapeHtml(groupDataDB?.grpName)}\n` +

@@ -1,4 +1,4 @@
-import { deleteReferral, updateReferral } from "../../../mongo-DB/referralsDb.js";
+import { deleteReferral, updateReferral } from "../../../db/referrals.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { command, sendMessageWTyping, isGroupAdmin, isOwner } = msgInfoObj;

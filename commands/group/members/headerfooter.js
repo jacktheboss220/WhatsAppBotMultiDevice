@@ -6,7 +6,7 @@ import fs from "fs";
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { type, content, evv, sendMessageWTyping } = msgInfoObj;
+	const { type, content, evv, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
 	const isMedia = type === "imageMessage" || type === "videoMessage";
 	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
 
@@ -72,7 +72,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		if (msg.message.imageMessage) {
 			downloadFilePath = msg.message.imageMessage;
 		} else {
-			downloadFilePath = msg.message.extendedTextMessage.contextInfo.quotedMessage.imageMessage;
+			downloadFilePath = extendedMessageOriginal?.quotedMessage?.imageMessage;
 		}
 		const stream = await downloadContentFromMessage(downloadFilePath, "image");
 		let buffer = Buffer.from([]);

@@ -1,4 +1,5 @@
-import notifyOwner from "./getOwnerSend.js";
+import notifyOwner from "../notify/owner.js";
+import { escapeHtml } from "../notify/telegram.js";
 
 const getCallEvent = async (sock, call) => {
 	// console.log(`Received call event:`, call);
@@ -10,12 +11,13 @@ const getCallEvent = async (sock, call) => {
 			await sock
 				.rejectCall(c.id, c.from)
 				.then(() => {
-					notifyOwner(sock,
-					`📞 <b>Incoming Call</b>\n` +
-					`━━━━━━━━━━━━━━\n` +
-					`📱 <b>From:</b> <code>${c.from}</code>\n` +
-					`🚫 <b>Status:</b> Rejected`
-				);
+					notifyOwner(
+						sock,
+						`📞 <b>Incoming Call</b>\n` +
+							`━━━━━━━━━━━━━━\n` +
+							`📱 <b>From:</b> <code>${escapeHtml(c.from)}</code>\n` +
+							`🚫 <b>Status:</b> Rejected`,
+					);
 				})
 				.catch((err) => {
 					console.error(`Failed to reject call from ${c.from}:`, err);

@@ -1,19 +1,19 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { extractPhoneNumber } from "../../../functions/lidUtils.js";
-import { getGroupData } from "../../../mongo-DB/groupDataDb.js";
+import { extractPhoneNumber } from "../../../utils/lid.js";
+import { getGroupData } from "../../../db/groupData.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { senderJid, sendMessageWTyping } = msgInfoObj;
+	let { senderJid, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
 
 	let taggedJid;
-	if (!msg.message.extendedTextMessage) {
+	if (!extendedMessageOriginal) {
 		taggedJid = senderJid;
 	} else {
 		try {
-			if (msg.message.extendedTextMessage.contextInfo.participant)
-				taggedJid = msg.message.extendedTextMessage.contextInfo.participant;
-			else taggedJid = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+			if (extendedMessageOriginal.participant)
+				taggedJid = extendedMessageOriginal.participant;
+			else taggedJid = extendedMessageOriginal.mentionedJid[0];
 		} catch {
 			taggedJid = senderJid;
 		}

@@ -1,18 +1,10 @@
 import NodeCache from "node-cache";
-import makeWASocket from "baileys";
+import makeWASocket, { makeCacheableSignalKeyStore } from "baileys";
 import { fetchLatestBaileysVersion } from "baileys";
-import { useMongoDBAuthState } from "./useMongoDBAuthState.js";
+import { useMongoDBAuthState } from "./auth.js";
 import P from "pino";
 
-const logger = P({ level: "silent" }); // Set to "error" to allow essential logs but suppress debug spam
-
-// Optimized caches with reduced memory footprint
-const msgRetryCounterCache = new NodeCache({
-	stdTTL: 180, // Reduced to 3 minutes
-	checkperiod: 30,
-	maxKeys: 200, // Reduced from 500
-	useClones: false,
-});
+const logger = P({ level: "silent" });
 
 const messageCache = new NodeCache({
 	stdTTL: 120, // Reduced to 2 minutes
@@ -51,10 +43,9 @@ const socket = async () => {
 		logger,
 		auth: {
 			creds: state.creds,
-			keys: state.keys,
+			keys: makeCacheableSignalKeyStore(state.keys, logger),
 		},
 
-		msgRetryCounterCache,
 		generateHighQualityLinkPreview: true,
 
 		getMessage,
@@ -63,16 +54,15 @@ const socket = async () => {
 		shouldSyncHistoryMessage: () => false,
 
 		connectTimeoutMs: 60000,
-		defaultQueryTimeoutMs: 60000,
-		keepAliveIntervalMs: 30000,
+		defaultQueryTimeoutMs: 90000,
+		keepAliveIntervalMs: 15000,
 
 		browser: ["Ubuntu", "Chrome", "20.0.04"],
 		emitOwnEvents: false, // IMPORTANT
-		retryRequestDelayMs: 150,
-		maxMsgRetryCount: 3,
+		retryRequestDelayMs: 250,
+		maxMsgRetryCount: 5,
 
 		uploadTimeoutMs: 60000,
-		fireInitQueries: false,
 
 		// keep this minimal
 		patchMessageBeforeSending: (msg) => msg,
@@ -82,21 +72,8 @@ const socket = async () => {
 		try {
 			const cacheKey = `${key.remoteJid}:${key.id}`;
 			if (messageCache.has(cacheKey)) {
-				logger.debug("Retrieved message from cache:", cacheKey);
 				return messageCache.get(cacheKey);
 			}
-
-			if (msgRetryCounterCache.has(key.id)) {
-				logger.debug("Retrieved message from retry cache:", key.id);
-				return undefined;
-			}
-
-			logger.debug(
-				"getMessage called for key:" +
-					` ${key.id} in ${key.remoteJid} with fromMe: ${key.fromMe}` +
-					" but message not found in cache"
-			);
-
 			return undefined;
 		} catch (error) {
 			logger.error("Error in getMessage function:", error);
@@ -107,14 +84,6 @@ const socket = async () => {
 	// Cache incoming messages for getMessage function with size limit
 	sock.ev.on("messages.upsert", (m) => {
 		try {
-			// Add startup delay to prevent processing old messages immediately after restart
-			const timeSinceStart = Date.now() - socketStartTime;
-			if (timeSinceStart < 5000) {
-				// Wait 5 seconds after socket creation
-				console.log("⏳ Skipping message during startup period");
-				return;
-			}
-
 			for (const msg of m.messages) {
 				if (msg.message) {
 					const cacheKey = `${msg.key.remoteJid}:${msg.key.id}`;
@@ -145,9 +114,7 @@ const socket = async () => {
 			authStateCleanup();
 			authStateCleanup = null;
 		}
-		// Clear caches on disconnect
 		messageCache.flushAll();
-		msgRetryCounterCache.flushAll();
 		console.log("🧹 Socket cleanup completed");
 	});
 
@@ -161,7 +128,6 @@ const socket = async () => {
 			if (error.message.includes("session") || error.message.includes("prekey")) {
 				console.log("Clearing message caches due to session issues...");
 				messageCache.flushAll();
-				msgRetryCounterCache.flushAll();
 			}
 		}
 	});

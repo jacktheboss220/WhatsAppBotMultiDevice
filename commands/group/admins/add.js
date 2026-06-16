@@ -1,12 +1,12 @@
-import { normalizeJID } from "../../../functions/lidUtils.js";
+import { normalizeJID } from "../../../utils/lid.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { evv, groupAdmins, sendMessageWTyping, botNumber } = msgInfoObj;
+	const { evv, groupAdmins, sendMessageWTyping, botNumber, extendedMessageOriginal } = msgInfoObj;
 
 	if (!groupAdmins.includes(botNumber[0]) && !groupAdmins.includes(botNumber[1])) {
 		return sendMessageWTyping(from, { text: "❌ Bot needs to be admin to add members." }, { quoted: msg });
 	}
-	if (!evv && !msg.message.extendedTextMessage && !args[0]) {
+	if (!evv && !extendedMessageOriginal && !args[0]) {
 		return sendMessageWTyping(
 			from,
 			{ text: "❌ Provide a number or reply to a member's message." },
@@ -14,8 +14,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		);
 	}
 
-	let participant = msg.message.extendedTextMessage
-		? msg.message.extendedTextMessage.contextInfo.participant
+	let participant = extendedMessageOriginal
+		? extendedMessageOriginal.participant
 		: evv.split(" ").join("");
 	if (participant.startsWith("@")) {
 		return sendMessageWTyping(

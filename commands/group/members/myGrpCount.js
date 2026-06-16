@@ -1,12 +1,12 @@
-import { group } from "../../../mongo-DB/groupDataDb.js";
+import { group } from "../../../db/groupData.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, senderJid } = msgInfoObj;
+	const { sendMessageWTyping, senderJid, extendedMessageOriginal } = msgInfoObj;
 
-	taggedJid = msg?.message?.extendedTextMessage?.contextInfo?.participant;
+	taggedJid = extendedMessageOriginal?.participant;
 	const filter = {
 		"members.id": taggedJid || senderJid,
 	};

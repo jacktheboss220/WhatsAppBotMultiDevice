@@ -6,6 +6,7 @@ allowBuilds:
   baileys: false
   esbuild: true
   ffmpeg-static: false
+  msgpackr-extract: false
   protobufjs: false
   sharp: false
   youtube-dl-exec: false

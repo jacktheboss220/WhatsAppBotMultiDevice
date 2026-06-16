@@ -1,5 +1,5 @@
-import { group } from "../../../mongo-DB/groupDataDb.js";
-import { extractPhoneNumber } from "../../../functions/lidUtils.js";
+import { group } from "../../../db/groupData.js";
+import { extractPhoneNumber } from "../../../utils/lid.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);

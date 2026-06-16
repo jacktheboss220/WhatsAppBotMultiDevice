@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { group } from "../mongo-DB/groupDataDb.js";
-import { member } from "../mongo-DB/membersDataDb.js";
-import { bot, getBotData } from "../mongo-DB/botDataDb.js";
-import { cmdToText } from "../functions/getAddCommands.js";
-import mdClient from "../mongodb.js";
+import { group } from "../db/groupData.js";
+import { member } from "../db/members.js";
+import { bot, getBotData } from "../db/botData.js";
+import { cmdToText } from "../utils/commandLoader.js";
+import mdClient from "../db/client.js";
 import passport from "passport";
-import { normalizeJID } from "../functions/lidUtils.js";
-import messageQueue from "../functions/messageQueue.js";
-import { pushActivity, getLogs, getActivity, cmdUsage } from "../functions/adminEvents.js";
+import { normalizeJID } from "../utils/lid.js";
+import messageQueue from "../queue/messageQueue.js";
+import { pushActivity, getLogs, getActivity, cmdUsage } from "../notify/adminEvents.js";
 
 const router = Router();
 
@@ -412,7 +412,7 @@ router.get("/api/admin/groups", requireAdmin, async (req, res) => {
 
 router.patch("/api/admin/groups/:jid", requireAdmin, async (req, res) => {
 	const jid = decodeURIComponent(req.params.jid);
-	const allowed = ["isBotOn", "isChatBotOn", "isImgOn", "is91Only", "isAutoStickerOn", "cmdBlocked"];
+	const allowed = ["isBotOn", "isChatBotOn", "isImgOn", "is91Only", "isAutoStickerOn", "isRankNotifOn", "cmdBlocked"];
 	const update = {};
 	for (const key of allowed) {
 		if (key in req.body) update[key] = req.body[key];

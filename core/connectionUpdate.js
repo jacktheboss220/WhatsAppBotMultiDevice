@@ -1,11 +1,12 @@
 import { DisconnectReason } from "baileys";
-import sendToTelegram from "./telegramLogger.js";
+import sendToTelegram, { escapeHtml } from "../notify/telegram.js";
+import notifyOwner from "../notify/owner.js";
 
 const getConnectionUpdate = async (startSock, events) => {
 	const update = events;
 	const { connection, lastDisconnect, qr } = update;
 
-	console.log("Connection update:", connection);
+	if (!connection && !qr) return; // skip empty updates
 
 	if (connection === "close") {
 		const error = lastDisconnect?.error;
@@ -22,23 +23,21 @@ const getConnectionUpdate = async (startSock, events) => {
 
 		if (isTrueLogout) {
 			console.log("❌ Device logged out, manual re-authentication required");
-			sendToTelegram(
+			notifyOwner(null,
 				`🚨 <b>Bot Logged Out</b>\n` +
-				`━━━━━━━━━━━━━━\n` +
-				`⚠️ Device was logged out from WhatsApp.\n` +
-				`🔑 Manual re-authentication required.`
+					`━━━━━━━━━━━━━━\n` +
+					`⚠️ Device was logged out from WhatsApp.\n` +
+					`🔑 Manual re-authentication required.`,
 			);
 		} else {
-			const reason = isConflict
-				? "Session conflict (another device connected)"
-				: `Status ${statusCode}`;
+			const reason = isConflict ? "Session conflict (another device connected)" : `Status ${statusCode}`;
 
 			console.log(`🔄 Reconnecting... Reason: ${reason}`);
-			sendToTelegram(
+			notifyOwner(null,
 				`🔄 <b>Bot Disconnected</b>\n` +
-				`━━━━━━━━━━━━━━\n` +
-				`📋 <b>Reason:</b> ${reason}\n` +
-				`⏳ Reconnecting in 5 seconds...`
+					`━━━━━━━━━━━━━━\n` +
+					`📋 <b>Reason:</b> ${escapeHtml(reason)}\n` +
+					`⏳ Reconnecting in 5 seconds...`,
 			);
 			setTimeout(() => {
 				startSock("reconnect");
@@ -49,11 +48,7 @@ const getConnectionUpdate = async (startSock, events) => {
 	} else if (connection === "open") {
 		console.log("✅ Successfully connected to WhatsApp!");
 		console.log("📱 Ready to receive and process messages");
-		sendToTelegram(
-			`✅ <b>Bot Connected</b>\n` +
-			`━━━━━━━━━━━━━━\n` +
-			`📱 Successfully connected to WhatsApp.`
-		);
+		notifyOwner(null, `✅ <b>Bot Connected</b>\n` + `━━━━━━━━━━━━━━\n` + `📱 Successfully connected to WhatsApp.`);
 	}
 
 	if (qr) {

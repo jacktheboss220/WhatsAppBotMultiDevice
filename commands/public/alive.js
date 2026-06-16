@@ -1,3 +1,27 @@
+import mdClient from "../../db/client.js";
+import { isRedisEnabled } from "../../cache/redisCache.js";
+import getRedisClient from "../../cache/redisClient.js";
+import { isBullReady } from "../../queue/bullQueue.js";
+
+async function checkMongo() {
+	try {
+		await mdClient.db("admin").command({ ping: 1 });
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+async function checkRedis() {
+	try {
+		const r = await getRedisClient();
+		await r.ping();
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, startTime, updateName } = msgInfoObj;
 
@@ -14,19 +38,26 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const memoryUsage = process.memoryUsage();
 	const usedMB = (memoryUsage.rss / 1024 / 1024).toFixed(2);
 
-	const nodeVersion = process.version;
-	const platform = `${process.platform} (${process.arch})`;
+	const [mongoOk, redisResult] = await Promise.all([
+		checkMongo(),
+		isRedisEnabled ? checkRedis() : Promise.resolve(null),
+	]);
+
+	const bullOk = isBullReady();
+
+	const st = (ok) => (ok === null ? "⚪" : ok ? "🟢" : "🔴");
 
 	const response =
 		`*👋🏻 Hello ${updateName}*\n\n` +
 		`*🎾 Eva is Online!*\n` +
-		`*🟢 Response Time:* ${
-			responseTime >= 1000 ? `${responseTimeInSeconds.toFixed(2)}s` : `${responseTime.toFixed(2)}ms`
-		}\n` +
+		`*🟢 Response:* ${responseTime >= 1000 ? `${responseTimeInSeconds.toFixed(2)}s` : `${responseTime.toFixed(2)}ms`}\n` +
 		`*⏱️ Uptime:* ${simpleUptime}\n` +
-		`*🧠 RAM Usage:* ${usedMB} MB\n` +
-		`*🛠️ Node.js:* ${nodeVersion}\n` +
-		`*🌍 Platform:* ${platform}`;
+		`*🧠 RAM:* ${usedMB} MB\n\n` +
+		`*── Connections ──*\n` +
+		`${st(mongoOk)} *MongoDB*\n` +
+		`${st(redisResult)} *Redis*${redisResult === null ? " _(disabled)_" : ""}\n` +
+		`${st(bullOk)} *BullMQ Queue*\n\n` +
+		`*🛠️ Node.js:* ${process.version}`;
 
 	return sendMessageWTyping(from, { text: response }, { quoted: msg });
 };

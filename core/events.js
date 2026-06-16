@@ -1,7 +1,7 @@
-import getConnectionUpdate from "./getConnectionUpdateEvent.js";
-import getCommand from "./getMessagesEvent.js";
-import getGroupEvent from "./getGroupEvent.js";
-import getCallEvent from "./getCallEvents.js";
+import getConnectionUpdate from "./connectionUpdate.js";
+import getCommand from "./messages.js";
+import getGroupEvent from "./groupEvent.js";
+import getCallEvent from "./callEvents.js";
 
 const events = async (sock, startSock, cache) => {
 	sock.ev.process(async (event) => {
@@ -18,14 +18,14 @@ const events = async (sock, startSock, cache) => {
 							Object.keys(msg.message).length > 0
 					);
 
-					for (const msg of validMessages) {
-						try {
-							await getCommand(sock, msg, cache);
-						} catch (err) {
-							console.error("Error processing message:", err);
-							console.error("Message key:", msg.key);
-						}
-					}
+					await Promise.all(
+						validMessages.map((msg) =>
+							getCommand(sock, msg, cache).catch((err) => {
+								console.error("Error processing message:", err);
+								console.error("Message key:", msg.key);
+							})
+						)
+					);
 				}
 			}
 

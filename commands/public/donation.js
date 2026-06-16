@@ -1,4 +1,4 @@
-import { readFileEfficiently } from "../../functions/fileUtils.js";
+﻿import { readFileEfficiently } from "../../utils/file.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping } = msgInfoObj;

@@ -1,10 +1,10 @@
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
 dotenv.config();
 //-------------------------------------------------------------------------------------------------------------//
-import { getGroupData, group } from "../../mongo-DB/groupDataDb.js";
-import { getMemberData } from "../../mongo-DB/membersDataDb.js";
-import { extractPhoneNumber } from "../../functions/lidUtils.js";
-import { getChatMessages } from "../../functions/chatLogger.js";
+import { getGroupData, group } from "../../db/groupData.js";
+import { getMemberData } from "../../db/members.js";
+import { extractPhoneNumber } from "../../utils/lid.js";
+import { getChatMessages } from "../../utils/chatLogger.js";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 //-------------------------------------------------------------------------------------------------------------//
@@ -39,7 +39,7 @@ const generationConfig = {
 
 // Define models ONCE - not recreated every time
 const geminiModel = genAI.getGenerativeModel({
-	model: "gemini-2.0-flash",
+	model: "gemini-2.5-flash-lite",
 	systemInstruction: `You are a professional WhatsApp group assistant with full access to the provided chat history. Your goal is to keep the group informed by either synthesizing long conversations or answering specific questions about the group's activity.
 
 *How to Summarize:*
@@ -56,7 +56,7 @@ You have the full context of the recent chat. If a member asks about a specific 
 });
 
 const evaModel = genAI.getGenerativeModel({
-	model: "gemini-2.0-flash",
+	model: "gemini-2.5-flash-lite",
 	systemInstruction: `You're Eva, an 18-year-old girl with attitude. You're sassy, confident, and real. Talk like an actual person texting, not some AI trying to be cool.
 
 Your vibe:
@@ -227,7 +227,7 @@ Is Admin: ${groupAdmins?.includes(senderJid) ? "Yes" : "No"}
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { sendMessageWTyping, isGroup, evv } = msgInfoObj;
+	let { sendMessageWTyping, isGroup, evv, extendedMessageOriginal } = msgInfoObj;
 
 	if (GOOGLE_API_KEY == "") {
 		return sendMessageWTyping(from, { text: "```Generative AI API Key is Missing```" }, { quoted: msg });
@@ -250,11 +250,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 
 	let taggedMember, tagMessage, tagMessageSenderJID;
-	if (msg.message.extendedTextMessage) {
-		tagMessage = msg.message.extendedTextMessage.contextInfo.quotedMessage;
-		tagMessageSenderJID = msg.message.extendedTextMessage.contextInfo.participant;
-		if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-			taggedMember = msg.message.extendedTextMessage.contextInfo.mentionedJid;
+	if (extendedMessageOriginal) {
+		tagMessage = extendedMessageOriginal.quotedMessage;
+		tagMessageSenderJID = extendedMessageOriginal.participant;
+		if (extendedMessageOriginal?.mentionedJid?.length > 0) {
+			taggedMember = extendedMessageOriginal.mentionedJid;
 		}
 	}
 

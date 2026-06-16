@@ -8,7 +8,7 @@ const baseURL = "https://www.googleapis.com/customsearch/v1";
 const maxResults = 5; // Limiting to 5 results for better readability
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, evv } = msgInfoObj;
+	const { sendMessageWTyping, evv, extendedMessageOriginal } = msgInfoObj;
 
 	// Check if API keys are missing
 	if (!GOOGLE_API_KEY_SEARCH || !SEARCH_ENGINE_KEY) {
@@ -20,12 +20,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	}
 
 	// Check if there's no query provided
-	if (!args[0] && !msg.message.extendedTextMessage) {
+	if (!args[0] && !extendedMessageOriginal) {
 		return sendMessageWTyping(from, { text: "```Enter Word to Search```" }, { quoted: msg });
 	}
 
 	// Extract search query from quoted message or direct input
-	let searchQuery = evv || msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation;
+	let searchQuery = evv || extendedMessageOriginal?.quotedMessage?.conversation;
 
 	// Construct URL for Google Custom Search API
 	const urlToSearch = `${baseURL}?key=${GOOGLE_API_KEY_SEARCH}&cx=${SEARCH_ENGINE_KEY}&q=${encodeURIComponent(

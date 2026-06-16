@@ -1,4 +1,4 @@
-import { cmdToText } from "../../functions/getAddCommands.js";
+import { cmdToText } from "../../utils/commandLoader.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);

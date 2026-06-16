@@ -1,7 +1,7 @@
-import { getGroupData, group } from "../../mongo-DB/groupDataDb.js";
-import { getMemberData, member } from "../../mongo-DB/membersDataDb.js";
-import { getBotData, bot } from "../../mongo-DB/botDataDb.js";
-import { extractPhoneNumber } from "../../functions/lidUtils.js";
+import { getGroupData, group } from "../../db/groupData.js";
+import { getMemberData, member } from "../../db/members.js";
+import { getBotData, bot } from "../../db/botData.js";
+import { extractPhoneNumber } from "../../utils/lid.js";
 
 const updateData = async (collection, id, data, value, sendMessageWTyping, from, msg) => {
 	if (value.match(/^[0-9]+$/)) value = Number(value);
@@ -12,7 +12,7 @@ const updateData = async (collection, id, data, value, sendMessageWTyping, from,
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, command } = msgInfoObj;
+	const { sendMessageWTyping, command, extendedMessageOriginal } = msgInfoObj;
 	let data, value, id, collection, getDataFunc;
 
 	switch (command) {
@@ -22,13 +22,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			id = from;
 			break;
 		case "member":
-			if (!msg.message.extendedTextMessage) {
+			if (!extendedMessageOriginal) {
 				return sendMessageWTyping(from, { text: "*Reply On User's Message.*" }, { quoted: msg });
 			}
 			collection = member;
 			getDataFunc = getMemberData;
 			// Normalize to PN-based JID for DB consistency
-			id = extractPhoneNumber(msg.message.extendedTextMessage.contextInfo.participant);
+			id = extractPhoneNumber(extendedMessageOriginal.participant);
 			break;
 		case "bot":
 			collection = bot;

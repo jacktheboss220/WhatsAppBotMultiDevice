@@ -42,7 +42,7 @@ const getRemoveBg = async (Path) => {
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { type, content, sendMessageWTyping } = msgInfoObj;
+	const { type, content, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
 
 	if (!REMOVE_BG_KEY)
 		return sendMessageWTyping(from, { text: "```Remove BG API Key is Missing```" }, { quoted: msg });
@@ -54,7 +54,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		if (msg.message.imageMessage) {
 			downloadFilePath = msg.message.imageMessage;
 		} else {
-			downloadFilePath = msg.message.extendedTextMessage.contextInfo.quotedMessage.imageMessage;
+			downloadFilePath = extendedMessageOriginal?.quotedMessage?.imageMessage;
 		}
 		const stream = await downloadContentFromMessage(downloadFilePath, "image");
 		let buffer = Buffer.from([]);

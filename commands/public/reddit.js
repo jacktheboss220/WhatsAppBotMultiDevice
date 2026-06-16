@@ -1,26 +1,26 @@
-import axiox from "axios";
+﻿import axiox from "axios";
 import jsdom from "jsdom";
-import { getMemberData, member } from "../../mongo-DB/membersDataDb.js";
+// import { getMemberData, member } from "../../db/members.js";
 
 const { JSDOM } = jsdom;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { isGroup, senderJid, sendMessageWTyping } = msgInfoObj;
-	const limit = await getMemberData(senderJid);
+	// const limit = await getMemberData(senderJid);
 
 	if (!args[0] || !args[0].includes("reddit.com/r"))
 		return sendMessageWTyping(from, { text: "Provide the post link after command." }, { quoted: msg });
 	console.log(args[0]);
-	if (!isGroup) {
-		if (limit.dmLimit <= 0) {
-			return sendMessageWTyping(
-				from,
-				{ text: "You have used your monthly limit.\nWait for next month." },
-				{ quoted: msg }
-			);
-		}
-		member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
-	}
+	// if (!isGroup) {
+	// 	if (limit.dmLimit <= 0) {
+	// 		return sendMessageWTyping(
+	// 			from,
+	// 			{ text: "You have used your monthly limit.\nWait for next month." },
+	// 			{ quoted: msg }
+	// 		);
+	// 	}
+	// 	member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
+	// }
 	await axiox("https://redditsave.com/info?url=" + args[0])
 		.then((res) => {
 			const dom = new JSDOM(res.data);

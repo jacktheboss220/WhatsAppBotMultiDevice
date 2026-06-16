@@ -1,4 +1,4 @@
-import { group } from "../../../mongo-DB/groupDataDb.js";
+import { group } from "../../../db/groupData.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);

@@ -26,6 +26,8 @@ const mdClient = new MongoClient(uri, {
 			console.log("Created AuthTable collection");
 		}
 
+		// Index for group member queries ($inc / $set by members.id)
+		// Use sparse: true to match any existing index definition and avoid conflicts
 		await db.collection("Groups").createIndex({ "members.id": 1 }, { background: true, sparse: true });
 	} catch (err) {
 		console.error("Error connecting to MongoDB:", err);

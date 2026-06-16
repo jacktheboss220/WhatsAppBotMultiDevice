@@ -11,6 +11,11 @@ export const escapeHtml = (text) =>
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;");
 
+// Tagged template: HTML structure stays literal; interpolated values auto-escape.
+// Usage: sendToTelegram(html`<b>${userName}</b> ran <code>${cmd}</code>`)
+export const html = (strings, ...values) =>
+	strings.reduce((out, str, i) => out + str + (i < values.length ? escapeHtml(String(values[i] ?? "")) : ""), "");
+
 /**
  * Send a log message to Telegram.
  * Falls back to console.warn if env vars are not configured.
@@ -28,7 +33,8 @@ const sendToTelegram = async (text) => {
 			parse_mode: "HTML",
 		});
 	} catch (err) {
-		console.error("[TelegramLogger] Failed to send message:", err.message);
+		const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+		console.error("[TelegramLogger] Failed to send message:", detail);
 	}
 };
 

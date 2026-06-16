@@ -6,7 +6,7 @@ const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
 
 import fs from "fs";
 import axios from "axios";
-import { getGroupData } from "../../../mongo-DB/groupDataDb.js";
+import { getGroupData } from "../../../db/groupData.js";
 
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
@@ -17,7 +17,7 @@ const searchType = "&searchType=image";
 const defQuery = "&q=";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, evv } = msgInfoObj;
+	const { sendMessageWTyping, evv, extendedMessageOriginal } = msgInfoObj;
 
 	if (!GOOGLE_API_KEY_SEARCH || !SEARCH_ENGINE_KEY)
 		return sendMessageWTyping(
@@ -36,7 +36,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		);
 	}
 
-	if (args[0]?.startsWith("@") && msg.message.extendedTextMessage) {
+	if (args[0]?.startsWith("@") && extendedMessageOriginal) {
 		return sendMessageWTyping(from, { text: "```Enter Word to Search```" }, { quoted: msg });
 	}
 

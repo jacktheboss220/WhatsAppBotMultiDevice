@@ -16,6 +16,7 @@ const TOGGLES = [
   { field: 'isImgOn',         label: 'Image Search' },
   { field: 'isAutoStickerOn', label: 'Auto-Sticker' },
   { field: 'is91Only',        label: 'India-Only (+91)' },
+  { field: 'isRankNotifOn',   label: 'Rank Notifications' },
 ]
 
 const HOUR_TABS = [1, 6, 12, 24]

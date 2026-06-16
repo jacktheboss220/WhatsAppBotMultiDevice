@@ -1,4 +1,4 @@
-import mdClient from "../mongodb.js";
+import mdClient from "./client.js";
 
 const referrals = mdClient.db("MyBotDataDB").collection("Referrals");
 
@@ -56,8 +56,29 @@ const createReferral = async (companyName, userJid, userName) => {
 
 const getAllReferrals = async () => {
 	try {
-		const res = await referrals.find({}).toArray();
-		return res;
+		const referralsList = await referrals
+			.aggregate([
+				{
+					$match: {
+						users: {
+							$exists: true,
+							$type: "array",
+							$ne: [],
+						},
+					},
+				},
+				{
+					$sort: {
+						companyName: 1,
+					},
+				},
+			])
+			.toArray();
+
+		return referralsList.map((company) => ({
+			...company,
+			companyName: company.companyName?.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()),
+		}));
 	} catch (err) {
 		console.error("[referralsDb error]", err.message);
 		return [];

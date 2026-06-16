@@ -5,13 +5,13 @@ import fs from "fs";
 const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, evv } = msgInfoObj;
+	const { sendMessageWTyping, evv, extendedMessageOriginal } = msgInfoObj;
 
-	if (!args[0] && !msg.message.extendedTextMessage) {
+	if (!args[0] && !extendedMessageOriginal) {
 		return sendMessageWTyping(from, { text: `❌ *Enter some text*` }, { quoted: msg });
 	}
 
-	let message = evv || msg.message.extendedTextMessage.contextInfo.quotedMessage.conversation;
+	let message = evv || extendedMessageOriginal?.quotedMessage?.conversation;
 	message = message.split(":").join("\n");
 
 	const canvas = createCanvas(512, 512);

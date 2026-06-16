@@ -1,4 +1,4 @@
-import { createReferral, updateUserRef } from "../../mongo-DB/referralsDb.js";
+﻿import { createReferral, updateUserRef } from "../../db/referrals.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { command, senderJid, sendMessageWTyping, updateName } = msgInfoObj;

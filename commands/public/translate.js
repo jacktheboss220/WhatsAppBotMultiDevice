@@ -8,7 +8,7 @@ const LANG_NAMES = {
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, prefix } = msgInfoObj;
+	const { sendMessageWTyping, prefix, extendedMessageOriginal } = msgInfoObj;
 
 	if (!args[0])
 		return sendMessageWTyping(
@@ -22,8 +22,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	// Fall back to quoted message if no text given
 	if (!text) {
-		const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-		text = quoted?.conversation || quoted?.extendedTextMessage?.text || "";
+		text = extendedMessageOriginal?.quotedMessage?.conversation || extendedMessageOriginal?.quotedMessage?.extendedTextMessage?.text || "";
 	}
 
 	if (!text)

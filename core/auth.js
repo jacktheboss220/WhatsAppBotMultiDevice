@@ -1,5 +1,5 @@
 import { BufferJSON, initAuthCreds, proto } from "baileys";
-import mdClient from "../mongodb.js";
+import mdClient from "../db/client.js";
 
 const FLUSH_INTERVAL_MS = 5000; // non-critical flush
 const MAX_BUFFER_SIZE = 500; // safety cap
@@ -73,9 +73,15 @@ const useMongoDBAuthState = async () => {
 			creds,
 			keys: {
 				get: async (type, ids) => {
+					const keys = ids.map((id) => `${type}-${id}`);
+					const docs = await collection.find({ _id: { $in: keys } }).toArray();
+					const byKey = {};
+					for (const doc of docs) {
+						if (doc?.value) byKey[doc._id] = JSON.parse(doc.value, BufferJSON.reviver);
+					}
 					const data = {};
 					for (const id of ids) {
-						let value = await readData(`${type}-${id}`);
+						let value = byKey[`${type}-${id}`] ?? null;
 						if (type === "app-state-sync-key" && value) {
 							value = proto.Message.AppStateSyncKeyData.fromObject(value);
 						}

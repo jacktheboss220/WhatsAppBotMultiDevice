@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
 dotenv.config();
 
-import { cmdToText } from "../../functions/getAddCommands.js";
+import { cmdToText } from "../../utils/commandLoader.js";
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
@@ -12,7 +12,23 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	const { publicCommands, groupCommands, adminCommands, ownerCommands, directCommands } = await cmdToText();
 
-	const adminCmd = adminCommands.filter((cmd) => cmd.cmd.includes("admin") || cmd.cmd.some(c => c.startsWith("ref_") || c.startsWith("warning") || c.startsWith("welcome")));
+	if (args.length > 0) {
+		const query = args[0].toLowerCase().replace(/^[-/]/, "");
+		const all = [...publicCommands, ...groupCommands, ...adminCommands, ...ownerCommands];
+		const found = all.find((c) => c.cmd.includes(query));
+		if (!found) {
+			return sendMessageWTyping(from, { text: `❌ No command found: *${query}*` }, { quoted: msg });
+		}
+		const aliases = found.cmd.filter((c) => c !== found.cmd[0]).map((c) => `${prefix}${c}`).join("  |  ");
+		const text =
+			`📖 *${prefix}${found.cmd[0]}*\n\n` +
+			`*Description:* ${found.desc}\n` +
+			`*Usage:* \`${prefix}${found.usage}\`` +
+			(aliases ? `\n*Aliases:* ${aliases}` : "");
+		return sendMessageWTyping(from, { text }, { quoted: msg });
+	}
+
+	const adminCmd = adminCommands.filter((cmd) => cmd.cmd.includes("admin"));
 	const ownerCmd = ownerCommands.filter((cmd) => cmd.cmd.includes("owner"));
 
 	const help = `
@@ -57,6 +73,6 @@ ${directCommands
 export default () => ({
 	cmd: ["help", "menu"],
 	desc: "Help menu",
-	usage: "help",
+	usage: "help [command]",
 	handler,
 });

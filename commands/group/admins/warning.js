@@ -1,6 +1,6 @@
-import { getGroupData, createGroupData, group } from "../../../mongo-DB/groupDataDb.js";
-import { createMembersData, getMemberData, member } from "../../../mongo-DB/membersDataDb.js";
-import { extractPhoneNumber } from "../../../functions/lidUtils.js";
+import { getGroupData, createGroupData, group } from "../../../db/groupData.js";
+import { createMembersData, getMemberData, member } from "../../../db/members.js";
+import { extractPhoneNumber } from "../../../utils/lid.js";
 
 import { config } from "dotenv";
 config();
@@ -9,15 +9,15 @@ const myNumber = [
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
 ];
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { command, groupAdmins, sendMessageWTyping, botNumber } = msgInfoObj;
+	let { command, groupAdmins, sendMessageWTyping, botNumber, extendedMessageOriginal } = msgInfoObj;
 	try {
-		if (!msg.message.extendedTextMessage) {
+		if (!extendedMessageOriginal) {
 			return sendMessageWTyping(from, { text: "❌ Tag someone! or reply to a message" }, { quoted: msg });
 		}
 
 		let taggedJid =
-			msg.message.extendedTextMessage.contextInfo.participant ||
-			msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+			extendedMessageOriginal.participant ||
+			extendedMessageOriginal.mentionedJid[0];
 		// JID is already in correct format (LID or PN)
 
 		let isGroupAdmin = groupAdmins.includes(taggedJid);

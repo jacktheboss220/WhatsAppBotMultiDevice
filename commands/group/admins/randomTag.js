@@ -1,14 +1,13 @@
-import { extractPhoneNumber } from "../../../functions/lidUtils.js";
+import { extractPhoneNumber } from "../../../utils/lid.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, botNumber } = msgInfoObj;
+	const { sendMessageWTyping, botNumber, extendedMessageOriginal } = msgInfoObj;
 	const groupMetadata = await sock.groupMetadata(from);
 	let message = "";
 
 	try {
-		if (msg.message.extendedTextMessage) {
-			console.log(msg.message.extendedTextMessage.quotedMessage);
-			message = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.conversation;
+		if (extendedMessageOriginal) {
+			message = extendedMessageOriginal?.quotedMessage?.conversation;
 		}
 		if (args.length > 0) {
 			message = args.join(" ");

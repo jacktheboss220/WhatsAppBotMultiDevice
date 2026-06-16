@@ -1,17 +1,17 @@
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
 import { downloadMediaMessage } from "baileys";
-import { writeFile } from "fs/promises";
+import { writeFile, readFile } from "fs/promises";
 
 const getRandom = (ext) => {
 	return `${Math.floor(Math.random() * 10000)}${ext}`;
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { type, content, sendMessageWTyping } = msgInfoObj;
+	const { type, content, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
 
-	if (msg.message.extendedTextMessage) {
-		msg["message"] = msg.message.extendedTextMessage.contextInfo.quotedMessage;
+	if (extendedMessageOriginal) {
+		msg["message"] = extendedMessageOriginal.quotedMessage;
 	}
 
 	const isMedia = type === "imageMessage" || type === "videoMessage";
@@ -41,21 +41,33 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					{ text: "❌ There is some problem!\nOnly non-animated stickers can be convert to image!" },
 					{ quoted: msg }
 				);
-			}).on("end", async () => {
-				// Use sendMessageWTyping with file path for async/efficient sending
-				await sendMessageWTyping(
-					from,
-					{
-						image: ran,
-						caption: "Sent by eva",
-						mimetype: "image/png",
-					},
-					{ quoted: msg }
-				);
 				try {
 					fs.unlinkSync(media);
 					fs.unlinkSync(ran);
 				} catch {}
+			}).on("end", async () => {
+				// Read into a buffer before sending: sendMessageWTyping enqueues to BullMQ
+				// and returns before the worker consumes it, so deleting the temp file by
+				// path would race the worker ("File not found"). Buffer stays in memory.
+				try {
+					const imageBuffer = await readFile(ran);
+					await sendMessageWTyping(
+						from,
+						{
+							image: imageBuffer,
+							caption: "Sent by eva",
+							mimetype: "image/png",
+						},
+						{ quoted: msg }
+					);
+				} catch (err) {
+					console.log(err);
+				} finally {
+					try {
+						fs.unlinkSync(media);
+						fs.unlinkSync(ran);
+					} catch {}
+				}
 			});
 		} catch (err) {
 			sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });

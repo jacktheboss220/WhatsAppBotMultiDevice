@@ -1,4 +1,4 @@
-import { createMembersData, getMemberData, member } from "../../mongo-DB/membersDataDb.js";
+﻿import { createMembersData, getMemberData, member } from "../../db/members.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, senderJid, evv } = msgInfoObj;

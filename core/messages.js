@@ -1,16 +1,20 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import messageQueue from "./messageQueue.js";
-import notifyOwner from "./getOwnerSend.js";
-import { readFileEfficiently } from "./fileUtils.js";
+import messageQueue from "../queue/messageQueue.js";
+import notifyOwner from "../notify/owner.js";
+import { escapeHtml } from "../notify/telegram.js";
+import { readFileEfficiently } from "../utils/file.js";
+import { getGroupMeta, setGroupMeta, checkRateLimit } from "../cache/redisCache.js";
+import { bullEnqueue, isBullReady } from "../queue/bullQueue.js";
 
 const prefix = process.env.PREFIX;
 const moderatos = [...process.env.MODERATORS?.split(",")];
-import getGroupAdmins from "./getGroupAdmins.js";
-import { stickerForward, forwardGroup } from "../functions/getStickerForward.js";
-import { createMembersData, getMemberData, member } from "../mongo-DB/membersDataDb.js";
-import { createGroupData, getGroupData, group } from "../mongo-DB/groupDataDb.js";
+import getGroupAdmins from "../utils/groupAdmins.js";
+import { extractPhoneNumber, getPNFromLID } from "../utils/lid.js";
+import { stickerForward, forwardGroup } from "../utils/stickerForward.js";
+import { createMembersData, getMemberData, member } from "../db/members.js";
+import { createGroupData, getGroupData, group } from "../db/groupData.js";
 import {
 	commandsPublic,
 	commandsMembers,
@@ -18,9 +22,10 @@ import {
 	commandsOwners,
 	commandsReadyPromise,
 	commandsLoaded,
-} from "./getAddCommands.js";
-import { getBotData } from "../mongo-DB/botDataDb.js";
-import { saveChatMessage } from "./chatLogger.js";
+} from "../utils/commandLoader.js";
+import { getBotData } from "../db/botData.js";
+import { saveChatMessage } from "../utils/chatLogger.js";
+import { getRankUp } from "../utils/ranks.js";
 
 // These will be used for permission checks
 const myNumber = [
@@ -47,10 +52,24 @@ const getCommand = async (sock, msg, cache) => {
 
 	try {
 		if (!sock || !sock.user) return;
-		if (sock.startupTime && Date.now() - sock.startupTime < 1000) return;
 		const messageKeys = Object.keys(msg.message);
 		if (messageKeys.length === 0) return;
 		if (msg.key.fromMe && !msg.key.remoteJid) return;
+
+		// On first group send after idle, WA bundles senderKeyDistributionMessage + messageContextInfo
+		// alongside the real content type. Pick the first known content type key directly.
+		const _contentTypes = new Set([
+			"conversation",
+			"imageMessage",
+			"videoMessage",
+			"extendedTextMessage",
+			"buttonsResponseMessage",
+			"templateButtonReplyMessage",
+			"listResponseMessage",
+			"stickerMessage",
+			"documentMessage",
+			"audioMessage",
+		]);
 
 		const sendMessageWTyping = async (to, msgObj, messageOptions) => {
 			try {
@@ -61,6 +80,19 @@ const getCommand = async (sock, msg, cache) => {
 				const messageType = Object.keys(msgObj)[0];
 				const isGroupChat = to.endsWith("@g.us");
 
+				if (isGroupChat && isBullReady()) {
+					// Groups → BullMQ (Redis-backed, survives restarts, concurrency 5)
+					const priority = mediaTypes.includes(messageType) ? 2 : 1;
+					try {
+						await bullEnqueue(to, msgObj, messageOptions, true, priority);
+						return;
+					} catch (bullErr) {
+						console.error("[BullMQ enqueue failed, falling back to in-memory]", bullErr.message);
+						// fall through to in-memory queue below
+					}
+				}
+
+				// DMs or BullMQ unavailable → in-memory queue (original path)
 				if (mediaTypes.includes(messageType)) {
 					if (typeof msgObj[messageType] === "string") {
 						try {
@@ -83,7 +115,7 @@ const getCommand = async (sock, msg, cache) => {
 					try {
 						const sendOptions = {
 							...messageOptions,
-							mediaUploadTimeoutMs: isGroupChat ? 1000 * 60 * 10 : 1000 * 60 * 5, // 10min for groups, 5min for DMs
+							mediaUploadTimeoutMs: isGroupChat ? 1000 * 60 * 10 : 1000 * 60 * 5,
 						};
 
 						await sock.sendMessage(to, msgObj, sendOptions);
@@ -104,7 +136,7 @@ const getCommand = async (sock, msg, cache) => {
 						.catch((e) => console.error("[queue enqueue error]", e.message));
 					return;
 				} else {
-					await messageQueue.enqueue(to, doSend, 0); // Highest priority for DMs
+					await messageQueue.enqueue(to, doSend, 0);
 				}
 				return;
 			} catch (error) {
@@ -115,7 +147,7 @@ const getCommand = async (sock, msg, cache) => {
 
 		const from = msg.key.remoteJid;
 		const content = JSON.stringify(msg.message);
-		const type = Object.keys(msg.message)[0];
+		const type = messageKeys.find((k) => _contentTypes.has(k)) ?? messageKeys[0];
 
 		if (type === "stickerMessage" && forwardGroup != "") {
 			stickerForward(sock, msg, from);
@@ -147,6 +179,10 @@ const getCommand = async (sock, msg, cache) => {
 			"stickerMessage",
 			"documentMessage",
 		];
+
+		const extendedMessageOriginal =
+			type === "extendedTextMessage" ? msg.message.extendedTextMessage.contextInfo : null;
+		// console.log("extendedMessageOriginal:", JSON.stringify(extendedMessageOriginal, null, 2));
 
 		if (!types.includes(type)) return;
 
@@ -193,25 +229,34 @@ const getCommand = async (sock, msg, cache) => {
 								: null;
 
 		if (mediaTypeField) {
-			await Promise.all([
-				member.updateOne(
-					{ _id: updateId },
-					{ $inc: { totalmsg: 1, [mediaTypeField]: 1 }, $set: { username: updateName } },
-				),
-				createMembersData(updateId, updateName),
-			]).catch((e) => console.error("[member update error]", e.message));
+			let updatedDoc = null;
+			try {
+				[updatedDoc] = await Promise.all([
+					member.findOneAndUpdate(
+						{ _id: updateId },
+						{ $inc: { totalmsg: 1, [mediaTypeField]: 1 }, $set: { username: updateName } },
+						{ returnDocument: "after" },
+					),
+					createMembersData(updateId, updateName),
+				]);
+			} catch (e) {
+				console.error("[member update error]", e.message);
+			}
 
 			if (isGroup) {
 				setImmediate(async () => {
 					try {
-						const r = await group.updateOne(
+						const snapId = updateId;
+						const updated = await group.findOneAndUpdate(
 							{ _id: from, "members.id": updateId },
 							{
 								$inc: { "members.$.count": 1, [`members.$.${mediaTypeField}`]: 1 },
 								$set: { "members.$.name": updateName },
 							},
+							{ returnDocument: "after" },
 						);
-						if (r.matchedCount === 0) {
+
+						if (!updated) {
 							const newMember = {
 								id: updateId,
 								name: updateName,
@@ -224,6 +269,20 @@ const getCommand = async (sock, msg, cache) => {
 							};
 							newMember[mediaTypeField] = 1;
 							await group.updateOne({ _id: from }, { $push: { members: newMember } });
+						} else {
+							// Check rank-up using per-group count
+							const memberEntry = updated.members?.find((m) => m.id === snapId);
+							const grpCount = memberEntry?.count || 0;
+							const rankUp = getRankUp(grpCount);
+							if (rankUp) {
+								const grpCheck = await group.findOne({ _id: from }, { projection: { isRankNotifOn: 1 } });
+								if (grpCheck?.isRankNotifOn) {
+									const text = rankUp.congrats
+										? `🎉 @${snapId.split("@")[0]} completed *${grpCount.toLocaleString()}* messages in this group! 💎`
+										: `🎉 *Rank Up!*\n${rankUp.emoji} *${rankUp.name}*\n@${snapId.split("@")[0]} just hit *${grpCount.toLocaleString()}* messages in this group! 🚀`;
+									await sendMessageWTyping(from, { text, mentions: [snapId] });
+								}
+							}
 						}
 						await group.updateOne({ _id: from }, { $inc: { totalMsgCount: 1 } });
 					} catch (e) {
@@ -283,7 +342,8 @@ const getCommand = async (sock, msg, cache) => {
 		let groupMetadata = "";
 		let groupData = "";
 		if (isGroup) {
-			groupMetadata = cache.get(from + ":groupMetadata");
+			// Redis first, NodeCache fallback, then live fetch
+			groupMetadata = (await getGroupMeta(from)) || cache.get(from + ":groupMetadata");
 			if (!groupMetadata) {
 				try {
 					groupMetadata = await Promise.race([
@@ -292,7 +352,8 @@ const getCommand = async (sock, msg, cache) => {
 							setTimeout(() => reject(new Error("Group metadata fetch timeout")), 2000),
 						),
 					]);
-					cache.set(from + ":groupMetadata", groupMetadata, 10 * 60); // 10 min
+					setGroupMeta(from, groupMetadata); // Redis (async, non-blocking)
+					cache.set(from + ":groupMetadata", groupMetadata, 10 * 60); // NodeCache fallback
 					createGroupData(from, groupMetadata).catch((e) =>
 						console.error("[createGroupData error]", e.message),
 					);
@@ -384,9 +445,9 @@ const getCommand = async (sock, msg, cache) => {
 					`🤖 <b>Command Used</b>\n` +
 						`━━━━━━━━━━━━━━\n` +
 						`📌 <b>Command:</b> <code>chat</code>\n` +
-						`👤 <b>User:</b> ${msg.pushName}\n` +
-						`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
-						`💬 <b>In:</b> ${groupMetadata.subject}`,
+						`👤 <b>User:</b> ${escapeHtml(msg.pushName)}\n` +
+						`📱 <b>ID:</b> <code>${escapeHtml(senderJid)}</code>\n` +
+						`💬 <b>In:</b> ${escapeHtml(groupMetadata.subject)}`,
 					msg,
 				);
 			}
@@ -394,6 +455,12 @@ const getCommand = async (sock, msg, cache) => {
 		//---------------------------------------------------NO-CMD----------------------------------------------------//
 		if (!isCmd) return;
 		//-------------------------------------------------------------------------------------------------------------//
+		// Rate limit: 3 calls per 5s per user per command (owners exempt)
+		// if (!isOwner) {
+		// const allowed = await checkRateLimit(senderJid, command);
+		// if (!allowed) return console.log("Rate limit exceeded for", senderJid, "command:", command);
+
+		// }
 		sock.readMessages([msg.key]).catch(() => {});
 
 		const msgInfoObj = {
@@ -414,12 +481,16 @@ const getCommand = async (sock, msg, cache) => {
 			updateId,
 			isOwner,
 			startTime,
+			extendedMessageOriginal,
 		};
+		const displayFrom = senderJid.endsWith("@s.whatsapp.net")
+			? extractPhoneNumber(senderJid)
+			: extractPhoneNumber((await Promise.resolve(getPNFromLID(sock, senderJid))) || senderJid);
 		console.log(
 			"[COMMAND]",
 			command,
 			"[FROM]",
-			senderJid,
+			displayFrom,
 			"[name]",
 			msg.pushName,
 			"[IN]",
@@ -429,10 +500,10 @@ const getCommand = async (sock, msg, cache) => {
 			sock,
 			`🤖 <b>Command Used</b>\n` +
 				`━━━━━━━━━━━━━━\n` +
-				`📌 <b>Command:</b> <code>${command}</code>\n` +
-				`👤 <b>User:</b> ${msg.pushName}\n` +
-				`📱 <b>ID:</b> <code>${senderJid}</code>\n` +
-				`💬 <b>In:</b> ${isGroup ? groupMetadata.subject : "Direct Message"}`,
+				`📌 <b>Command:</b> <code>${escapeHtml(command)}</code>\n` +
+				`👤 <b>User:</b> ${escapeHtml(msg.pushName)}\n` +
+				`📱 <b>ID:</b> <code>${escapeHtml(displayFrom)}</code>\n` +
+				`💬 <b>In:</b> ${escapeHtml(isGroup ? groupMetadata.subject : "Direct Message")}`,
 			msg,
 		);
 		if (command != "") {
@@ -460,7 +531,7 @@ const getCommand = async (sock, msg, cache) => {
 			}
 		}
 		// Track command usage for admin dashboard
-		const { pushActivity, cmdUsage } = await import("./adminEvents.js");
+		const { pushActivity, cmdUsage } = await import("../notify/adminEvents.js");
 		if (commandsPublic[command] || commandsMembers[command] || commandsAdmins[command] || commandsOwners[command]) {
 			cmdUsage.set(command, (cmdUsage.get(command) || 0) + 1);
 			pushActivity("command_used", {
@@ -528,6 +599,41 @@ const getCommand = async (sock, msg, cache) => {
 			console.log(`[PROFILE] Command '${command}' (owners) took ${t1 - t0}ms`);
 			return result;
 		} else {
+			const allCmds = [
+				...Object.keys(commandsPublic),
+				...Object.keys(commandsMembers),
+				...Object.keys(commandsAdmins),
+				...Object.keys(commandsOwners),
+			];
+			const lev = (a, b) => {
+				const dp = Array.from({ length: a.length + 1 }, (_, i) =>
+					Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
+				);
+				for (let i = 1; i <= a.length; i++)
+					for (let j = 1; j <= b.length; j++)
+						dp[i][j] =
+							a[i - 1] === b[j - 1]
+								? dp[i - 1][j - 1]
+								: 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+				return dp[a.length][b.length];
+			};
+			let best = null,
+				bestDist = Infinity;
+			for (const c of allCmds) {
+				const d = lev(command, c);
+				if (d < bestDist) {
+					bestDist = d;
+					best = c;
+				}
+			}
+			const threshold = Math.max(2, Math.floor(command.length / 2));
+			if (best && bestDist <= threshold) {
+				return sendMessageWTyping(
+					from,
+					{ text: `Did you mean *${prefix}${best}*?` },
+					{ quoted: msg },
+				);
+			}
 			return sendMessageWTyping(
 				from,
 				{ text: "```" + msg.pushName + " !!Use " + prefix + "help ```" },
@@ -550,15 +656,15 @@ const getCommand = async (sock, msg, cache) => {
 				2,
 			),
 		);
-		if (sock && sock.user && msg && msg.key && msg.key.remoteJid) {
-			setTimeout(async () => {
-				try {
-					await sendMessageWTyping(msg.key.remoteJid, {
-						text: "❌ Sorry, I encountered an error processing your message. Please try again in a moment.",
-					});
-				} catch (sendError) {
-					console.error("❌ Failed to send error message:", sendError.message);
-				}
+		if (sock?.user && msg?.key?.remoteJid) {
+			setTimeout(() => {
+				sock.sendMessage(
+					msg.key.remoteJid,
+					{
+						text: "❌ Sorry, I encountered an error processing your message. Please try again.",
+					},
+					{ quoted: msg },
+				).catch(() => {});
 			}, 1000);
 		}
 	}

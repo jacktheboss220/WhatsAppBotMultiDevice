@@ -9,8 +9,9 @@ const cache = new NodeCache({
 	deleteOnExpire: true,
 });
 
-import socket from "./functions/getSocket.js";
-import events from "./functions/getEvents.js";
+import socket from "./core/socket.js";
+import events from "./core/events.js";
+import { setSock } from "./core/socketRef.js";
 
 let connectionAttempts = 0;
 const MAX_CONNECTION_ATTEMPTS = 5;
@@ -50,6 +51,7 @@ const startSock = async (reason = "initial") => {
 
 		const sock = await socket();
 		if (sock) {
+			setSock(sock); // Update live reference for BullMQ worker
 			// Notify index.js FIRST so it can attach its listener before events() runs
 			if (_onNewSock) _onNewSock(sock);
 

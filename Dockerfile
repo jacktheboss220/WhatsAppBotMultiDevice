@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
     -O /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp
 
-ENV YTDL_EXTRACTOR_ARGS="youtube:player_client=default,web"
+ENV YTDLP_PATH=/usr/local/bin/yt-dlp
 ENV FFMPEG_PATH=ffmpeg
 
 RUN corepack enable && corepack prepare pnpm@11.5.0 --activate

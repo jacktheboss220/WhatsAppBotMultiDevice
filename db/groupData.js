@@ -1,4 +1,4 @@
-import mdClient from "../mongodb.js";
+import mdClient from "./client.js";
 
 mdClient.connect();
 
@@ -14,6 +14,7 @@ const createGroupData = async (groupJid, groupMetadata) => {
 				isImgOn: false,
 				isChatBotOn: false,
 				is91Only: false,
+				isRankNotifOn: false,
 				grpName: groupMetadata.subject,
 				desc: groupMetadata.desc ? groupMetadata.desc.toString() : "",
 				cmdBlocked: [],

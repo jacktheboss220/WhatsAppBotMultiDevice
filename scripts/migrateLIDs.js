@@ -1,6 +1,6 @@
-import mdClient from "../mongodb.js";
-import socket from "../functions/getSocket.js";
-import { extractPhoneNumber } from "../functions/lidUtils.js";
+import mdClient from "../db/client.js";
+import socket from "../core/socket.js";
+import { extractPhoneNumber } from "../utils/lid.js";
 
 const migrate = async () => {
 	try {

@@ -1,16 +1,14 @@
-import { getGroupData, createGroupData, group } from "../../mongo-DB/groupDataDb.js";
-import { getMemberData, createMembersData, member } from "../../mongo-DB/membersDataDb.js";
+import { getGroupData, createGroupData, group } from "../../db/groupData.js";
+import { getMemberData, createMembersData, member } from "../../db/members.js";
 import axios from "axios";
 import fs from "fs";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, evv } = msgInfoObj;
+	const { sendMessageWTyping, evv, command, extendedMessageOriginal } = msgInfoObj;
 
 	let taggedJid;
-	if (msg.message.extendedTextMessage) {
-		taggedJid = msg.message.extendedTextMessage
-			? msg.message.extendedTextMessage.contextInfo.participant
-			: msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+	if (extendedMessageOriginal) {
+		taggedJid = extendedMessageOriginal.participant || extendedMessageOriginal.mentionedJid?.[0];
 	}
 
 	if (args.length === 0) {
@@ -27,7 +25,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 };
 
 export default () => ({
-	cmd: ["test", "code"],
+	cmd: ["test", "code", "mano"],
 	desc: "Test your code",
 	usage: "test | code",
 	handler,

@@ -1,4 +1,4 @@
-import { getGroupData } from "../../mongo-DB/groupDataDb.js";
+import { getGroupData } from "../../db/groupData.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, isGroup } = msgInfoObj;

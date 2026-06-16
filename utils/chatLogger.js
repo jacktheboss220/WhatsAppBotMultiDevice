@@ -1,4 +1,4 @@
-import mdClient from "../mongodb.js";
+import mdClient from "../db/client.js";
 
 const chatLogs = mdClient.db("MyBotDataDB").collection("ChatLogs");
 

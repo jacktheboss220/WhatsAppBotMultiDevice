@@ -1,10 +1,11 @@
-import { getAllReferrals, searchReferrals } from "../../mongo-DB/referralsDb.js";
+﻿import { getAllReferrals, searchReferrals } from "../../db/referrals.js";
+const readMore = String.fromCharCode(8206).repeat(4000);
 
 const buildMessage = (companies, isGroup, header) => {
 	let message = header;
 	const allJids = [];
 
-	for (const company of companies) {
+	for (const [index, company] of companies.entries()) {
 		if (isGroup) {
 			const userLines = company.users.map((u) => `  • ${u.name || "Unknown"}`);
 			message += `*🏢 ${company.companyName}*\n${userLines.join("\n")}\n\n`;
@@ -14,6 +15,10 @@ const buildMessage = (companies, isGroup, header) => {
 				return `  • @${u.jid.split("@")[0]}`;
 			});
 			message += `*🏢 ${company.companyName}*\n${userLines.join("\n")}\n\n`;
+		}
+
+		if (index === 1) {
+			message += `${readMore}`;
 		}
 	}
 
@@ -46,7 +51,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		}
 
 		const { message, allJids } = buildMessage(allReferrals, isGroup, "*📋 Company Referral List*\n\n");
-		const footer = `_Total: ${allReferrals.length} company/companies_` +
+		const footer =
+			`_Total: ${allReferrals.length} company/companies_` +
 			(isGroup ? "\n\n_For better experience, use -ref_list via DM to the bot._" : "");
 		await sendMessageWTyping(from, { text: message + footer, mentions: allJids }, { quoted: msg });
 	} else if (command === "company") {
@@ -72,7 +78,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		}
 
 		const { message, allJids } = buildMessage(results, isGroup, `*🔍 Search results for:* ${searchTerm}\n\n`);
-		const footer = `_Total: ${results.length} company/companies_` +
+		const footer =
+			`_Total: ${results.length} company/companies_` +
 			(isGroup ? "\n\n_For better experience, use -company via DM to the bot._" : "");
 		await sendMessageWTyping(from, { text: message + footer, mentions: allJids }, { quoted: msg });
 	}

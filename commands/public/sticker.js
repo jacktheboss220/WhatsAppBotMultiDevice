@@ -1,9 +1,9 @@
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
 dotenv.config();
 
 import { downloadMediaMessage } from "baileys";
 import WSF from "wa-sticker-formatter";
-import memoryManager from "../../functions/memoryUtils.js";
+import memoryManager from "../../utils/memory.js";
 
 import ffmpeg from "fluent-ffmpeg";
 
@@ -13,42 +13,42 @@ if (!ffmpegPath1) {
 	try {
 		const { default: ffmpegStatic } = await import("ffmpeg-static");
 		const { existsSync } = await import("fs");
-		ffmpegPath1 = (ffmpegStatic && existsSync(ffmpegStatic)) ? ffmpegStatic : "ffmpeg";
+		ffmpegPath1 = ffmpegStatic && existsSync(ffmpegStatic) ? ffmpegStatic : "ffmpeg";
 	} catch (err) {
 		ffmpegPath1 = "ffmpeg";
 	}
 }
 
-console.log(`🎬 Sticker command using FFmpeg: ${ffmpegPath1}`);
+// console.log(`🎬 FFmpeg (sticker): ${ffmpegPath1.split(/[\\/]/).pop()}`);
 ffmpeg.setFfmpegPath(ffmpegPath1);
 
-import { getMemberData, member } from "../../mongo-DB/membersDataDb.js";
-import { writeFile } from "fs/promises";
+import { getMemberData, member } from "../../db/members.js";
+import { writeFile, readFile } from "fs/promises";
 import fs from "fs";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const getRandom = (ext = "") => memoryManager.generateTempFileName(ext);
-	const { senderJid, type, content, isGroup, sendMessageWTyping, evv } = msgInfoObj;
+	const { senderJid, type, content, isGroup, sendMessageWTyping, evv, extendedMessageOriginal } = msgInfoObj;
 	const memberData = await getMemberData(senderJid);
 
 	if (msg.message.extendedTextMessage) {
-		msg.message = msg.message.extendedTextMessage.contextInfo.quotedMessage;
+		msg.message = extendedMessageOriginal?.quotedMessage;
 	}
 
 	const isMedia = type === "imageMessage" || type === "videoMessage";
 	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
 	const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
 
-	if (!isGroup) {
-		if (memberData.dmLimit <= 0) {
-			return sendMessageWTyping(
-				from,
-				{ text: "You have used your monthly limit.\nWait for next month." },
-				{ quoted: msg }
-			);
-		}
-		member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
-	}
+	// if (!isGroup) {
+	// 	if (memberData.dmLimit <= 0) {
+	// 		return sendMessageWTyping(
+	// 			from,
+	// 			{ text: "You have used your monthly limit.\nWait for next month." },
+	// 			{ quoted: msg },
+	// 		);
+	// 	}
+	// 	member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
+	// }
 
 	let packName = memberData ? await memberData?.customStealText : "eva";
 	let authorName = memberData?.customStealText ? undefined : "jacktheboss220";
@@ -61,33 +61,77 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		authorName = isAuthorIncluded ? evv.split("author")[1].split("pack")[0] : authorName;
 	}
 
-	const outputOptions =
-		args.includes("crop") || args.includes("c")
-			? [
-					`-vcodec`,
-					`libwebp`,
-					`-vf`,
-					`crop=w='min(min(iw\,ih)\,500)':h='min(min(iw\,ih)\,500)',scale=500:500,setsar=1,fps=15`,
-					`-loop`,
-					`0`,
-					`-ss`,
-					`00:00:00.0`,
-					`-t`,
-					`00:00:09.0`,
-					`-preset`,
-					`default`,
-					`-an`,
-					`-vsync`,
-					`0`,
-					`-s`,
-					`512:512`,
-			  ]
-			: [
-					`-vcodec`,
-					`libwebp`,
-					`-vf`,
-					`scale='min(220,iw)':min'(220,ih)':force_original_aspect_ratio=decrease,fps=15, pad=220:220:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse`,
-			  ];
+	const qualityArg = args.find((a) => /^\d{1,3}$/.test(a));
+	const quality = qualityArg ? Math.min(100, Math.max(1, +qualityArg)) : 75;
+
+	const FOCAL_POINTS = ["top", "bottom", "left", "right", "center"];
+	const focalPoint = FOCAL_POINTS.find((p) => args.includes(p)) || "center";
+	const isCrop = args.includes("crop") || args.includes("c") || FOCAL_POINTS.some((p) => args.includes(p));
+
+	const buildCropFilter = (pos) => {
+		const s = `min(iw\\,ih)`;
+		const cx = `(iw-min(iw\\,ih))/2`;
+		const cy = `(ih-min(iw\\,ih))/2`;
+		const xMap = { center: cx, top: cx, bottom: cx, left: `0`, right: `iw-min(iw\\,ih)` };
+		const yMap = { center: cy, top: `0`, bottom: `ih-min(iw\\,ih)`, left: cy, right: cy };
+		return `crop=${s}:${s}:${xMap[pos]}:${yMap[pos]},scale=512:512,fps=fps=15`;
+	};
+
+	const isVideoType = type === "videoMessage" || isTaggedVideo;
+
+	const outputOptions = isCrop
+		? [
+				`-vcodec`,
+				`libwebp`,
+				`-vf`,
+				buildCropFilter(focalPoint),
+				`-lossless`,
+				`0`,
+				`-q:v`,
+				`${quality}`,
+				`-loop`,
+				`0`,
+				`-ss`,
+				`00:00:00.0`,
+				`-t`,
+				`00:00:09.0`,
+				`-preset`,
+				`default`,
+				`-an`,
+				`-s`,
+				`512:512`,
+			]
+		: isVideoType
+		? [
+				`-vcodec`,
+				`libwebp`,
+				`-vf`,
+				`scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:-1:-1:color=black@0,fps=fps=15`,
+				`-lossless`,
+				`0`,
+				`-q:v`,
+				`${quality}`,
+				`-loop`,
+				`0`,
+				`-t`,
+				`00:00:09.0`,
+				`-preset`,
+				`default`,
+				`-an`,
+			]
+		: [
+				`-vcodec`,
+				`libwebp`,
+				`-vf`,
+				`scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=yuva420p`,
+				`-lossless`,
+				`0`,
+				`-q:v`,
+				`${quality}`,
+				`-preset`,
+				`default`,
+				`-an`,
+			];
 
 	const media = isTaggedImage ? getRandom(".png") : getRandom(".mp4");
 
@@ -102,7 +146,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				return sendMessageWTyping(
 					from,
 					{ text: "❌ Failed to download media. Please try again." },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			}
 
@@ -113,83 +157,69 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				return sendMessageWTyping(
 					from,
 					{ text: "❌ Failed to save media file. Please try again." },
-					{ quoted: msg }
+					{ quoted: msg },
 				);
 			}
 
 			await buildSticker(media);
 		} catch (error) {
-			console.error("Media download error:", error);
-			// Clean up any partial file
 			memoryManager.safeUnlink(media);
+			if (error?.output?.statusCode === 400 || error?.message?.includes("No valid media URL")) {
+				return sendMessageWTyping(
+					from,
+					{
+						text: "❌ Can't download quoted media — WhatsApp strips download info from replies.\n\n*Fix:* Send the image/GIF/video *directly* with *-s* as caption instead of replying.",
+					},
+					{ quoted: msg },
+				);
+			}
+			console.error("[STICKER ERR]", error.message);
 			return sendMessageWTyping(from, { text: "❌ Failed to process media. Please try again." }, { quoted: msg });
 		}
 	} else {
-		sendMessageWTyping(from, { text: `❌ *Error reply to image or video only*` }, { quoted: msg });
-		console.error("Error not replied");
+		sendMessageWTyping(from, { text: `❌ *Reply to an image or video*` }, { quoted: msg });
 	}
 
-	async function buildSticker(media) {
+	function buildSticker(media) {
 		const ran = getRandom(".webp");
 
-		try {
-			// Verify input file exists before processing
+		return new Promise((resolve, reject) => {
 			if (!fs.existsSync(media)) {
-				throw new Error("Input media file not found");
+				return reject(new Error("Input media file not found"));
 			}
 
-			const file = ffmpeg(media)
+			ffmpeg(media)
 				.on("error", (err) => {
-					console.error("FFmpeg error:", err);
 					memoryManager.safeUnlink(media);
 					memoryManager.safeUnlink(ran);
-					sendMessageWTyping(from, { text: "❌ Error converting media to sticker." }, { quoted: msg });
+					reject(err);
+				})
+				.on("end", async () => {
+					try {
+						if (!fs.existsSync(ran)) throw new Error("Output sticker file not created");
+						const isVideoSticker = type === "videoMessage" || isTaggedVideo;
+						const stickerBuffer = isVideoSticker
+							? await readFile(ran)
+							: await WSF.setMetadata(packName, authorName, ran);
+						await sendMessageWTyping(from, { sticker: Buffer.from(stickerBuffer) }, { quoted: msg });
+						resolve();
+					} catch (err) {
+						reject(err);
+					} finally {
+						memoryManager.safeUnlink(media);
+						memoryManager.safeUnlink(ran);
+					}
 				})
 				.addOutputOptions(outputOptions)
 				.toFormat("webp")
 				.save(ran);
-
-			file.on("end", async () => {
-				try {
-					// Verify output file was created
-					if (!fs.existsSync(ran)) {
-						throw new Error("Output sticker file not created");
-					}
-
-					const stickerBuffer = await WSF.setMetadata(packName, authorName, ran);
-					// Use sendMessageWTyping with file path for async/efficient sending
-					await sendMessageWTyping(from, { sticker: ran }, { quoted: msg });
-				} catch (wsError) {
-					console.error("Sticker creation error:", wsError);
-					// Fallback to file reading if buffer method fails
-					try {
-						if (fs.existsSync(ran)) {
-							await sendMessageWTyping(from, { sticker: ran }, { quoted: msg });
-						} else {
-							throw new Error("No sticker file to send");
-						}
-					} catch (fallbackError) {
-						console.error("Fallback error:", fallbackError);
-						sendMessageWTyping(from, { text: "❌ Failed to create sticker." }, { quoted: msg });
-					}
-				} finally {
-					// Ensure cleanup happens
-					memoryManager.safeUnlink(media);
-					memoryManager.safeUnlink(ran);
-				}
-			});
-		} catch (err) {
-			console.error("buildSticker error:", err);
-			sendMessageWTyping(from, { text: `❌ Error: ${err.message}` }, { quoted: msg });
-			memoryManager.safeUnlink(media);
-			memoryManager.safeUnlink(ran);
-		}
+		});
 	}
 };
 
 export default () => ({
 	cmd: ["sticker", "s"],
 	desc: "Convert image or video to sticker.",
-	usage: "sticker | s [pack <packname>] [author <authorname>] [crop/c] [nometadata]",
+	usage: "sticker | s [1-100] [pack <packname>] [author <authorname>] [crop/c] [top|bottom|left|right|center] [nometadata]",
 	handler,
 });

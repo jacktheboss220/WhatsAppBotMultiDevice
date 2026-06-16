@@ -3,7 +3,7 @@ dotenv.config();
 
 import fs from "fs";
 import axios from "axios";
-import memoryManager from "../../../functions/memoryUtils.js";
+import memoryManager from "../../../utils/memory.js";
 import ffmpeg from "fluent-ffmpeg";
 
 // Get FFmpeg path - prioritize environment variable
@@ -21,7 +21,7 @@ if (!ffmpegPath1) {
 	}
 }
 
-console.log(`🎬 Meme command using FFmpeg: ${ffmpegPath1}`);
+// console.log(`🎬 FFmpeg (meme):    ${ffmpegPath1.split(/[\\/]/).pop()}`);
 ffmpeg.setFfmpegPath(ffmpegPath1);
 
 const getRandom = (ext) => {

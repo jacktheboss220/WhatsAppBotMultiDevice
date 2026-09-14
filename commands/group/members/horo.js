@@ -46,7 +46,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		);
 	} else {
 		getHoroscope(signs[h_Low]).then((res) => {
-			const reading = res.split("-")[1]?.trim() || res.trim();
+			const reading = res.trim().replace(/^[A-Za-z]{3,9}\s\d{1,2},\s\d{4}\s*-\s*/, "");
 			sendMessageWTyping(
 				from,
 				{

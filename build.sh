@@ -83,7 +83,6 @@ case "${1:-help}" in
         docker image prune -f && docker builder prune -f ;;
     nginx)
         # Installs Nginx, drops the conf with the right domain, enables it.
-        [ -n "$DOMAIN" ] || { echo "Set DOMAIN: DOMAIN=your.domain.com ./build.sh nginx"; exit 1; }
         command -v nginx >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y nginx; }
         sudo cp deploy/nginx/wabot.conf /etc/nginx/sites-available/wabot.conf
         sudo sed -i "s/your-domain\.example\.com/${DOMAIN}/g" /etc/nginx/sites-available/wabot.conf

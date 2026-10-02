@@ -3,10 +3,10 @@ import { downloadMediaMessage } from "baileys";
 import fs from "fs";
 import ffmpeg from "fluent-ffmpeg";
 import { writeFile } from "fs/promises";
+import memoryManager from "../../../utils/memory.js";
+import { getMediaFlags } from "../../../utils/mediaFlags.js";
 
-const getRandom = (ext) => {
-	return `${Math.floor(Math.random() * 10000)}${ext}`;
-};
+const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { type, content, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
@@ -15,9 +15,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		msg["message"] = extendedMessageOriginal.quotedMessage;
 	}
 
-	const isMedia = type === "imageMessage" || type === "videoMessage";
-	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
-	const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
+	const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
 
 	if (isMedia || isTaggedImage || isTaggedVideo) {
 		const media = getRandom(".mp4");
@@ -39,23 +37,20 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						{
 							audio: await fs.promises.readFile(path),
 							mimetype: "audio/mpeg",
-							fileName: path,
+							fileName: "audio.mp3", // was the server temp path
 						},
 						{ quoted: msg }
 					);
 				} finally {
-					try {
-						fs.unlinkSync(media);
-						fs.unlinkSync(path);
-					} catch {}
+					memoryManager.safeUnlink(media);
+					memoryManager.safeUnlink(path);
 				}
 			})
 			.on("error", (err) => {
 				console.error("Error:", err);
 				sendMessageWTyping(from, { text: `Error while converting` }, { quoted: msg });
-				try {
-					fs.unlinkSync(media);
-				} catch {}
+				memoryManager.safeUnlink(media);
+				memoryManager.safeUnlink(path);
 			})
 			.save(path);
 	} else {
@@ -66,7 +61,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["mp3", "mp4audio", "tomp3"],
-	desc: "Convert video to mp3",
+	desc: "Convert a video to an MP3. Reply to the video.",
 	usage: "mp3 | reply to video",
 	handler,
 });

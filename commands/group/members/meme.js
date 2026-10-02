@@ -115,7 +115,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["meme"],
-	desc: "Get random meme",
+	desc: "Get a random meme.",
 	usage: "meme",
 	handler,
 });

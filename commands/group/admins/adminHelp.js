@@ -7,24 +7,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	let { prefix, sendMessageWTyping } = msgInfoObj;
 	const { adminCommands } = await cmdToText();
 
-	const admin = `
----------------------------------------------------------------
-    ─「 *Admin Commands* 」─
----------------------------------------------------------------
-${readMore}
+	const line = (c) => `▸ *${prefix}${c.cmd[0]}*${c.cmd.length > 1 ? ` _(${c.cmd.slice(1).map((a) => prefix + a).join(", ")})_` : ""}\n   ${c.desc}`;
+	const text =
+		`🛡️ *Admin Commands*\n${readMore}\n` +
+		adminCommands.map(line).join("\n\n") +
+		`\n\n💡 _${prefix}help <command> for usage_\n♥ buymeacoffee.com/jacktheboss220`;
 
-${adminCommands
-	.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`)
-	.join("\n\n")}
-
-♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️`;
-
-	sendMessageWTyping(from, { text: admin }, { quoted: msg });
+	sendMessageWTyping(from, { text }, { quoted: msg });
 };
 
 export default () => ({
 	cmd: ["admin"],
-	desc: "Admin commands list",
+	desc: "Show all admin commands.",
 	usage: "admin",
 	handler,
 });

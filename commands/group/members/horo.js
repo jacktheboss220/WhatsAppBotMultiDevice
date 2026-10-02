@@ -19,7 +19,7 @@ const signs = {
 const URL = "https://www.horoscope.com/us/horoscopes/general/horoscope-general-daily-today.aspx?sign=";
 
 const getHoroscope = async (sign) => {
-	const res = await axios.get(URL + sign);
+	const res = await axios.get(URL + sign, { timeout: 8000 });
 	const $ = cheerio.load(res.data);
 	const horoscope = $("body > div.grid.grid-right-sidebar > main > div.main-horoscope > p:nth-child(2)").text();
 	return horoscope;
@@ -63,7 +63,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["horo", "horoscope"],
-	desc: "Get horoscope",
+	desc: "Get today's horoscope for a zodiac sign.",
 	usage: "horo <sign> | " + Object.keys(signs).join(", "),
 	handler,
 });

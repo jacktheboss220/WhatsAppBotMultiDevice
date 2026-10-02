@@ -5,7 +5,8 @@ const myNumber = [
 	process.env.MY_NUMBER.split(",")[1] + "@lid",
 ];
 import { member } from "../../db/members.js";
-import { extractPhoneNumber, normalizeJID } from "../../utils/lid.js";
+import { extractPhoneNumber } from "../../utils/lid.js";
+import { isPrivileged } from "../../utils/roles.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { command, botNumber, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
@@ -16,6 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	let taggedJid;
 
 	taggedJid = extendedMessageOriginal.participant || extendedMessageOriginal.mentionedJid?.[0];
+	if (!taggedJid) return sendMessageWTyping(from, { text: "❌ Tag / mentioned!" }, { quoted: msg });
 
 	const targetNumber = extractPhoneNumber(taggedJid);
 
@@ -24,20 +26,19 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	if (
 		targetNumber == extractPhoneNumber(botNumber[0]) ||
 		targetNumber == extractPhoneNumber(botNumber[1]) ||
-		myNumber.map((m) => extractPhoneNumber(m)).includes(targetNumber)
+		myNumber.map((m) => extractPhoneNumber(m)).includes(targetNumber) ||
+		(await isPrivileged(sock, taggedJid))
 	)
 		return sendMessageWTyping(from, { text: `_Command Can't be used on Bot / Mod / Owner_.💀` }, { quoted: msg });
 
 	if (command == "block") {
-		const dbJid = targetNumber + "@lid";
-		member.updateOne({ _id: dbJid }, { $set: { isBlock: true } }).then(() => {
+		member.updateOne({ _id: taggedJid }, { $set: { isBlock: true } }).then(() => {
 			sendMessageWTyping(from, { text: `❌ Blocked` }, { quoted: msg });
 		});
 	}
 
 	if (command == "unblock") {
-		const dbJid = targetNumber + "@lid";
-		member.updateOne({ _id: dbJid }, { $set: { isBlock: false } }).then(() => {
+		member.updateOne({ _id: taggedJid }, { $set: { isBlock: false } }).then(() => {
 			sendMessageWTyping(from, { text: `✅ *Unblocked*` }, { quoted: msg });
 		});
 	}
@@ -45,7 +46,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["block", "unblock"],
-	desc: "Block / Unblock a user",
+	desc: "Block or unblock a user from using the bot. Tag them or reply.",
 	usage: "block | unblock | tag / mention the user | reply to a message to block / unblock",
 	handler,
 });

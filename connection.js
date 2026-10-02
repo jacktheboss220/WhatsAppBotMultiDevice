@@ -24,6 +24,7 @@ let _onNewSock = null;
 export const onNewSock = (fn) => { _onNewSock = fn; };
 
 const startSock = async (reason = "initial") => {
+	let socketCreated = false; // retry only if we failed BEFORE a socket existed (else we would start a second one)
 	try {
 		const now = Date.now();
 
@@ -38,12 +39,12 @@ const startSock = async (reason = "initial") => {
 		}
 
 		if (connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
-			console.log("❌ Max connection attempts reached. Performing emergency cleanup and resetting...");
-			connectionAttempts = 0; // Reset after cleanup
-			// Wait longer before allowing reconnection
+			console.log("❌ Max connection attempts reached. Backing off for 1 minute, then trying again...");
+			// Was: reset the counter and give up, so nothing ever called startSock again and the bot stayed offline.
 			setTimeout(() => {
 				connectionAttempts = 0;
-			}, 60000); // 1 minute reset
+				startSock(reason);
+			}, 60000);
 			return null;
 		}
 
@@ -54,6 +55,7 @@ const startSock = async (reason = "initial") => {
 		// Perform comprehensive cleanup to prevent stale references
 
 		const sock = await socket();
+		socketCreated = !!sock;
 		if (sock) {
 			setSock(sock); // Update live reference for BullMQ worker
 			// Notify index.js FIRST so it can attach its listener before events() runs
@@ -66,6 +68,9 @@ const startSock = async (reason = "initial") => {
 		return sock;
 	} catch (error) {
 		console.error("❌ Error starting socket:", error.message);
+		// socket() can throw (Mongo blip while reading auth, ...). With no live socket there is no 'close'
+		// event to trigger a reconnect, so the bot used to stay offline until someone restarted it.
+		if (!socketCreated) setTimeout(() => startSock(reason), 10000);
 		return null;
 	}
 };

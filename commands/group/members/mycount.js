@@ -42,7 +42,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["mycount", "total"],
-	desc: "Get your message count in group",
+	desc: "Show how many messages you have sent in this group.",
 	usage: "total | mycount",
 	handler,
 });

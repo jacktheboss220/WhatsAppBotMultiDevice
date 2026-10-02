@@ -64,7 +64,7 @@ function getWeatherEmoji(desc) {
 
 export default () => ({
 	cmd: ["weather", "w"],
-	desc: "Get current weather for a city",
+	desc: "Get the current weather for a city.",
 	usage: "weather <city>",
 	handler,
 });

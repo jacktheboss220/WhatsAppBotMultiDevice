@@ -10,21 +10,26 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	let message = `📢 *Broadcast*\n\n${args.join(" ")}`;
 
-	try {
-		for (let i = 0; i < res.length; i++) {
+	let sent = 0;
+	for (let i = 0; i < res.length; i++) {
+		try {
 			await sendMessageWTyping(res[i], { text: message });
-			await delay(2000);
-			if (i == res.length - 1)
-				return sendMessageWTyping(from, { text: `✅ Broadcast sent to *${res.length}* groups.` }, { quoted: msg });
+			sent++;
+		} catch (err) {
+			console.log(err);
 		}
-	} catch (err) {
-		console.log(err);
+		await delay(2000);
 	}
+	return sendMessageWTyping(
+		from,
+		{ text: `✅ Broadcast sent to *${sent}*/${res.length} groups.` },
+		{ quoted: msg }
+	);
 };
 
 export default () => ({
 	cmd: ["bb", "broadcast"],
-	desc: "Broadcast message to all groups",
+	desc: "Send a message to all groups.",
 	usage: "broadcast <message>",
 	handler,
 });

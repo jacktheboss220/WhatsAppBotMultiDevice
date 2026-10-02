@@ -100,7 +100,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["epicgames", "epic", "freegames"],
-	desc: "Get current free games on Epic Games Store",
+	desc: "Show the games currently free on the Epic Games Store.",
 	usage: "epicgames | epic | freegames",
 	handler,
 });

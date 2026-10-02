@@ -1,6 +1,6 @@
 import getRedisClient from "./redisClient.js";
 
-const GROUP_META_TTL = 10 * 60;
+const GROUP_META_TTL = 60 * 60;
 const RATE_LIMIT_WINDOW = 5;
 
 export const getGroupMeta = async (jid) => {

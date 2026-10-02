@@ -2,13 +2,14 @@ import { downloadContentFromMessage } from "baileys";
 import memeMaker from "@erickwendel/meme-maker";
 import { writeFile } from "fs/promises";
 import fs from "fs";
+import memoryManager from "../../../utils/memory.js";
+import { getMediaFlags } from "../../../utils/mediaFlags.js";
 
-const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
+const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { type, content, evv, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
-	const isMedia = type === "imageMessage" || type === "videoMessage";
-	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
+	const { isMedia, isTaggedImage } = getMediaFlags(type, content);
 
 	if (!args[0]) {
 		return sendMessageWTyping(
@@ -102,10 +103,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			console.error(error);
 			sendMessageWTyping(from, { text: `*Failed to create meme*` }, { quoted: msg });
 		} finally {
-			try {
-				fs.unlinkSync(MemePath);
-				fs.unlinkSync(media);
-			} catch {}
+			memoryManager.safeUnlink(MemePath);
+			memoryManager.safeUnlink(media);
 		}
 	} else {
 		sendMessageWTyping(from, { text: `*Reply to Image Only*` }, { quoted: msg });
@@ -114,7 +113,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["text", "txt", "texmeme"],
-	desc: "Create a meme with text",
+	desc: "Make a meme by adding top and bottom text to an image.",
 	usage: "textmeme _FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_ | reply to an image",
 	handler,
 });

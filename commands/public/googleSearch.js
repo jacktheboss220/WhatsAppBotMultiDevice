@@ -35,7 +35,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	)}`;
 
 	try {
-		const response = await axios.get(urlToSearch);
+		const response = await axios.get(urlToSearch, { timeout: 8000 });
 
 		// Extract search results
 		const searchResults = response.data?.items?.slice(0, maxResults); // Limiting results to 'maxResults'
@@ -59,7 +59,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["search", "gs"],
-	desc: "Search on Google",
+	desc: "Search Google and show the top results.",
 	usage: "search | gs <query>",
 	handler,
 });

@@ -73,7 +73,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					} else {
 						await sendMessageWTyping(
 							from,
-							{ document: { url: url }, mimetype: detected.mime, fileName: `file.${detected.ext}` },
+							{
+								document: { url: url },
+								// detection can fail ({ error }): don't send "file.undefined" with an undefined mimetype
+								mimetype: detected.mime || "application/octet-stream",
+								fileName: `file.${detected.ext || "bin"}`,
+							},
 							{ quoted: msg }
 						);
 					}
@@ -95,6 +100,7 @@ async function detectUrlType(url) {
 		const res = await axios.get(url, {
 			responseType: "arraybuffer",
 			headers: { Range: "bytes=0-16383" },
+			timeout: 8000,
 		});
 
 		const buffer = Buffer.from(res.data);
@@ -116,7 +122,7 @@ async function detectUrlType(url) {
 
 export default () => ({
 	cmd: ["insta", "i"],
-	desc: "Download Instagram post",
+	desc: "Download an Instagram post from its link.",
 	usage: "insta | i <url>",
 	handler,
 });

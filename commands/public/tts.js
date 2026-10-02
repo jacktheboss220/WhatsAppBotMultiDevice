@@ -1,8 +1,5 @@
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { createCanvas } from "@napi-rs/canvas";
 import { Sticker } from "wa-sticker-formatter";
-import fs from "fs";
-
-const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, evv, extendedMessageOriginal } = msgInfoObj;
@@ -13,45 +10,45 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	let message = evv || extendedMessageOriginal?.quotedMessage?.conversation;
 	if (!message) return sendMessageWTyping(from, { text: `❌ *Enter some text*` }, { quoted: msg });
-	message = message.split(":").join("\n");
+	message = message.slice(0, 100).split(":").join("\n");
 
-	const canvas = createCanvas(512, 512);
-	const ctx = canvas.getContext("2d");
+	try {
+		const canvas = createCanvas(512, 512);
+		const ctx = canvas.getContext("2d");
 
-	ctx.fillStyle = "#ffffff"; // Background color
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = "#ffffff"; // Background color
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-	ctx.font = "80px Arial";
-	ctx.fillStyle = "#ff0000"; // Font color
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-	ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+		ctx.fillStyle = "#ff0000"; // Font color
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
 
-	const filename = getRandom(".png");
-	const out = fs.createWriteStream(`./${filename}`);
-	const stream = canvas.createPNGStream();
-	stream.pipe(out);
+		// shrink the font until the widest line fits the sticker (long text used to run off the canvas)
+		const lines = message.split("\n");
+		let size = 80;
+		for (; size > 16; size -= 4) {
+			ctx.font = `${size}px Arial`;
+			if (Math.max(...lines.map((l) => ctx.measureText(l).width)) <= canvas.width - 32) break;
+		}
+		const lineHeight = size * 1.2;
+		const top = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
+		lines.forEach((l, i) => ctx.fillText(l, canvas.width / 2, top + i * lineHeight));
 
-	out.on("error", (err) => {
-		console.error("[TTS ERR] write stream:", err.message);
-		sendMessageWTyping(from, { text: `❌ *Failed to create sticker*` }, { quoted: msg });
-	});
-
-	out.on("finish", async () => {
-		const sticker = new Sticker(`./${filename}`, {
-			pack: "Bot",
-			author: "eva",
-		});
+		// @napi-rs/canvas has no createPNGStream() (that is node-canvas), and no temp file is needed:
+		// the sticker builder accepts the PNG buffer directly.
+		const sticker = new Sticker(canvas.toBuffer("image/png"), { pack: "Bot", author: "eva" });
 		await sticker.build();
 		const stickerBuffer = await sticker.get();
 		await sendMessageWTyping(from, { sticker: Buffer.from(stickerBuffer) }, { quoted: msg });
-		fs.unlinkSync(filename); // Clean up after sending
-	});
+	} catch (err) {
+		console.error("[TTS ERR]", err.message);
+		sendMessageWTyping(from, { text: `❌ *Failed to create sticker*` }, { quoted: msg });
+	}
 };
 
 export default () => ({
-	cmd: ["tts", "attp"],
-	desc: "Convert text to sticker",
-	usage: "tts <text>",
+	cmd: ["attp"],
+	desc: "Turn text into a sticker.",
+	usage: "attp <text>",
 	handler,
 });

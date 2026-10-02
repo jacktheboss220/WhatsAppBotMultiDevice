@@ -15,6 +15,7 @@ import { getStats, getAnalytics, getActivity, fmtUptime } from '../lib/api.js'
 import { useWebSocket } from '../hooks/useWebSocket.js'
 import { useWsEvent } from '../hooks/useWsEvent.js'
 import { useToast } from '../App.jsx'
+import { Card, ChartTitle, Code, Empty, Loading, PageHeader, StatCard, StatGrid, cx } from '../components/ui.jsx'
 
 ChartJS.register(ArcElement, RadialLinearScale, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
@@ -32,24 +33,12 @@ const TOOLTIP = {
   boxHeight: 8,
 }
 
-function StatCard({ icon, value, label, accent }) {
-  return (
-    <div className="stat-card">
-      <span className="stat-icon">{icon}</span>
-      <div className="stat-body">
-        <strong style={accent ? { color: accent } : {}}>{value ?? '—'}</strong>
-        <span>{label}</span>
-      </div>
-    </div>
-  )
-}
-
 const ACTIVITY_META = {
-  command_used:      { icon: '⚙️', label: 'Command',   color: '#0ea5e9' },
-  member_blocked:    { icon: '🚫', label: 'Blocked',   color: '#ef4444' },
-  member_unblocked:  { icon: '✅', label: 'Unblocked', color: '#10b981' },
-  broadcast_sent:    { icon: '📢', label: 'Broadcast', color: '#f59e0b' },
-  dm_sent:           { icon: '✉️', label: 'DM Sent',   color: '#8b5cf6' },
+  command_used:      { icon: '⚙️', label: 'Command',   cls: 'text-accent bg-accent/10' },
+  member_blocked:    { icon: '🚫', label: 'Blocked',   cls: 'text-danger bg-danger/10' },
+  member_unblocked:  { icon: '✅', label: 'Unblocked', cls: 'text-success bg-success/10' },
+  broadcast_sent:    { icon: '📢', label: 'Broadcast', cls: 'text-warning bg-warning/10' },
+  dm_sent:           { icon: '✉️', label: 'DM Sent',   cls: 'text-purple bg-purple/10' },
 }
 
 function fmtAgo(ts) {
@@ -60,10 +49,10 @@ function fmtAgo(ts) {
 }
 
 function ActivityDetail({ kind, detail }) {
-  if (kind === 'command_used') return <span><code style={{ fontFamily: 'monospace', color: '#0ea5e9' }}>{detail.cmd}</code> by {detail.name || detail.from?.split('@')[0]} in {detail.group}</span>
-  if (kind === 'member_blocked' || kind === 'member_unblocked') return <code style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{detail.jid}</code>
+  if (kind === 'command_used') return <span><Code className="text-accent bg-transparent p-0">{detail.cmd}</Code> by {detail.name || detail.from?.split('@')[0]} in {detail.group}</span>
+  if (kind === 'member_blocked' || kind === 'member_unblocked') return <Code className="bg-transparent p-0 text-muted">{detail.jid}</Code>
   if (kind === 'broadcast_sent') return <span>{detail.sent}/{detail.total} sent — "{detail.preview}"</span>
-  if (kind === 'dm_sent') return <span>to <code style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{detail.to}</code></span>
+  if (kind === 'dm_sent') return <span>to <Code className="bg-transparent p-0">{detail.to}</Code></span>
   return <span>{JSON.stringify(detail)}</span>
 }
 
@@ -94,7 +83,7 @@ export default function Dashboard() {
   useWsEvent('activity', handleActivity)
   useWsEvent('activity_snapshot', handleActivitySnapshot)
 
-  if (loading) return <div className="loading-state"><span className="spinner" /></div>
+  if (loading) return <Loading />
 
   const typeData = analytics ? [
     { name: 'Text',    value: analytics.typeBreakdown.text },
@@ -123,33 +112,38 @@ export default function Dashboard() {
 
   const connected = wsStatus === 'connected'
 
+  const shortcuts = [
+    { to: '/commands',  icon: '⚙️', label: 'Manage Commands',  sub: `${(stats?.disabledGlobally || []).length} disabled` },
+    { to: '/groups',    icon: '👥', label: 'Manage Groups',    sub: `${analytics?.activeGroups ?? '—'} active` },
+    { to: '/members',   icon: '👤', label: 'View Members',     sub: `${analytics?.blockedMembers ?? '—'} blocked` },
+    { to: '/dm',        icon: '✉️', label: 'Direct Message',   sub: 'Message any user' },
+    { to: '/broadcast', icon: '📢', label: 'Broadcast',        sub: 'Send to all groups' },
+    { to: '/logs',      icon: '📋', label: 'Logs',             sub: 'Live bot output' },
+  ]
+
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h2>Dashboard</h2>
-          <p className="sub">Overview of your bot's activity and health.</p>
-        </div>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.82rem', color: connected ? '#10b981' : '#4b5d72' }}>
-          <span className={`conn-dot ${connected ? 'on' : ''}`} />
+      <PageHeader title="Dashboard" sub="Overview of your bot's activity and health.">
+        <span className={cx('flex items-center gap-[7px] text-[0.82rem]', connected ? 'text-success' : 'text-muted')}>
+          <span className={cx('size-1.5 rounded-full', connected ? 'bg-success animate-glow' : 'bg-danger')} />
           {connected ? 'Bot Online' : wsStatus === 'connecting' ? 'Connecting…' : 'Bot Offline'}
         </span>
-      </div>
+      </PageHeader>
 
-      <div className="stats-grid">
+      <StatGrid>
         <StatCard icon="👥" value={stats?.groupCount}               label="Total Groups" />
-        <StatCard icon="✅" value={analytics?.activeGroups}         label="Active Groups"  accent="#10b981" />
+        <StatCard icon="✅" value={analytics?.activeGroups}         label="Active Groups"    color="text-success" />
         <StatCard icon="👤" value={stats?.memberCount}              label="Total Members" />
-        <StatCard icon="🚫" value={analytics?.blockedMembers}       label="Blocked Members" accent="#ef4444" />
+        <StatCard icon="🚫" value={analytics?.blockedMembers}       label="Blocked Members"  color="text-danger" />
         <StatCard icon="💬" value={analytics?.totalMessages?.toLocaleString()} label="Total Messages" />
-        <StatCard icon="⏱"  value={stats ? fmtUptime(stats.uptime) : null}    label="Uptime" />
-      </div>
+        <StatCard icon="⏱"  value={stats ? fmtUptime(stats.uptime) : null}     label="Uptime" />
+      </StatGrid>
 
-      <div className="charts-row">
-        <div className="chart-card">
-          <p className="chart-title">Top Groups by Messages</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mb-3.5">
+        <Card>
+          <ChartTitle>Top Groups by Messages</ChartTitle>
           {topGroups.length ? (
-            <div style={{ height: 'clamp(220px, 28vh, 480px)' }}>
+            <div className="h-[clamp(220px,28vh,480px)]">
               <Bar
                 data={groupBarData}
                 options={{
@@ -167,13 +161,13 @@ export default function Dashboard() {
                 }}
               />
             </div>
-          ) : <p className="empty-state">No group data yet.</p>}
-        </div>
+          ) : <Empty>No group data yet.</Empty>}
+        </Card>
 
-        <div className="chart-card">
-          <p className="chart-title">Message Type Breakdown</p>
+        <Card>
+          <ChartTitle>Message Type Breakdown</ChartTitle>
           {typeData.length ? (
-            <div style={{ height: 'clamp(220px, 28vh, 480px)' }}>
+            <div className="h-[clamp(220px,28vh,480px)]">
               <PolarArea
                 data={polarData}
                 options={{
@@ -193,51 +187,46 @@ export default function Dashboard() {
                 }}
               />
             </div>
-          ) : <p className="empty-state">No message data yet.</p>}
-        </div>
+          ) : <Empty>No message data yet.</Empty>}
+        </Card>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 18 }}>
-        {[
-          { to: '/commands',  icon: '⚙️', label: 'Manage Commands',  sub: `${(stats?.disabledGlobally || []).length} disabled` },
-          { to: '/groups',    icon: '👥', label: 'Manage Groups',    sub: `${analytics?.activeGroups ?? '—'} active` },
-          { to: '/members',   icon: '👤', label: 'View Members',     sub: `${analytics?.blockedMembers ?? '—'} blocked` },
-          { to: '/dm',        icon: '✉️', label: 'Direct Message',   sub: 'Message any user' },
-          { to: '/broadcast', icon: '📢', label: 'Broadcast',        sub: 'Send to all groups' },
-          { to: '/logs',      icon: '📋', label: 'Logs',             sub: 'Live bot output' },
-        ].map(({ to, icon, label, sub }) => (
-          <Link key={to} to={to} style={{ textDecoration: 'none' }}>
-            <div className="stat-card" style={{ cursor: 'pointer', gap: 12 }}>
-              <span className="stat-icon">{icon}</span>
-              <div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{label}</div>
-                <div style={{ fontSize: '0.72rem', color: '#4b5d72', marginTop: 2 }}>{sub}</div>
-              </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5 mb-[18px]">
+        {shortcuts.map(({ to, icon, label, sub }) => (
+          <Link
+            key={to}
+            to={to}
+            className="flex items-center gap-3 bg-s1 border border-line hover:border-line-hi rounded-[14px] px-[18px] py-4 transition-colors"
+          >
+            <span className="text-2xl shrink-0">{icon}</span>
+            <div>
+              <div className="text-[0.85rem] font-semibold">{label}</div>
+              <div className="text-[0.72rem] text-muted mt-0.5">{sub}</div>
             </div>
           </Link>
         ))}
       </div>
 
-      <div className="chart-card">
-        <p className="chart-title">Recent Activity</p>
+      <Card>
+        <ChartTitle>Recent Activity</ChartTitle>
         {activity.length === 0 ? (
-          <p className="empty-state" style={{ padding: '24px' }}>No activity yet. Use the bot to see live events here.</p>
+          <Empty>No activity yet. Use the bot to see live events here.</Empty>
         ) : (
-          <div className="activity-list">
+          <div className="flex flex-col">
             {activity.map(ev => {
-              const m = ACTIVITY_META[ev.kind] || { icon: '•', label: ev.kind, color: 'var(--text-soft)' }
+              const m = ACTIVITY_META[ev.kind] || { icon: '•', label: ev.kind, cls: 'text-soft bg-s2' }
               return (
-                <div key={ev.id} className="activity-row">
-                  <span className="activity-icon">{m.icon}</span>
-                  <span className="activity-badge" style={{ color: m.color, background: m.color + '18' }}>{m.label}</span>
-                  <span className="activity-detail"><ActivityDetail kind={ev.kind} detail={ev.detail || {}} /></span>
-                  <span className="activity-time">{fmtAgo(ev.ts)}</span>
+                <div key={ev.id} className="flex items-center gap-2.5 py-[9px] border-b border-line last:border-b-0 text-[0.82rem]">
+                  <span className="w-5 shrink-0 text-center text-base">{m.icon}</span>
+                  <span className={cx('shrink-0 px-2 py-0.5 rounded-full text-[0.66rem] font-bold uppercase tracking-wide', m.cls)}>{m.label}</span>
+                  <span className="flex-1 min-w-0 text-soft break-words"><ActivityDetail kind={ev.kind} detail={ev.detail || {}} /></span>
+                  <span className="shrink-0 whitespace-nowrap text-[0.72rem] text-muted">{fmtAgo(ev.ts)}</span>
                 </div>
               )
             })}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

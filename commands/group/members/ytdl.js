@@ -1,38 +1,10 @@
 import fs from "fs";
-import path from "path";
 import yts from "yt-search";
-import ffmpeg from "ffmpeg-static";
-import defaultYoutubedl, { create } from "youtube-dl-exec";
 import memoryManager from "../../../utils/memory.js";
 import { readFileEfficiently, isValidVideoFile } from "../../../utils/file.js";
+import { youtubedl, ytdlpOpts, parseYouTubeUrl, downloadLimits } from "../../../utils/ytdlp.js";
 
 const getRandom = (ext) => memoryManager.generateTempFileName(ext);
-
-// Use the system yt-dlp binary when YTDLP_PATH is set (e.g. /usr/local/bin/yt-dlp on
-// the server). Otherwise fall back to the binary bundled with youtube-dl-exec.
-const youtubedl = process.env.YTDLP_PATH ? create(process.env.YTDLP_PATH) : defaultYoutubedl;
-
-import { getCookiePath } from "../../../functions/cookieManager.js";
-
-const ytdlpOpts = async (extra = {}) => {
-	const opts = {
-		noCheckCertificates: true,
-		noWarnings: true,
-		noPlaylist: true,
-		forceIpv4: true,
-		ffmpegLocation: ffmpeg,
-		// tv + android_vr work without a PO token (server-side, no browser). web is
-		// kept last as a cookie-backed extra. android/ios are dead on modern YouTube.
-		extractorArgs: "youtube:player_client=tv,android_vr,web",
-		// yt-dlp now requires an EJS runtime to solve YouTube JS challenges (2026+).
-		// Node.js is available in the container, so use it.
-		jsRuntimes: "node",
-		...extra,
-	};
-	const cookiePath = await getCookiePath();
-	if (cookiePath) opts.cookies = cookiePath;
-	return opts;
-};
 
 const findVideoURL = async (name) => {
 	const r = await yts(`${name}`);
@@ -44,12 +16,12 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, command, evv } = msgInfoObj;
 
 	if (command != "vs") {
-		if (!args[0] || !args[0].startsWith("http")) {
-			return sendMessageWTyping(from, { text: `Enter youtube link after yt` }, { quoted: msg });
+		if (!args[0] || !parseYouTubeUrl(args[0])) {
+			return sendMessageWTyping(from, { text: `Enter a youtube link after yt` }, { quoted: msg });
 		}
 	}
 
-	let URL = args[0];
+	let URL = command == "vs" ? args[0] : parseYouTubeUrl(args[0]);
 	if (command == "vs") {
 		if (!args[0]) return sendMessageWTyping(from, { text: `Enter something to search` }, { quoted: msg });
 		try {
@@ -96,6 +68,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				format: "best[height<=720][ext=mp4]/bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best",
 				mergeOutputFormat: "mp4",
 				output: fileDown,
+				...downloadLimits,
 			})
 		);
 		console.log("yt-dlp result:", JSON.stringify(result)?.slice(0, 300));
@@ -165,7 +138,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["yt", "ytv", "vs"],
-	desc: "Download youtube video",
+	desc: "Download a YouTube video from its link.",
 	usage: "yt <youtube link>",
 	handler,
 });

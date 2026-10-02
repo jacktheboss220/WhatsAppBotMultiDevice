@@ -18,13 +18,16 @@ export function removeWsListener(type, fn) {
 }
 
 let reconnectTimer = null
+let current = null
 
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
   const ws    = new WebSocket(`${proto}//${location.host}`)
+  current = ws
 
   ws.onopen  = () => emit('_status', { status: 'connecting' })
   ws.onclose = () => {
+    if (ws !== current) return // replaced by reconnectWs(): don't schedule a second connection
     emit('_status', { status: 'disconnected' })
     clearTimeout(reconnectTimer)
     reconnectTimer = setTimeout(connect, 5000)
@@ -42,6 +45,14 @@ function connect() {
       emit(data.type, data)
     } catch (_) {}
   }
+}
+
+// The server ties the socket to the login cookie at connect time, so call this after login/logout.
+export function reconnectWs() {
+  clearTimeout(reconnectTimer)
+  const old = current
+  connect()
+  old?.close()
 }
 
 connect()

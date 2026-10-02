@@ -88,6 +88,19 @@ async function readFileEfficiently(filePath, maxSize = 50 * 1024 * 1024, useCach
 	});
 }
 
+// Reads only the first n bytes. fs.readFileSync ignores {start,end} (those are stream options), so the old
+// code read the WHOLE file synchronously (blocking the event loop) and hex-encoded all of it.
+function readHeader(filePath, n) {
+	const fd = fs.openSync(filePath, "r");
+	try {
+		const buf = Buffer.alloc(n);
+		const read = fs.readSync(fd, buf, 0, n, 0);
+		return buf.subarray(0, read);
+	} finally {
+		fs.closeSync(fd);
+	}
+}
+
 /**
  * Check if file is valid audio format
  * @param {string} filePath
@@ -120,7 +133,7 @@ function isValidAudioFile(filePath) {
 
 		// Try to read file header - if we can read it, it's probably valid
 		try {
-			const buffer = fs.readFileSync(filePath, { start: 0, end: Math.min(1024, stats.size) });
+			const buffer = readHeader(filePath, Math.min(1024, stats.size));
 
 			// Check for some common audio signatures, but be more flexible
 			const signature = buffer.toString("hex").toLowerCase();
@@ -178,7 +191,7 @@ function isValidVideoFile(filePath) {
 		}
 
 		// Read first few bytes to check video signature
-		const buffer = fs.readFileSync(filePath, { start: 0, end: 11 });
+		const buffer = readHeader(filePath, 12);
 		const signature = buffer.toString("hex");
 
 		// Check for common video file signatures

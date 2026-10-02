@@ -12,6 +12,7 @@ import Health from './pages/Health.jsx'
 import Logs from './pages/Logs.jsx'
 import DirectMessage from './pages/DirectMessage.jsx'
 import Settings from './pages/Settings.jsx'
+import { Spinner } from './components/ui.jsx'
 
 // ── Contexts ───────────────────────────────────────────────────────────────────
 export const ToastCtx = createContext(null)
@@ -25,9 +26,7 @@ function AuthGuard({ children }) {
   const { auth } = useAuth()
   const location = useLocation()
   if (auth === null) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)' }}>
-      <div className="spinner" />
-    </div>
+    <div className="flex items-center justify-center h-screen bg-bg"><Spinner /></div>
   )
   if (auth === false) return <Navigate to="/login" state={{ from: location }} replace />
   return children
@@ -36,9 +35,14 @@ function AuthGuard({ children }) {
 // ── Toast component ────────────────────────────────────────────────────────────
 function Toast({ toasts }) {
   return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 1000 }}>
+    <div className="fixed bottom-6 right-6 z-[1000] flex flex-col gap-2 pointer-events-none">
       {toasts.map(t => (
-        <div key={t.id} className={`toast show ${t.ok ? 'ok' : 'err'}`}>{t.msg}</div>
+        <div
+          key={t.id}
+          className={`min-w-[200px] max-w-[300px] rounded-[10px] border border-line bg-s2 px-4 py-2.5 text-[0.82rem] font-medium shadow-2xl border-l-[3px] ${t.ok ? 'border-l-success' : 'border-l-danger'}`}
+        >
+          {t.msg}
+        </div>
       ))}
     </div>
   )

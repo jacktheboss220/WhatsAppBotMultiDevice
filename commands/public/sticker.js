@@ -4,6 +4,7 @@ dotenv.config();
 import { downloadMediaMessage } from "baileys";
 import WSF from "wa-sticker-formatter";
 import memoryManager from "../../utils/memory.js";
+import { getMediaFlags } from "../../utils/mediaFlags.js";
 
 import ffmpeg from "fluent-ffmpeg";
 
@@ -35,9 +36,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		msg.message = extendedMessageOriginal?.quotedMessage;
 	}
 
-	const isMedia = type === "imageMessage" || type === "videoMessage";
-	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
-	const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
+	const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
 
 	// if (!isGroup) {
 	// 	if (memberData.dmLimit <= 0) {
@@ -50,7 +49,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	// 	member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
 	// }
 
-	const savedStealText = memberData && memberData !== -1 ? memberData.customStealText : null;
+	const savedStealText = memberData ? memberData.customStealText : null;
 	let packName = savedStealText || "eva";
 	let authorName = savedStealText ? undefined : "jacktheboss220";
 
@@ -220,7 +219,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["sticker", "s"],
-	desc: "Convert image or video to sticker.",
+	desc: "Turn an image or video into a sticker, with optional pack, author and crop settings.",
 	usage: "sticker | s [1-100] [pack <packname>] [author <authorname>] [crop/c] [top|bottom|left|right|center] [nometadata]",
 	handler,
 });

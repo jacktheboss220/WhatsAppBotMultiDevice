@@ -16,6 +16,13 @@ let commandsMembers = {};
 let commandsAdmins = {};
 let commandsOwners = {};
 
+// Populated once by addCommands() and reused by cmdToText() — avoids re-scanning
+// and re-importing every command file on every -help/-owner/-admin call.
+const publicDetails = [];
+const groupDetails = [];
+const adminDetails = [];
+const ownerDetails = [];
+
 const loadCommands = async (dirPath, commandsObj, cmdDetails) => {
 	let filenames = await readdir(dirPath);
 	for (const file of filenames) {
@@ -62,45 +69,34 @@ const loadCommands = async (dirPath, commandsObj, cmdDetails) => {
 	}
 };
 
-const deleteFiles = async (dirPath, extensions) => {
-	let filenames = await readdir(dirPath);
-	filenames.forEach((file) => {
-		if (extensions.some((ext) => file.endsWith(ext))) {
-			fs.unlinkSync(dirPath + file);
-		}
-	});
-};
-
 const addCommands = async () => {
 	console.log("📦 Loading commands...");
-	await loadCommands(mainPath + "public/", commandsPublic, []);
+	await loadCommands(mainPath + "public/", commandsPublic, publicDetails);
 	console.log(`✅ Loaded ${Object.keys(commandsPublic).length} public commands`);
-	await loadCommands(mainPath + "group/members/", commandsMembers, []);
+	await loadCommands(mainPath + "group/members/", commandsMembers, groupDetails);
 	console.log(`✅ Loaded ${Object.keys(commandsMembers).length} member commands`);
-	await loadCommands(mainPath + "group/admins/", commandsAdmins, []);
+	await loadCommands(mainPath + "group/admins/", commandsAdmins, adminDetails);
 	console.log(`✅ Loaded ${Object.keys(commandsAdmins).length} admin commands`);
-	await loadCommands(mainPath + "owner/", commandsOwners, []);
+	await loadCommands(mainPath + "owner/", commandsOwners, ownerDetails);
 	console.log(`✅ Loaded ${Object.keys(commandsOwners).length} owner commands`);
 
-	await deleteFiles("./", [".webp", ".jpeg", ".jpg", ".mp3", ".mp4", ".png", ".gif"]);
 	console.log("🎉 All commands loaded successfully!");
 };
 
 let commandsLoaded = false;
 const commandsReadyPromise = addCommands().then(() => { commandsLoaded = true; });
 
+// Reuses the details collected once by addCommands() instead of re-scanning and
+// re-importing every command file on every call (was happening on every -help/-owner/-admin).
 const cmdToText = async () => {
-	let adminCommands = [];
-	let publicCommands = [];
-	let groupCommands = [];
-	let ownerCommands = [];
-	let directCommands = [];
-	await loadCommands(mainPath + "public/", {}, directCommands);
-	await loadCommands(mainPath + "public/", {}, publicCommands);
-	await loadCommands(mainPath + "group/members/", {}, groupCommands);
-	await loadCommands(mainPath + "group/admins/", {}, adminCommands);
-	await loadCommands(mainPath + "owner/", {}, ownerCommands);
-	return { publicCommands, groupCommands, adminCommands, ownerCommands, directCommands };
+	if (!commandsLoaded) await commandsReadyPromise;
+	return {
+		publicCommands: publicDetails,
+		groupCommands: groupDetails,
+		adminCommands: adminDetails,
+		ownerCommands: ownerDetails,
+		directCommands: publicDetails,
+	};
 };
 
 export { commandsPublic, commandsMembers, commandsAdmins, commandsOwners, cmdToText, commandsReadyPromise, commandsLoaded };

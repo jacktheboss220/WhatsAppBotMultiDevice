@@ -4,7 +4,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, senderJid, evv } = msgInfoObj;
 
 	const memberData = await getMemberData(senderJid);
-	let customStealText = memberData.customStealText;
+	let customStealText = memberData?.customStealText;
 
 	if (customStealText && args.length == 0) {
 		return sendMessageWTyping(from, { text: "*Custom steal Text* :" + customStealText }, { quoted: msg });
@@ -28,7 +28,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["sets", "stealText"],
-	desc: "Set custom steal text",
+	desc: "Set your own pack and author text for stolen stickers.",
 	usage: "sets <text>",
 	handler,
 });

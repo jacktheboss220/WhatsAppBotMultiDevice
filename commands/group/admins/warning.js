@@ -1,13 +1,8 @@
 import { getGroupData, createGroupData, group } from "../../../db/groupData.js";
 import { createMembersData, getMemberData, member } from "../../../db/members.js";
 import { extractPhoneNumber } from "../../../utils/lid.js";
+import { isPrivileged } from "../../../utils/roles.js";
 
-import { config } from "dotenv";
-config();
-const myNumber = [
-	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
-	process.env.MY_NUMBER.split(",")[1] + "@lid",
-];
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	let { command, groupAdmins, sendMessageWTyping, botNumber, extendedMessageOriginal } = msgInfoObj;
 	try {
@@ -25,7 +20,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		if (command != "unwarn") {
 			if (taggedJid == botNumber[0] || taggedJid == botNumber[1])
 				return sendMessageWTyping(from, { text: `_How can I warn Myself_` }, { quoted: msg });
-			if (myNumber.includes(taggedJid))
+			if (await isPrivileged(sock, taggedJid))
 				return sendMessageWTyping(from, { text: `_Owner or Moderator cannot be warned_` }, { quoted: msg });
 		}
 		const groupData = await getGroupData(from);
@@ -74,7 +69,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				try {
 					warnCount++;
 					const bars = "🔴".repeat(warnCount) + "⚪".repeat(Math.max(0, 3 - warnCount));
-					warnMsg = `⚠️ *Warning Issued*\n\n@${phoneNumber}\n${bars} *(${warnCount}/3)*\n\n${warnCount >= 3 ? "_⛔ Final warning — you will be removed for the next violation._" : "_Clean up your act or face removal._"}`;
+					warnMsg = `⚠️ *Warning Issued*\n\n@${phoneNumber}\n${bars} *(${warnCount}/3)*\n\n${warnCount >= 3 ? "_⛔ Warning limit reached — you are being removed._" : "_Clean up your act or face removal._"}`;
 					sendMessageWTyping(from, {
 						text: warnMsg,
 						mentions: [taggedJid],
@@ -93,7 +88,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 						});
 					member
 						.updateOne({ _id: taggedJid, "warning.group": from }, { $inc: { "warning.$.count": 1 } })
-						.then((r) => {
+						.then(async (r) => {
 							if (r.matchedCount == 0)
 								member.updateOne(
 									{ _id: taggedJid },
@@ -108,7 +103,16 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 									sendMessageWTyping(from, { text: "❌ Cannot remove admin!" }, { quoted: msg });
 									return;
 								}
-								sock.groupParticipantsUpdate(from, [taggedJid], "remove");
+								try {
+									await sock.groupParticipantsUpdate(from, [taggedJid], "remove");
+								} catch (removeErr) {
+									// used to announce "Removed" even when WhatsApp refused
+									sendMessageWTyping(from, { text: `❌ Could not remove: ${removeErr.message}` }, { quoted: msg });
+									return;
+								}
+								// start clean if they are ever added back (the count used to keep growing past 3)
+								await member.updateOne({ _id: taggedJid }, { $pull: { warning: { group: from } } });
+								await group.updateOne({ _id: from }, { $pull: { memberWarnCount: { member: taggedJid } } });
 								sendMessageWTyping(
 									from,
 									{ text: `✅ *Removed* @${phoneNumber} — reached 3 warnings.`, mentions: [taggedJid] },
@@ -142,7 +146,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["warn", "unwarn"],
-	desc: "Warn a member",
+	desc: "Warn a member, or take a warning back. Tag them or reply.",
 	usage: "warn @mention | unwarn @mention | reply",
 	handler,
 });

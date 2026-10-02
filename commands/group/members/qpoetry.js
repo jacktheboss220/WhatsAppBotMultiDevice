@@ -8,7 +8,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping, evv } = msgInfoObj;
 	if (!args) return sendMessageWTyping(from, { text: "Provide author argument." }, { quoted: msg });
 	if (args.length == 1 && args[0].toLowerCase() == "authors") {
-		await axios(poetURL + "/author")
+		await axios(poetURL + "/author", { timeout: 8000 })
 			.then((res) => {
 				try {
 					let mess = `\n-------------------------------------------------------------\n\n:  *All AUTHORS* : \n\n${readMore}: -------------------------------------------------------------: \n\n`;
@@ -41,7 +41,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			.split(" ")
 			.join("%20");
 		if (title == "") return sendMessageWTyping(from, { text: `Enter the title/author.` }, { quoted: msg });
-		await axios(poetURL + "author,title/" + author + ";" + title)
+		await axios(poetURL + "author,title/" + author + ";" + title, { timeout: 8000 })
 			.then((res) => {
 				try {
 					let mess = `\n-------------------------------------------------------------\n\n: ${res.data[0].author} : \n-------------------------------------------------------------\n\nTitle ${res.data[0].title}\n\n-------------------------------------------------------------\n\n${readMore}`;
@@ -63,7 +63,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			.trim()
 			.split(" ")
 			.join("%20");
-		await axios(poetURL + "author/" + author + "/title")
+		await axios(poetURL + "author/" + author + "/title", { timeout: 8000 })
 			.then((res) => {
 				try {
 					let mess = `\n-------------------------------------------------------------\n\n:  *${author}*'s Work  : \n\n${readMore}: -------------------------------------------------------------: \n\n`;
@@ -88,7 +88,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["qpt", "qpoetry"],
-	desc: "Get random poetry",
+	desc: "Get a random poem, optionally by author.",
 	usage: "qpoetry <author>",
 	handler,
 });

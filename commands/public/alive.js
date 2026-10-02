@@ -60,7 +60,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["a", "alive", "ping"],
-	desc: "Check if bot is alive",
+	desc: "Check that the bot is online.",
 	usage: "alive | ping | a",
 	handler,
 });

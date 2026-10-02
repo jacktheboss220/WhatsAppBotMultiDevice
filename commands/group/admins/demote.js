@@ -33,7 +33,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["demote"],
-	desc: "Remove admin permission of a member",
+	desc: "Remove admin rights from a member. Tag them or reply to their message.",
 	usage: "demote @mention | reply",
 	handler,
 });

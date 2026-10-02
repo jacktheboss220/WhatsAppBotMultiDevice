@@ -34,10 +34,6 @@
 			"description": "Remove.bg API key for background removal feature",
 			"required": false
 		},
-		"TRUECALLER_ID": {
-			"description": "Truecaller API ID for phone number lookup",
-			"required": false
-		},
 		"GOOGLE_API_KEY": {
 			"description": "Google API Key for search and image search features",
 			"required": false

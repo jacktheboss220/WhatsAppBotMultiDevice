@@ -1,6 +1,7 @@
 import { config } from "dotenv";
 config();
 import { extractPhoneNumber } from "../../../utils/lid.js";
+import { getMediaFlags } from "../../../utils/mediaFlags.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { prefix, sendMessageWTyping, groupMetadata, type, content, extendedMessageOriginal } = msgInfoObj;
@@ -13,9 +14,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		msg["message"]["conversation"] = temp;
 	}
 
-	const isMedia = type === "imageMessage" || type === "videoMessage";
-	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
-	const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
+	const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
 
 	try {
 		if (isMedia || isTaggedImage || isTaggedVideo) {
@@ -65,7 +64,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["tagall"],
-	desc: "Tag all members in group",
+	desc: "Mention every member of the group, with an optional message.",
 	usage: "tagall | tagall <message> | reply with tagall",
 	handler,
 });

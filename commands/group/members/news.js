@@ -60,7 +60,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["news", "categories", "cate"],
-	desc: "Get news",
+	desc: "Get the latest news, optionally by category.",
 	usage: "news | news <category> | categories",
 	handler,
 });

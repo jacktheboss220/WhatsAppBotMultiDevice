@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["donate", "donation"],
-	desc: "Donate to keep this bot alive",
+	desc: "Support the bot with a donation.",
 	usage: "donate",
 	handler,
 });

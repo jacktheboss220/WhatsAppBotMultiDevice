@@ -7,10 +7,24 @@ import mdClient from "../db/client.js";
 import passport from "passport";
 import { normalizeJID } from "../utils/lid.js";
 import messageQueue from "../queue/messageQueue.js";
-import { pushActivity, getLogs, getActivity, cmdUsage } from "../notify/adminEvents.js";
+import { pushActivity, getLogs, getActivity } from "../notify/adminEvents.js";
+import { getCommandStats } from "../db/cmdStats.js";
 import { getCookiesContent, saveCookies } from "../functions/cookieManager.js";
+import { checkAdminPassword, loginBlocked, recordLoginFail, clearLoginFails, isAllowedGoogleProfile } from "../utils/adminAuth.js";
+import { escapeHtml } from "../notify/telegram.js";
 
 const router = Router();
+
+// New session id on login (prevents session fixation), then flag it as admin.
+const grantAdmin = (req, cb) =>
+	req.session.regenerate((err) => {
+		if (err) return cb(err);
+		req.session.isAdmin = true;
+		cb();
+	});
+
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const isStr = (v, max) => typeof v === "string" && v.length <= max;
 
 // ── Auth middleware ────────────────────────────────────────────────────────────
 function requireAdmin(req, res, next) {
@@ -60,11 +74,12 @@ router.get("/api/admin/me", (req, res) => {
 });
 
 router.post("/api/admin/login", (req, res) => {
-	const { password } = req.body;
-	if (password === process.env.ADMIN_PASSWORD) {
-		req.session.isAdmin = true;
-		return res.json({ ok: true });
+	if (loginBlocked(req.ip)) return res.status(429).json({ error: "Too many attempts. Try again in 15 minutes." });
+	if (checkAdminPassword(req.body?.password)) {
+		clearLoginFails(req.ip);
+		return grantAdmin(req, (err) => (err ? res.status(500).json({ error: "Session error." }) : res.json({ ok: true })));
 	}
+	recordLoginFail(req.ip);
 	res.status(401).json({ error: "Incorrect password." });
 });
 
@@ -82,12 +97,14 @@ router.get("/admin/login", (req, res) => {
 });
 
 router.post("/admin/login", (req, res) => {
-	const { password } = req.body;
-	if (password === process.env.ADMIN_PASSWORD) {
-		req.session.isAdmin = true;
-		return res.redirect("/admin");
+	if (loginBlocked(req.ip)) return res.status(429).send("Too many attempts. Try again in 15 minutes.");
+	if (checkAdminPassword(req.body?.password)) {
+		clearLoginFails(req.ip);
+		return grantAdmin(req, (err) => (err ? res.status(500).send("Session error.") : res.redirect("/admin")));
 	}
-	res.render("login", { error: "Incorrect password." });
+	recordLoginFail(req.ip);
+	// (was res.render("login") — that view doesn't exist, so a wrong password was a 500)
+	res.redirect("/admin/#/login");
 });
 
 router.post("/admin/logout", (req, res) => {
@@ -108,8 +125,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 		}),
 		(req, res) => {
 			const email = req.user?.emails?.[0]?.value || "";
-			const allowed = (process.env.GOOGLE_ALLOWED_EMAILS || "").split(",").map(e => e.trim());
-			if (!allowed.includes(email)) {
+			if (!isAllowedGoogleProfile(req.user, process.env.GOOGLE_ALLOWED_EMAILS)) {
 				req.logout(() => {});
 				return res.status(401).send(`<!DOCTYPE html>
 <html lang="en">
@@ -134,15 +150,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     <div class="code">401</div>
     <h1>Not Authorised</h1>
     <p>This Google account is not allowed to access the admin panel.</p>
-    <div class="email">${email}</div>
+    <div class="email">${escapeHtml(email)}</div>
     <p>Contact the bot owner to get access.</p>
     <a href="/auth/google">Try a different account</a>
   </div>
 </body>
 </html>`);
 			}
-			req.session.isAdmin = true;
-			res.redirect("/admin/");
+			grantAdmin(req, (err) => (err ? res.status(500).send("Session error.") : res.redirect("/admin/")));
 		}
 	);
 }
@@ -238,7 +253,7 @@ router.get("/api/admin/bot/health", requireAdmin, (req, res) => {
 				rss:       mem.rss,
 				external:  mem.external,
 			},
-			connected:   !!req.app.locals.sock,
+			connected:   !!req.app.locals.sock?.user,
 			nodeVersion: process.version,
 			pid:         process.pid,
 			platform:    process.platform,
@@ -251,7 +266,10 @@ router.get("/api/admin/bot/health", requireAdmin, (req, res) => {
 // ── API: Broadcast (new) ───────────────────────────────────────────────────────
 router.post("/api/admin/broadcast", requireAdmin, async (req, res) => {
 	const { message, targetJids } = req.body;
-	if (!message || !message.trim()) return res.status(400).json({ error: "Message is required." });
+	if (typeof message !== "string" || !message.trim()) return res.status(400).json({ error: "Message is required." });
+	if (message.length > 4096) return res.status(400).json({ error: "Message too long (max 4096)." });
+	if (targetJids !== undefined && !(Array.isArray(targetJids) && targetJids.length <= 2000 && targetJids.every((j) => isStr(j, 100) && j.includes("@"))))
+		return res.status(400).json({ error: "targetJids must be a list of JIDs." });
 
 	const sock = req.app.locals.sock;
 	if (!sock) return res.status(503).json({ error: "Bot is not connected. Cannot send messages." });
@@ -382,6 +400,8 @@ router.get("/api/admin/commands", requireAdmin, async (req, res) => {
 router.patch("/api/admin/commands/:cmd", requireAdmin, async (req, res) => {
 	const { disabled, aliases = [] } = req.body;
 	const primary = decodeURIComponent(req.params.cmd);
+	if (!isStr(primary, 40) || !Array.isArray(aliases) || aliases.length > 20 || !aliases.every((a) => isStr(a, 40)))
+		return res.status(400).json({ error: "Invalid command name or aliases." });
 	const allKeys = [...new Set([primary, ...aliases])];
 	try {
 		if (disabled) {
@@ -411,10 +431,18 @@ router.get("/api/admin/groups", requireAdmin, async (req, res) => {
 
 router.patch("/api/admin/groups/:jid", requireAdmin, async (req, res) => {
 	const jid = decodeURIComponent(req.params.jid);
-	const allowed = ["isBotOn", "isChatBotOn", "isImgOn", "is91Only", "isAutoStickerOn", "isRankNotifOn", "cmdBlocked"];
+	const allowed = ["isBotOn", "isChatBotOn", "isImgOn", "is91Only", "isAutoStickerOn", "isRankNotifOn", "cmdBlocked", "rules", "welcome"];
 	const update = {};
 	for (const key of allowed) {
-		if (key in req.body) update[key] = req.body[key];
+		if (!(key in req.body)) continue;
+		const v = req.body[key];
+		if ((key === "rules" || key === "welcome") && !isStr(v, 2000))
+			return res.status(400).json({ error: `${key} must be text up to 2000 characters` });
+		if (key === "cmdBlocked" && !(Array.isArray(v) && v.length <= 200 && v.every((c) => isStr(c, 40))))
+			return res.status(400).json({ error: "cmdBlocked must be a list of command names" });
+		if (key.startsWith("is") && typeof v !== "boolean")
+			return res.status(400).json({ error: `${key} must be true or false` });
+		update[key] = v;
 	}
 	if (!Object.keys(update).length) return res.status(400).json({ error: "No valid fields" });
 	try {
@@ -453,8 +481,12 @@ router.get("/api/admin/groups/:jid/chat-history", requireAdmin, async (req, res)
 
 // ── API: Members ───────────────────────────────────────────────────────────────
 router.get("/api/admin/members", requireAdmin, async (req, res) => {
-	const { search = "", page = 1, limit = 50, sort = "totalmsg", order = "desc" } = req.query;
-	const skip = (parseInt(page) - 1) * parseInt(limit);
+	const { sort = "totalmsg", order = "desc" } = req.query;
+	// query params can arrive as arrays/objects (?search[$ne]=x): only accept plain strings, escape regex chars
+	const search = typeof req.query.search === "string" ? escapeRegex(req.query.search.slice(0, 100)) : "";
+	const pageN = Math.max(parseInt(req.query.page) || 1, 1);
+	const limitN = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
+	const skip = (pageN - 1) * limitN;
 	const query = search
 		? { $or: [{ _id: { $regex: search, $options: "i" } }, { username: { $regex: search, $options: "i" } }] }
 		: {};
@@ -463,10 +495,10 @@ router.get("/api/admin/members", requireAdmin, async (req, res) => {
 	const sortDir = order === "asc" ? 1 : -1;
 	try {
 		const [members, total] = await Promise.all([
-			member.find(query).sort({ [sortField]: sortDir }).skip(skip).limit(parseInt(limit)).toArray(),
+			member.find(query).sort({ [sortField]: sortDir }).skip(skip).limit(limitN).toArray(),
 			member.countDocuments(query),
 		]);
-		res.json({ members, total, page: parseInt(page), limit: parseInt(limit) });
+		res.json({ members, total, page: pageN, limit: limitN });
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}
@@ -509,8 +541,14 @@ router.get("/api/admin/activity", requireAdmin, (_req, res) => {
 });
 
 // ── API: Command usage stats ───────────────────────────────────────────────────
-router.get("/api/admin/command-stats", requireAdmin, (_req, res) => {
-	res.json({ stats: Object.fromEntries(cmdUsage) });
+// Persisted in MongoDB (survives restarts), { stats: { command: count } }
+router.get("/api/admin/command-stats", requireAdmin, async (_req, res) => {
+	try {
+		const rows = await getCommandStats();
+		res.json({ stats: Object.fromEntries(rows.map((r) => [r._id, r.count])) });
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
 });
 
 // ── API: YT Cookies ────────────────────────────────────────────────────────────
@@ -525,7 +563,7 @@ router.get("/api/admin/yt-cookies", requireAdmin, async (req, res) => {
 
 router.post("/api/admin/yt-cookies", requireAdmin, async (req, res) => {
 	const { content } = req.body;
-	if (typeof content !== "string") return res.status(400).json({ error: "content required" });
+	if (!isStr(content, 500_000)) return res.status(400).json({ error: "content required (text, max 500 KB)" });
 	try {
 		await saveCookies(content);
 		res.json({ ok: true });
@@ -537,9 +575,10 @@ router.post("/api/admin/yt-cookies", requireAdmin, async (req, res) => {
 // ── API: Direct message ────────────────────────────────────────────────────────
 router.post("/api/admin/dm", requireAdmin, async (req, res) => {
 	const { jid, message } = req.body;
-	if (!jid || !message || !message.trim()) {
+	if (typeof jid !== "string" || typeof message !== "string" || !jid.trim() || !message.trim()) {
 		return res.status(400).json({ error: "jid and message are required." });
 	}
+	if (message.length > 4096) return res.status(400).json({ error: "Message too long (max 4096)." });
 	const sock = req.app.locals.sock;
 	if (!sock) return res.status(503).json({ error: "Bot is not connected." });
 	try {

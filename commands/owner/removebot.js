@@ -8,7 +8,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["removebot"],
-	desc: "Remove bot from group",
+	desc: "Make the bot leave this group.",
 	usage: "removebot",
 	handler,
 });

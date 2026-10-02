@@ -1,3 +1,5 @@
+import { getMediaFlags } from "../../utils/mediaFlags.js";
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { prefix, sendMessageWTyping, groupMetadata, type, content, extendedMessageOriginal } = msgInfoObj;
 	if (extendedMessageOriginal?.quotedMessage) {
@@ -8,9 +10,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		msg["message"] = extendedMessageOriginal.quotedMessage;
 		msg["message"]["conversation"] = temp;
 	}
-	const isMedia = type === "imageMessage" || type === "videoMessage";
-	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
-	const isTaggedVideo = type === "extendedTextMessage" && content.includes("videoMessage");
+	const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
 
 	try {
 		if (isMedia || isTaggedImage || isTaggedVideo) {
@@ -56,7 +56,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["hidetag"],
-	desc: "Hide Tag Message",
+	desc: "Send a message that silently mentions everyone.",
 	usage: "hidetag <message>",
 	handler,
 });

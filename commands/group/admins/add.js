@@ -54,7 +54,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["add"],
-	desc: "Add a member to group.",
+	desc: "Add a person to the group by number or by replying to their message.",
 	usage: "add number | reply",
 	handler,
 });

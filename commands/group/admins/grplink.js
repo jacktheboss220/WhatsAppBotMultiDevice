@@ -17,7 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["link"],
-	desc: "Get Group Link",
+	desc: "Get the group invite link.",
 	usage: "link",
 	handler,
 });

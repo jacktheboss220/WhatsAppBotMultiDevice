@@ -8,11 +8,11 @@ import { readFileEfficiently } from "../utils/file.js";
 import { getGroupMeta, setGroupMeta, checkRateLimit } from "../cache/redisCache.js";
 
 const prefix = process.env.PREFIX;
-const moderatos = [...process.env.MODERATORS?.split(",")];
+import { isModeratorJid } from "../utils/roles.js"; // moderators come from MODERATORS only (see utils/roles.js)
 import getGroupAdmins from "../utils/groupAdmins.js";
-import { extractPhoneNumber, getPNFromLID } from "../utils/lid.js";
-import { createMembersData, getMemberData, member } from "../db/members.js";
-import { createGroupData, getGroupData, group } from "../db/groupData.js";
+import { extractPhoneNumber, getPNFromLID, isLID } from "../utils/lid.js";
+import { createMembersData, getMemberData, member, migratePNToLID } from "../db/members.js";
+import { createGroupData, getGroupData, group, migrateGroupMemberPNToLID } from "../db/groupData.js";
 import {
 	commandsPublic,
 	commandsMembers,
@@ -22,8 +22,20 @@ import {
 	commandsLoaded,
 } from "../utils/commandLoader.js";
 import { getBotData } from "../db/botData.js";
+import { recordCommand } from "../db/cmdStats.js";
+import groupMetaStore from "../cache/groupMetaStore.js";
 import { saveChatMessage } from "../utils/chatLogger.js";
 import { getRankUp } from "../utils/ranks.js";
+
+// Short-lived cache for the globally-disabled command list — avoids a Mongo
+// round trip on every single command (was previously fetched fresh each time).
+let _disabledCache = { list: [], expiresAt: 0 };
+const getDisabledGlobally = async () => {
+	if (Date.now() < _disabledCache.expiresAt) return _disabledCache.list;
+	const botData = await getBotData();
+	_disabledCache = { list: botData?.disabledGlobally || [], expiresAt: Date.now() + 30_000 };
+	return _disabledCache.list;
+};
 
 // These will be used for permission checks
 const myNumber = [
@@ -178,7 +190,8 @@ const getCommand = async (sock, msg, cache) => {
 		}
 
 		if (body[1] == " ") body = body[0] + body.slice(2);
-		const isCmd = body.startsWith(prefix);
+		// "-" alone, "--", "-_-", "- " etc. are plain chat, not commands: need a letter/digit right after the prefix
+		const isCmd = body.startsWith(prefix) && /^[a-z0-9]/i.test(body.slice(prefix.length));
 		const evv = body
 			.trim()
 			.split(/ +/)
@@ -191,6 +204,14 @@ const getCommand = async (sock, msg, cache) => {
 		const senderJid = isGroup ? msg.key.participant : msg.key.remoteJid;
 		const isOwner = myNumber.includes(senderJid);
 		if (!senderJid || !senderJid.includes("@")) return;
+
+		// Migrate the old @s.whatsapp.net member doc to the new @lid one, learned
+		// from Baileys 7's participantAlt (group) / remoteJidAlt (dm) on this message.
+		const senderJidAlt = isGroup ? msg.key.participantAlt : msg.key.remoteJidAlt;
+		if (senderJidAlt && isLID(senderJid)) {
+			await migratePNToLID(senderJid, senderJidAlt);
+			if (isGroup) await migrateGroupMemberPNToLID(from, senderJid, senderJidAlt);
+		}
 
 		const updateId = msg.key.fromMe ? botNumber[0] : senderJid;
 		const updateName = msg.key.fromMe ? sock.user.name : msg.pushName;
@@ -215,8 +236,12 @@ const getCommand = async (sock, msg, cache) => {
 				[updatedDoc] = await Promise.all([
 					member.findOneAndUpdate(
 						{ _id: updateId },
-						{ $inc: { totalmsg: 1, [mediaTypeField]: 1 }, $set: { username: updateName } },
-						{ returnDocument: "after" },
+						{
+							$inc: { totalmsg: 1, [mediaTypeField]: 1 },
+							$set: { username: updateName },
+							$setOnInsert: { isBlock: false, dmLimit: 99999, warning: [] },
+						},
+						{ returnDocument: "after", upsert: true },
 					),
 					createMembersData(updateId, updateName),
 				]);
@@ -249,7 +274,18 @@ const getCommand = async (sock, msg, cache) => {
 								pdftotal: 0,
 							};
 							newMember[mediaTypeField] = 1;
-							await group.updateOne({ _id: from }, { $push: { members: newMember } });
+							// Push only if nobody else did meanwhile: two first messages arriving together used to
+							// each push an entry, splitting that member's counts across duplicates.
+							const pushed = await group.updateOne(
+								{ _id: from, "members.id": { $ne: updateId } },
+								{ $push: { members: newMember } },
+							);
+							if (pushed.matchedCount === 0) {
+								await group.updateOne(
+									{ _id: from, "members.id": updateId },
+									{ $inc: { "members.$.count": 1, [`members.$.${mediaTypeField}`]: 1 } },
+								);
+							}
 						} else {
 							// Check rank-up using per-group count
 							const memberEntry = updated.members?.find((m) => m.id === snapId);
@@ -273,11 +309,92 @@ const getCommand = async (sock, msg, cache) => {
 			}
 		}
 
-		// Log text messages to chat history for gemini summarization
+		// Return early for non-command sticker and document messages (no further processing needed)
+		if (!isCmd && (type == "stickerMessage" || type == "documentMessage")) return;
+		//-------------------------------------------------------------------------------------------------------------//
+
+		let groupMetadata = "";
+		let groupData = "";
+		if (isGroup) {
+			// NodeCache first (no network), then Redis, then live fetch
+			groupMetadata = cache.get(from + ":groupMetadata") || (await getGroupMeta(from));
+			if (groupMetadata) groupMetaStore.set(from, groupMetadata);
+			if (!groupMetadata) {
+				try {
+					// Commands need real admin data (empty list => false "bot is not admin"), so wait longer for them
+					groupMetadata = await Promise.race([
+						sock.groupMetadata(from),
+						new Promise((_, reject) =>
+							setTimeout(() => reject(new Error("Group metadata fetch timeout")), isCmd ? 10000 : 2000),
+						),
+					]);
+					groupMetaStore.set(from, groupMetadata);
+					setGroupMeta(from, groupMetadata); // Redis (async, non-blocking)
+					cache.set(from + ":groupMetadata", groupMetadata, 60 * 60); // NodeCache fallback
+					createGroupData(from, groupMetadata).catch((e) =>
+						console.error("[createGroupData error]", e.message),
+					);
+				} catch (e) {
+					console.error("Group metadata fetch failed:", e.message);
+					// Not cached, so the next message retries. Commands bail instead of guessing admin status.
+					if (isCmd) return;
+					groupMetadata = { participants: [] };
+				}
+			}
+		}
+		if (msg.message.extendedTextMessage) {
+			const rawMentioned = msg.message.extendedTextMessage.contextInfo?.mentionedJid;
+			const mentioned = Array.isArray(rawMentioned) ? rawMentioned : rawMentioned ? [rawMentioned] : [];
+			if (mentioned.includes(botNumber[0]) || mentioned.includes(botNumber[1])) {
+				try {
+					const stickerBuffer = await getTagSticker();
+					sendMessageWTyping(from, { sticker: stickerBuffer }, { quoted: msg });
+				} catch (err) {
+					console.error("Failed to send tag sticker:", err.message);
+				}
+			}
+		}
+		const senderNumber = senderJid.includes(":") ? senderJid.split(":")[0] : senderJid.split("@")[0];
+		if (senderJid !== updateId) {
+			createMembersData(senderJid, msg.pushName);
+		}
+		// Parallelize member and group data fetch, but don't block main thread
+		let senderData = null;
+		let groupDataFetched = null;
+		try {
+			[senderData, groupDataFetched] = await Promise.all([
+				getMemberData(senderJid),
+				isGroup ? getGroupData(from) : Promise.resolve(""),
+			]);
+		} catch (e) {
+			senderData = null;
+			groupDataFetched = null;
+		}
+		if (isGroup) groupData = groupDataFetched;
+		if (isGroup && type == "imageMessage" && groupData?.isAutoStickerOn && !senderData?.isBlock) {
+			// Only images sent WITHOUT a caption. A caption-less image has caption === null in this Baileys
+			// version (was `== ""`, which is false for null, so auto sticker never triggered).
+			if (!msg.message.imageMessage.caption) {
+				commandsPublic["sticker"](sock, msg, from, args, {
+					senderJid,
+					type,
+					content,
+					isGroup,
+					sendMessageWTyping,
+					evv,
+				}).catch((e) => console.error("[autosticker error]", e.message));
+			}
+		}
+		//-------------------------------------------------------------------------------------------------------------//
+		if (senderData?.isBlock) return;
+		// Log text messages to chat history for gemini summarization.
+		// Only in groups where the bot is switched on (it used to log every group, even ones that never opted in),
+		// and only after the blocked-user check.
 		// Skip: commands (prefix), eva triggers, bot's own messages
 		const isEvaTrigger = body.trim().split(" ")[0].toLowerCase() === "eva";
 		if (
 			isGroup &&
+			groupData?.isBotOn &&
 			body &&
 			!isCmd &&
 			!isEvaTrigger &&
@@ -315,78 +432,6 @@ const getCommand = async (sock, msg, cache) => {
 				}
 			});
 		}
-
-		// Return early for non-command sticker and document messages (no further processing needed)
-		if (!isCmd && (type == "stickerMessage" || type == "documentMessage")) return;
-		//-------------------------------------------------------------------------------------------------------------//
-
-		let groupMetadata = "";
-		let groupData = "";
-		if (isGroup) {
-			// Redis first, NodeCache fallback, then live fetch
-			groupMetadata = (await getGroupMeta(from)) || cache.get(from + ":groupMetadata");
-			if (!groupMetadata) {
-				try {
-					groupMetadata = await Promise.race([
-						sock.groupMetadata(from),
-						new Promise((_, reject) =>
-							setTimeout(() => reject(new Error("Group metadata fetch timeout")), 2000),
-						),
-					]);
-					setGroupMeta(from, groupMetadata); // Redis (async, non-blocking)
-					cache.set(from + ":groupMetadata", groupMetadata, 10 * 60); // NodeCache fallback
-					createGroupData(from, groupMetadata).catch((e) =>
-						console.error("[createGroupData error]", e.message),
-					);
-				} catch (e) {
-					console.error("Group metadata fetch failed:", e.message);
-					groupMetadata = { participants: [] };
-				}
-			}
-		}
-		if (msg.message.extendedTextMessage) {
-			const rawMentioned = msg.message.extendedTextMessage.contextInfo?.mentionedJid;
-			const mentioned = Array.isArray(rawMentioned) ? rawMentioned : rawMentioned ? [rawMentioned] : [];
-			if (mentioned.includes(botNumber[0]) || mentioned.includes(botNumber[1])) {
-				try {
-					const stickerBuffer = await getTagSticker();
-					sendMessageWTyping(from, { sticker: stickerBuffer }, { quoted: msg });
-				} catch (err) {
-					console.error("Failed to send tag sticker:", err.message);
-				}
-			}
-		}
-		const senderNumber = senderJid.includes(":") ? senderJid.split(":")[0] : senderJid.split("@")[0];
-		if (senderJid !== updateId) {
-			createMembersData(senderJid, msg.pushName);
-		}
-		// Parallelize member and group data fetch, but don't block main thread
-		let senderData = null;
-		let groupDataFetched = null;
-		try {
-			[senderData, groupDataFetched] = await Promise.all([
-				getMemberData(senderJid),
-				isGroup ? getGroupData(from) : Promise.resolve(""),
-			]);
-		} catch (e) {
-			senderData = null;
-			groupDataFetched = null;
-		}
-		if (isGroup) groupData = groupDataFetched;
-		if (isGroup && type == "imageMessage" && groupData?.isAutoStickerOn) {
-			if (msg.message.imageMessage.caption == "") {
-				commandsPublic["sticker"](sock, msg, from, args, {
-					senderJid,
-					type,
-					content,
-					isGroup,
-					sendMessageWTyping,
-					evv,
-				});
-			}
-		}
-		//-------------------------------------------------------------------------------------------------------------//
-		if (senderData?.isBlock) return;
 		const groupAdmins = isGroup ? getGroupAdmins(groupMetadata.participants) : "";
 		const isGroupAdmin = groupAdmins?.includes(senderJid) || false;
 
@@ -442,6 +487,8 @@ const getCommand = async (sock, msg, cache) => {
 		// if (!allowed) return console.log("Rate limit exceeded for", senderJid, "command:", command);
 
 		// }
+		const isKnown = !!(commandsPublic[command] || commandsMembers[command] || commandsAdmins[command] || commandsOwners[command]);
+		// Unknown words after the prefix ("- yes", "-5") are usually normal chat: stay silent unless it looks like a typo
 		sock.readMessages([msg.key]).catch(() => {});
 
 		const msgInfoObj = {
@@ -477,7 +524,7 @@ const getCommand = async (sock, msg, cache) => {
 			"[IN]",
 			isGroup ? groupMetadata.subject : "Directs",
 		);
-		notifyOwner(
+		if (isKnown) notifyOwner(
 			sock,
 			`🤖 <b>Command Used</b>\n` +
 				`━━━━━━━━━━━━━━\n` +
@@ -488,15 +535,14 @@ const getCommand = async (sock, msg, cache) => {
 			msg,
 		);
 		if (command != "") {
-			const botData = await getBotData();
-			const globallyDisabled = botData?.disabledGlobally || [];
+			const globallyDisabled = await getDisabledGlobally();
 			if (globallyDisabled.includes(command)) {
 				return sendMessageWTyping(from, { text: `🚫 This command is globally disabled.` }, { quoted: msg });
 			}
 		}
 		if (isGroup) {
 			let resBotOn = groupData ? await groupData.isBotOn : false;
-			if (resBotOn == false && !(command.startsWith("group") || command.startsWith("dev"))) {
+			if (isKnown && resBotOn == false && !(command.startsWith("group") || command.startsWith("dev") || command === "toggle")) {
 				return sendMessageWTyping(from, {
 					text:
 						"```By default, bot is turned off in this group.\nAsk the Owner to activate.\n\nUse ```" +
@@ -504,7 +550,7 @@ const getCommand = async (sock, msg, cache) => {
 						"dev",
 				});
 			}
-			let blockCommandsInDB = await groupData?.cmdBlocked;
+			let blockCommandsInDB = groupData?.cmdBlocked ?? [];
 			if (command != "") {
 				if (blockCommandsInDB.includes(command)) {
 					return sendMessageWTyping(from, { text: `Command blocked for this group.` }, { quoted: msg });
@@ -515,6 +561,7 @@ const getCommand = async (sock, msg, cache) => {
 		const { pushActivity, cmdUsage } = await import("../notify/adminEvents.js");
 		if (commandsPublic[command] || commandsMembers[command] || commandsAdmins[command] || commandsOwners[command]) {
 			cmdUsage.set(command, (cmdUsage.get(command) || 0) + 1);
+			recordCommand(command, isGroup ? from : null);
 			pushActivity("command_used", {
 				cmd: command,
 				from: senderJid,
@@ -552,7 +599,7 @@ const getCommand = async (sock, msg, cache) => {
 					{ text: "```❎ This command is only applicable in Groups!```" },
 					{ quoted: msg },
 				);
-			} else if (isGroupAdmin || moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
+			} else if (isGroupAdmin || myNumber.includes(senderJid) || (await isModeratorJid(sock, senderJid, senderJidAlt))) {
 				result = await commandsAdmins[command](sock, msg, from, args, msgInfoObj);
 			} else {
 				result = await sendMessageWTyping(
@@ -567,7 +614,7 @@ const getCommand = async (sock, msg, cache) => {
 		} else if (commandsOwners[command]) {
 			const t0 = Date.now();
 			let result;
-			if (moderatos.includes(senderNumber) || myNumber.includes(senderJid)) {
+			if (myNumber.includes(senderJid) || (await isModeratorJid(sock, senderJid, senderJidAlt))) {
 				result = await commandsOwners[command](sock, msg, from, args, msgInfoObj);
 			} else {
 				result = await sendMessageWTyping(
@@ -607,7 +654,7 @@ const getCommand = async (sock, msg, cache) => {
 					best = c;
 				}
 			}
-			const threshold = Math.max(2, Math.floor(command.length / 2));
+			const threshold = command.length > 4 ? 2 : 1; // short words ("no", "yes") are chat, only suggest near-misses
 			if (best && bestDist <= threshold) {
 				return sendMessageWTyping(
 					from,
@@ -615,11 +662,7 @@ const getCommand = async (sock, msg, cache) => {
 					{ quoted: msg },
 				);
 			}
-			return sendMessageWTyping(
-				from,
-				{ text: "```" + msg.pushName + " !!Use " + prefix + "help ```" },
-				{ quoted: msg },
-			);
+			return; // not a command and not a close typo: ignore
 		}
 	} catch (error) {
 		console.error("❌ Error processing message:", error.message);

@@ -12,7 +12,9 @@ const updateData = async (collection, id, data, value, sendMessageWTyping, from,
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, command, extendedMessageOriginal } = msgInfoObj;
+	const { sendMessageWTyping, command, extendedMessageOriginal, isOwner } = msgInfoObj;
+	// Writes arbitrary DB fields — real owner only, moderators can't use it.
+	if (!isOwner) return sendMessageWTyping(from, { text: "❌ Owner only." }, { quoted: msg });
 	let data, value, id, collection, getDataFunc;
 
 	switch (command) {
@@ -44,13 +46,16 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		sendMessageWTyping(from, { text: JSON.stringify(data, null, 2, 100) }, { quoted: msg });
 	} else {
 		[data, value] = args[0].split(":");
+		if (value === undefined) {
+			return sendMessageWTyping(from, { text: "*Usage:* field:value" }, { quoted: msg });
+		}
 		await updateData(collection, id, data, value, sendMessageWTyping, from, msg);
 	}
 };
 
 export default () => ({
 	cmd: ["group", "member", "bot"],
-	desc: "Control Database",
+	desc: "Manage the database records for groups, members or the bot.",
 	usage: "group | member | bot",
 	handler,
 });

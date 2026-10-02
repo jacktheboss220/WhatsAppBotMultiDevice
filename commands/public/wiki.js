@@ -62,7 +62,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["wiki", "wikipedia"],
-	desc: "Get Wikipedia summary for a topic",
+	desc: "Get a short Wikipedia summary of a topic.",
 	usage: "wiki <query>",
 	handler,
 });

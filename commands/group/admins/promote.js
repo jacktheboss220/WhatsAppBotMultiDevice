@@ -33,7 +33,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["promote"],
-	desc: "Give admin permission to a member",
+	desc: "Make a member admin. Tag them or reply to their message.",
 	usage: "promote @mention | reply",
 	handler,
 });

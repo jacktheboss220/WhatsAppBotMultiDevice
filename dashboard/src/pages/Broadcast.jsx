@@ -1,6 +1,13 @@
 import { useEffect, useState, useMemo } from 'react'
 import { getGroups, broadcast } from '../lib/api.js'
 import { useToast } from '../App.jsx'
+import { Btn, Card, CardTitle, PageHeader, SearchInput, Spinner, Textarea, cx } from '../components/ui.jsx'
+
+const MODES = (active, all) => [
+  { key: 'active', label: `Active groups (${active})`, sub: 'Only groups where bot is ON' },
+  { key: 'all',    label: `All groups (${all})`,       sub: 'Every group in the database' },
+  { key: 'custom', label: 'Custom selection',          sub: 'Pick specific groups below' },
+]
 
 export default function Broadcast() {
   const toast   = useToast()
@@ -61,91 +68,82 @@ export default function Broadcast() {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h2>Broadcast</h2>
-          <p className="sub">Send a message to multiple groups at once.</p>
-        </div>
-      </div>
+      <PageHeader title="Broadcast" sub="Send a message to multiple groups at once." />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 items-start">
         {/* Left: Message */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="card">
-            <div className="card-header">
-              <div>
-                <p className="card-title">Message</p>
-                <p className="card-sub">This text will be sent as-is to all selected groups.</p>
-              </div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{message.length} / 4096</span>
-            </div>
-            <textarea
-              className="form-textarea"
+        <div className="flex flex-col gap-3.5">
+          <Card>
+            <CardTitle
+              sub="This text will be sent as-is to all selected groups."
+              right={<span className="text-xs text-muted">{message.length} / 4096</span>}
+            >
+              Message
+            </CardTitle>
+            <Textarea
               placeholder="Type your broadcast message here…"
               value={message}
               maxLength={4096}
               onChange={e => setMessage(e.target.value)}
-              style={{ minHeight: 160 }}
+              className="min-h-40"
             />
-          </div>
+          </Card>
 
-          {/* Preview */}
           {message.trim() && (
-            <div className="card">
-              <p className="card-title" style={{ marginBottom: 10 }}>Preview</p>
-              <div style={{
-                background: 'var(--surface-2)',
-                borderRadius: 'var(--r)',
-                padding: '12px 14px',
-                fontSize: '0.85rem',
-                color: 'var(--text-soft)',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                borderLeft: '3px solid var(--accent)',
-              }}>
+            <Card>
+              <p className="text-[0.9rem] font-semibold mb-2.5">Preview</p>
+              <div className="bg-s2 rounded-[10px] px-3.5 py-3 text-[0.85rem] text-soft whitespace-pre-wrap break-words border-l-[3px] border-accent">
                 {message}
               </div>
-            </div>
+            </Card>
           )}
 
-          <button
-            className="btn btn-primary"
+          <Btn
             onClick={handleSend}
             disabled={loading || !message.trim() || targetCount() === 0}
-            style={{ alignSelf: 'flex-start', padding: '10px 24px' }}
+            className="self-start px-6"
           >
             {loading
-              ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Sending…</>
+              ? <><Spinner size="size-3.5" /> Sending…</>
               : `📢 Send to ${targetCount()} group${targetCount() !== 1 ? 's' : ''}`
             }
-          </button>
+          </Btn>
 
           {result && !result.error && (
-            <div className={`broadcast-result ${result.failed > 0 ? '' : 'ok'}`}>
+            <div className={cx('px-[18px] py-3.5 bg-s2 border rounded-[10px] text-[0.84rem]', result.failed > 0 ? 'border-line' : 'border-success/30')}>
               <strong>✅ Sent to {result.sent}</strong> / {result.total} groups
-              {result.failed > 0 && <span style={{ color: 'var(--warning)', marginLeft: 8 }}>· {result.failed} failed</span>}
+              {result.failed > 0 && <span className="text-warning ml-2">· {result.failed} failed</span>}
             </div>
           )}
           {result?.error && (
-            <div className="broadcast-result err">❌ {result.error}</div>
+            <div className="px-[18px] py-3.5 bg-s2 border border-danger/30 text-danger rounded-[10px] text-[0.84rem]">❌ {result.error}</div>
           )}
         </div>
 
         {/* Right: Target selection */}
-        <div className="card" style={{ position: 'sticky', top: 0 }}>
-          <p className="card-title" style={{ marginBottom: 12 }}>Target Groups</p>
+        <Card className="lg:sticky lg:top-0">
+          <p className="text-[0.9rem] font-semibold mb-3">Target Groups</p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-            {[
-              { key: 'active', label: `Active groups (${activeGroups.length})`, sub: 'Only groups where bot is ON' },
-              { key: 'all',    label: `All groups (${groups.length})`,          sub: 'Every group in the database' },
-              { key: 'custom', label: 'Custom selection',                        sub: 'Pick specific groups below' },
-            ].map(({ key, label, sub }) => (
-              <label key={key} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: mode === key ? 'var(--accent-dim)' : 'var(--surface-2)', borderRadius: 'var(--r-sm)', border: `1px solid ${mode === key ? 'var(--accent-bdr)' : 'var(--border)'}`, cursor: 'pointer', transition: 'all 0.12s' }}>
-                <input type="radio" name="mode" value={key} checked={mode === key} onChange={() => { setMode(key); setSelected(new Set()) }} style={{ accentColor: 'var(--accent)', marginTop: 2, flexShrink: 0 }} />
+          <div className="flex flex-col gap-1.5 mb-3.5">
+            {MODES(activeGroups.length, groups.length).map(({ key, label, sub }) => (
+              <label
+                key={key}
+                className={cx(
+                  'flex gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer transition',
+                  mode === key ? 'bg-accent/10 border-accent/30' : 'bg-s2 border-line'
+                )}
+              >
+                <input
+                  type="radio"
+                  name="mode"
+                  value={key}
+                  checked={mode === key}
+                  onChange={() => { setMode(key); setSelected(new Set()) }}
+                  className="accent-accent mt-0.5 shrink-0"
+                />
                 <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>{label}</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{sub}</div>
+                  <div className="text-[0.82rem] font-semibold">{label}</div>
+                  <div className="text-[0.72rem] text-muted mt-0.5">{sub}</div>
                 </div>
               </label>
             ))}
@@ -153,22 +151,29 @@ export default function Broadcast() {
 
           {mode === 'custom' && (
             <>
-              <input
-                className="search-input"
-                style={{ width: '100%', borderRadius: 'var(--r-sm)', marginBottom: 8 }}
+              <SearchInput
+                className="w-full rounded-md mb-2"
                 placeholder="Search groups…"
                 value={grpSearch}
                 onChange={e => setGrpSearch(e.target.value)}
               />
-              <div className="group-picker">
+              <div className="max-h-[260px] overflow-y-auto border border-line rounded-[10px] bg-s2">
                 {filteredGroups.map(g => (
-                  <div key={g._id} className="group-picker-row" onClick={() => toggleSelect(g._id)}>
-                    <input type="checkbox" checked={selected.has(g._id)} onChange={() => toggleSelect(g._id)} onClick={e => e.stopPropagation()} />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: '0.81rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {g.grpName || 'Unnamed Group'}
-                      </div>
-                      <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>
+                  <div
+                    key={g._id}
+                    className="flex items-center gap-2.5 px-3.5 py-[9px] border-b border-line last:border-b-0 cursor-pointer text-[0.83rem] hover:bg-s3 transition-colors"
+                    onClick={() => toggleSelect(g._id)}
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-[15px] accent-accent cursor-pointer"
+                      checked={selected.has(g._id)}
+                      onChange={() => toggleSelect(g._id)}
+                      onClick={e => e.stopPropagation()}
+                    />
+                    <div className="min-w-0">
+                      <div className="text-[0.81rem] font-medium truncate">{g.grpName || 'Unnamed Group'}</div>
+                      <div className="text-[0.66rem] text-muted">
                         {g.isBotOn ? '✅ Active' : '⭕ Inactive'} · {g.totalMsgCount || 0} msgs
                       </div>
                     </div>
@@ -176,13 +181,13 @@ export default function Broadcast() {
                 ))}
               </div>
               {selected.size > 0 && (
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8 }}>
+                <p className="text-xs text-muted mt-2">
                   {selected.size} group{selected.size !== 1 ? 's' : ''} selected
                 </p>
               )}
             </>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )

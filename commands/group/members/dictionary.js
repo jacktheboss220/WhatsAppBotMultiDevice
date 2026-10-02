@@ -10,7 +10,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const word = args[0];
 
 	try {
-		const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+		const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`, { timeout: 8000 });
 
 		const data = response.data[0];
 
@@ -50,7 +50,7 @@ _${example}_`;
 
 export default () => ({
 	cmd: ["dictionary", "dict"],
-	desc: "Get meaning of a word",
+	desc: "Look up the meaning of a word.",
 	usage: "dict <word>",
 	handler,
 });

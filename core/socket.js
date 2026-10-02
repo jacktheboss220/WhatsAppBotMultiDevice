@@ -3,15 +3,36 @@ import makeWASocket, { makeCacheableSignalKeyStore } from "baileys";
 import { fetchLatestBaileysVersion } from "baileys";
 import { useMongoDBAuthState } from "./auth.js";
 import P from "pino";
+import groupMetaStore from "../cache/groupMetaStore.js";
 
 const logger = P({ level: "silent" });
 
+// Holds messages the BOT SENT so getMessage() can answer WhatsApp's retry requests
+// (a recipient that couldn't decrypt a reply asks the sender to resend it).
 const messageCache = new NodeCache({
-	stdTTL: 120, // Reduced to 2 minutes
-	checkperiod: 30,
-	maxKeys: 180,
+	stdTTL: 600,
+	checkperiod: 60,
+	maxKeys: 500,
 	useClones: false,
 });
+
+// Wraps sock.sendMessage so every sent message is remembered. This cache used to be filled with
+// INCOMING messages instead, which getMessage() never needs, and it hit its size cap within minutes.
+export const cacheOutgoing = (sock, cache) => {
+	const send = sock.sendMessage.bind(sock);
+	sock.sendMessage = async (...args) => {
+		const sent = await send(...args);
+		try {
+			if (sent?.message && sent.key?.id) {
+				cache.set(`${sent.key.remoteJid}:${sent.key.id}`, sent.message);
+			}
+		} catch {
+			// cache full/unavailable must never fail a send
+		}
+		return sent;
+	};
+	return sock;
+};
 
 let authStateCleanup = null;
 
@@ -49,6 +70,7 @@ const socket = async () => {
 		generateHighQualityLinkPreview: true,
 
 		getMessage,
+		cachedGroupMetadata: async (jid) => groupMetaStore.get(jid),
 		markOnlineOnConnect: true,
 		syncFullHistory: false,
 		shouldSyncHistoryMessage: () => false,
@@ -81,22 +103,7 @@ const socket = async () => {
 		}
 	}
 
-	// Cache incoming messages for getMessage function with size limit
-	sock.ev.on("messages.upsert", (m) => {
-		try {
-			for (const msg of m.messages) {
-				if (msg.message) {
-					const cacheKey = `${msg.key.remoteJid}:${msg.key.id}`;
-					// Only cache if under limit to prevent memory overflow (must stay < maxKeys or .set() throws ECACHEFULL)
-					if (messageCache.getStats().keys < 180) {
-						messageCache.set(cacheKey, msg.message);
-					}
-				}
-			}
-		} catch (error) {
-			logger.error("Error caching message:", error);
-		}
-	});
+	cacheOutgoing(sock, messageCache);
 
 	// Enhanced session cleanup on errors
 	sock.ev.on("creds.update", async () => {

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { sendDirect, getMembers } from '../lib/api.js'
 import { useToast } from '../App.jsx'
+import { Btn, Card, ChartTitle, Field, Input, Jid, PageHeader, Textarea } from '../components/ui.jsx'
 
 function fmtTime(ts) {
   return new Date(ts).toLocaleTimeString('en-US', { hour12: false })
@@ -56,95 +57,70 @@ export default function DirectMessage() {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h2>Direct Message</h2>
-          <p className="sub">Send a message directly to any user by JID.</p>
-        </div>
-      </div>
+      <PageHeader title="Direct Message" sub="Send a message directly to any user by JID." />
 
-      <div className="dm-wrap">
-        <div className="card dm-compose">
-          <div className="form-field">
-            <label className="form-label">Search Members</label>
-            <input
-              className="form-input"
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <Card className="flex flex-col gap-3.5">
+          <Field label="Search Members">
+            <Input
               placeholder="Type name or number to search…"
               value={search}
               onChange={e => handleSearch(e.target.value)}
             />
             {members.length > 0 && (
-              <div className="dm-suggestions">
+              <div className="flex flex-col bg-s2 border border-line rounded-[10px] mt-1.5 overflow-hidden">
                 {members.map(m => (
                   <button
                     key={m._id}
-                    className="dm-suggestion"
+                    className="flex flex-col gap-[3px] px-3.5 py-[9px] text-left border-b border-line last:border-b-0 hover:bg-s3 transition-colors"
                     onClick={() => { setJid(m._id); setMembers([]); setSearch('') }}
                   >
-                    <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.username || '—'}</span>
-                    <code className="jid-sm">{m._id}</code>
+                    <span className="font-semibold text-[0.85rem]">{m.username || '—'}</span>
+                    <Jid>{m._id}</Jid>
                   </button>
                 ))}
               </div>
             )}
-          </div>
+          </Field>
 
-          <div className="form-field" style={{ marginTop: 14 }}>
-            <label className="form-label">Recipient JID</label>
-            <input
-              className="form-input"
+          <Field label="Recipient JID">
+            <Input
               placeholder="e.g. 919876543210@s.whatsapp.net"
               value={jid}
               onChange={e => setJid(e.target.value)}
             />
-          </div>
+          </Field>
 
-          <div className="form-field" style={{ marginTop: 14 }}>
-            <label className="form-label">
-              Message&nbsp;
-              <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-                Ctrl+Enter to send
-              </span>
-            </label>
-            <textarea
-              className="form-textarea"
+          <Field label="Message" hint="Ctrl+Enter to send">
+            <Textarea
               placeholder="Type your message…"
               value={message}
               onChange={e => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={6}
             />
-          </div>
+          </Field>
 
-          <button
-            className="btn-primary"
-            onClick={handleSend}
-            disabled={sending || !jid.trim() || !message.trim()}
-            style={{ marginTop: 16, width: '100%' }}
-          >
+          <Btn onClick={handleSend} disabled={sending || !jid.trim() || !message.trim()} className="w-full mt-1">
             {sending ? 'Sending…' : 'Send Message'}
-          </button>
-        </div>
+          </Btn>
+        </Card>
 
         {history.length > 0 && (
-          <div className="card dm-history">
-            <p className="chart-title" style={{ marginBottom: 14 }}>Sent This Session</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Card>
+            <ChartTitle>Sent This Session</ChartTitle>
+            <div className="flex flex-col gap-2.5">
               {history.map((h, i) => (
-                <div key={i} className="dm-history-row">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <code className="jid-sm">{h.jid}</code>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', flexShrink: 0, marginLeft: 8 }}>
-                      {fmtTime(h.ts)}
-                    </span>
+                <div key={i} className="bg-s2 border border-line rounded-md px-3.5 py-2.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <Jid>{h.jid}</Jid>
+                    <span className="text-[0.7rem] text-muted shrink-0 ml-2">{fmtTime(h.ts)}</span>
                   </div>
-                  <p style={{ fontSize: '0.83rem', color: 'var(--text-soft)', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {h.msg}
-                  </p>
+                  <p className="text-[0.83rem] text-soft whitespace-pre-wrap break-words">{h.msg}</p>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </div>

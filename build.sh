@@ -39,7 +39,7 @@ EOF
 }
 
 # Domain + email for Nginx/SSL. Set inline: DOMAIN=your.domain.com EMAIL=you@mail.com ./build.sh nginx
-DOMAIN="${DOMAIN:-}"
+DOMAIN="${DOMAIN:-www.example.com}"
 EMAIL="${EMAIL:-}"
 
 require_env() {

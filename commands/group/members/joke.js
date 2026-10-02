@@ -17,7 +17,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	try {
 		axios
-			.get(`${baseURL}/joke/${categories}`)
+			.get(`${baseURL}/joke/${categories}`, { timeout: 8000 })
 			.then((res) => {
 				let randomJoke = res.data;
 				let mess = "";
@@ -41,7 +41,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["joke"],
-	desc: "Get random joke",
+	desc: "Get a random joke, optionally from a category.",
 	usage: "joke | joke <category>",
 	handler,
 });

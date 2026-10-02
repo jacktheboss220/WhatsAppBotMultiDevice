@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["rn", "rt"],
-	desc: "Random Tag a member",
+	desc: "Tag one random member of the group.",
 	usage: "rn | rt ",
 	handler,
 });

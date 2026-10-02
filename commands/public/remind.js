@@ -1,6 +1,7 @@
 import { insertReminder, getUserReminders, deleteReminder } from "../../db/reminders.js";
 
 const MAX_MS = 7 * 24 * 60 * 60 * 1000;
+const MAX_PENDING = 20; // per user, so nobody can flood the DB or a group with reminders
 const UNITS = { m: 60_000, h: 3_600_000, d: 86_400_000, w: 604_800_000 };
 const REPEATS = ["daily", "weekly"];
 
@@ -137,6 +138,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			{ quoted: msg },
 		);
 
+	const pendingCount = (await getUserReminders(senderJid)).length;
+	if (pendingCount >= MAX_PENDING)
+		return sendMessageWTyping(
+			from,
+			{ text: `❌ You already have ${pendingCount} pending reminders (max ${MAX_PENDING}). Cancel some with \`remind cancel <number>\`.` },
+			{ quoted: msg },
+		);
+
 	const remindAt = specificTime ?? new Date(Date.now() + relativeMs);
 
 	await insertReminder({
@@ -161,7 +170,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["remind", "reminder"],
-	desc: "Set a timed reminder (max 1 week). Supports repeat & specific times (IST).",
+	desc: "Set a reminder (up to 1 week), with optional repeat. Times are in IST.",
 	usage: "remind <10m|2h|1:30PM> <message> [repeat daily|weekly] | remind list | remind cancel <n>",
 	handler,
 });

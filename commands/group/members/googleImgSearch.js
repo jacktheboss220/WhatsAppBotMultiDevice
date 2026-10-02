@@ -4,11 +4,9 @@ dotenv.config();
 const GOOGLE_API_KEY_SEARCH = process.env.GOOGLE_API_KEY_SEARCH || "";
 const SEARCH_ENGINE_KEY = process.env.SEARCH_ENGINE_KEY || "";
 
-import fs from "fs";
 import axios from "axios";
 import { getGroupData } from "../../../db/groupData.js";
-
-const getRandom = (ext) => `${Math.floor(Math.random() * 10000)}${ext}`;
+import { fetchImageBuffer } from "../../../utils/safeFetch.js";
 
 const baseURL = "https://www.googleapis.com/customsearch/v1";
 const googleapis = `?key=${GOOGLE_API_KEY_SEARCH}`;
@@ -40,10 +38,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		return sendMessageWTyping(from, { text: "```Enter Word to Search```" }, { quoted: msg });
 	}
 
-	const urlToSearch = `${baseURL}${googleapis}${searchEngineKey}${searchType}${defQuery}${evv}`;
-	console.log(urlToSearch);
+	// Never log this URL (it contains the API key, and logs are streamed to the dashboard);
+	// encode the query so user text can't inject extra API parameters.
+	const urlToSearch = `${baseURL}${googleapis}${searchEngineKey}${searchType}${defQuery}${encodeURIComponent(evv)}`;
 
-	await axios(urlToSearch)
+	await axios(urlToSearch, { timeout: 8000 })
 		.then(async (res) => {
 			const links = res?.data?.items?.map((ele) => ele.link);
 			sendImage(links, from, msg, { args, sendMessageWTyping });
@@ -53,8 +52,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		});
 };
 
+const MAX_TRIES = 3;
+
 const sendImage = async (links, from, msg, { args, sendMessageWTyping }) => {
-	const imageUrl = getRandom(".png");
 	if (!links?.length) {
 		return sendMessageWTyping(from, { text: "No image found" }, { quoted: msg });
 	}
@@ -64,31 +64,27 @@ const sendImage = async (links, from, msg, { args, sendMessageWTyping }) => {
 	} else if (links.length > 5) {
 		random = Math.floor(Math.random() * 5);
 	}
-	const url = links[random];
-	try {
-		await downloadImage(url, imageUrl);
-		await sendMessageWTyping(from, { image: await fs.promises.readFile(imageUrl) }, { quoted: msg });
-		fs.unlinkSync(imageUrl);
-	} catch (err) {
-		sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+	// The chosen result first, then the next ones: result links are arbitrary hosts, so some are dead, too big
+	// or refused by the safe fetcher (private addresses, non-images). Skip those instead of failing the command.
+	const candidates = [links[random], ...links.filter((_, i) => i !== random)].filter(Boolean).slice(0, MAX_TRIES);
+	let image;
+	for (const url of candidates) {
+		try {
+			image = await fetchImageBuffer(url);
+			break;
+		} catch (err) {
+			console.log("[img] skipped a result:", err.message);
+		}
 	}
-};
-
-const downloadImage = async (url, imageUrl) => {
-	const response = await axios({
-		method: "get",
-		url,
-		responseType: "stream",
-	});
-	const out = response.data.pipe(fs.createWriteStream(imageUrl));
-	return new Promise((resolve, reject) => {
-		out.on("finish", resolve).on("error", reject);
-	});
+	if (!image) {
+		return sendMessageWTyping(from, { text: "❌ Couldn't download an image for that search. Try another word." }, { quoted: msg });
+	}
+	await sendMessageWTyping(from, { image }, { quoted: msg });
 };
 
 export default () => ({
 	cmd: ["img"],
-	desc: "Search image from google",
+	desc: "Search Google Images. Add a number to get that many results.",
 	usage: "img <search word> | <number> (optional) <search word>",
 	handler,
 });

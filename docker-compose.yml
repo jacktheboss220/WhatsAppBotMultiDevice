@@ -6,7 +6,8 @@ services:
         container_name: whatsapp-bot
         restart: unless-stopped
         ports:
-            - "${PORT:-8080}:${PORT:-8080}"
+            # localhost only: nginx (host) proxies to it. Publishing it to the world would bypass TLS and the proxy.
+            - "127.0.0.1:${PORT:-8080}:${PORT:-8080}"
         env_file:
             - .env
         environment:

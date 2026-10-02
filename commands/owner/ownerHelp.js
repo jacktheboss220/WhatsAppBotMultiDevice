@@ -7,25 +7,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { prefix, sendMessageWTyping } = msgInfoObj;
 	const { ownerCommands } = await cmdToText();
 
-	const owner = `
---------------------------------------------------------------
-    ─「  *Owner Commands* 」─
----------------------------------------------------------------
+	const line = (c) => `▸ *${prefix}${c.cmd[0]}*${c.cmd.length > 1 ? ` _(${c.cmd.slice(1).map((a) => prefix + a).join(", ")})_` : ""}\n   ${c.desc}`;
+	const text =
+		`👑 *Owner Commands*\n${readMore}\n` +
+		ownerCommands.map(line).join("\n\n") +
+		`\n\n💡 _${prefix}help <command> for usage_\n♥ buymeacoffee.com/jacktheboss220`;
 
-${readMore}
-
-${ownerCommands
-	.map((cmd) => `*${prefix}${cmd.cmd.join(", ")}* - ${cmd.desc}\nUsage: ${prefix}${cmd.usage}`)
-	.join("\n\n")}
-
-♥ мα∂є ωιтн ℓσνє, υѕє ωιтн ℓσνє ♥️`;
-
-	sendMessageWTyping(from, { text: owner });
+	sendMessageWTyping(from, { text });
 };
 
 export default () => ({
 	cmd: ["owner", "ownerhelp", "ownermenu"],
-	desc: "Owner help menu",
+	desc: "Show all owner commands.",
 	usage: "owner",
 	handler,
 });

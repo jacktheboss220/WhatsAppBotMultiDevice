@@ -9,18 +9,21 @@ class MemoryManager {
 	constructor() {
 		this.tempFiles = new Set();
 		this.activeStreams = new Set();
-		this.maxTempFiles = 100;
 		this.maxActiveStreams = 50;
 	}
 
+	// Files are only deleted once they are STALE. This used to call destroy() when 100 were tracked,
+	// which unlinked every tracked file, including inputs of conversions still running.
 	registerTempFile(filePath) {
-		if (this.tempFiles.size >= this.maxTempFiles) {
-			this.destroy();
-		}
 		this.tempFiles.add(filePath);
-		setTimeout(() => {
-			this.tempFiles.delete(filePath);
-		}, 900000);
+		// Nothing legitimate takes 15 min, so this is a safety net for files a command failed to clean up
+		// (before, the timer only forgot the path and left the file on disk).
+		setTimeout(() => this.forgetAndUnlink(filePath), 900000).unref();
+	}
+
+	forgetAndUnlink(filePath) {
+		this.safeUnlink(filePath);
+		this.tempFiles.delete(filePath);
 	}
 
 	registerStream(stream) {

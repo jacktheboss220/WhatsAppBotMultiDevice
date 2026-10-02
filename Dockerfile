@@ -37,12 +37,12 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run --cwd dashboard build
 
-RUN mkdir -p temp
+RUN mkdir -p temp && chown -R bun:bun /app/temp
 
 ENV NODE_ENV=production
 
 EXPOSE 8080
 
-# Self-update yt-dlp on every boot so a long-lived container stays current even
-# without an image rebuild. Non-fatal if the network is unavailable at startup.
-CMD ["bun", "--smol", "index.js"]
+# Start as root only to fix ownership of the (possibly root-owned, pre-existing) temp volume, then drop to the
+# unprivileged "bun" user. If setpriv is missing it falls back to running as root instead of failing to start.
+CMD ["sh", "-c", "chown -R bun:bun /app/temp 2>/dev/null; if command -v setpriv >/dev/null 2>&1; then exec setpriv --reuid=bun --regid=bun --init-groups env HOME=/home/bun bun --smol index.js; else echo \"setpriv not found - running as root\"; exec bun --smol index.js; fi"]

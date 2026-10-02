@@ -9,7 +9,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const targetJid = mentions[0] || senderJid;
 
 	const data = await getMemberData(targetJid);
-	if (data === -1) {
+	if (!data) {
 		return sendMessageWTyping(
 			from,
 			{ text: "❌ No data found. Send some messages first!" },
@@ -46,7 +46,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["rank", "level", "xp"],
-	desc: "Check your rank in this group. Tag someone to check theirs.",
+	desc: "Show your rank and XP in this group. Tag someone to see theirs.",
 	usage: "rank [@user]",
 	handler,
 });

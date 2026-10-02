@@ -305,7 +305,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["eva", "gemini"],
-	desc: "Chat with Eva",
+	desc: "Chat with Eva, the AI assistant.",
 	usage: "eva <text>",
 	handler,
 });

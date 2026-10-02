@@ -2,7 +2,7 @@ import axios from "axios";
 
 const getGender = async (name) => {
 	let url = "https://api.genderize.io/?name=" + name;
-	let { data } = await axios.get(url);
+	let { data } = await axios.get(url, { timeout: 8000 });
 	if (!data.gender) return Promise.reject("Name Not Found!!!");
 	const genderEmoji = data.gender === "male" ? "👦" : "👧";
 	let genderText = `${genderEmoji} *${data.name}* is likely *${data.gender}*\n📊 Probability: *${Math.round(data.probability * 100)}%*`;
@@ -37,7 +37,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["gender"],
-	desc: "get gender of a name",
+	desc: "Guess the gender of a name, or of the replied message's sender.",
 	usage: "gender <name> | reply to a message.",
 	handler,
 });

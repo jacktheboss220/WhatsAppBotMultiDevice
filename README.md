@@ -302,7 +302,6 @@ Create a `.env` file in the project root with the following keys.
 | `GENIUS_ACCESS_SECRET`  | Genius API token — used by the `-l` lyrics command                                       |
 | `PIN_KEY`               | Pinterest API key for Pinterest image search                                             |
 | `REMOVE_BG_KEY`         | remove.bg API key — used by the `-removebg` command                                     |
-| `TRUECALLER_ID`         | Truecaller API ID for caller identification                                              |
 | `TWITTER_BEARER_TOKEN`  | Twitter/X API bearer token for Twitter-related features                                  |
 | `FFMPEG_PATH`           | Path to a custom `ffmpeg` binary. If unset the bundled `ffmpeg-static` binary is used.  |
 | `TELEGRAM_BOT_TOKEN`    | Telegram bot token — enables sending bot logs to a Telegram chat                         |
@@ -349,7 +348,6 @@ SEARCH_ENGINE_KEY=your_search_engine_id_here
 GENIUS_ACCESS_SECRET=your_genius_access_secret_here
 PIN_KEY=your_pinterest_api_key_here
 REMOVE_BG_KEY=your_remove_bg_key_here
-TRUECALLER_ID=your_truecaller_id_here
 TWITTER_BEARER_TOKEN=your_twitter_bearer_token_here
 
 # Custom ffmpeg path (leave blank to use bundled ffmpeg-static)

@@ -1,9 +1,4 @@
-import { config } from "dotenv";
-config();
-const myNumbers = [
-	process.env.MY_NUMBER.split(",")[0] + "@s.whatsapp.net",
-	process.env.MY_NUMBER.split(",")[1] + "@lid",
-];
+import { isPrivileged } from "../../../utils/roles.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { groupAdmins, sendMessageWTyping, groupMetadata, botNumber, extendedMessageOriginal } = msgInfoObj;
@@ -26,8 +21,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		return sendMessageWTyping(from, { text: `*Mention or tag member.*` }, { quoted: msg });
 	}
 
-	if (taggedJid === groupMetadata.owner || myNumbers.includes(taggedJid) || groupAdmins.includes(taggedJid)) {
-		return sendMessageWTyping(from, { text: `❌ *Can't remove Bot/Owner/admin*` }, { quoted: msg });
+	if (
+		taggedJid === groupMetadata.owner ||
+		botNumber.includes(taggedJid) ||
+		groupAdmins.includes(taggedJid) ||
+		(await isPrivileged(sock, taggedJid))
+	) {
+		return sendMessageWTyping(from, { text: `❌ *Can't remove Bot/Owner/Moderator/admin*` }, { quoted: msg });
 	}
 
 	try {
@@ -47,7 +47,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["remove", "kick", "ban"],
-	desc: "Remove a member from group.",
+	desc: "Remove a member from the group. Tag them or reply to their message.",
 	usage: "remove @mention | reply",
 	handler,
 });

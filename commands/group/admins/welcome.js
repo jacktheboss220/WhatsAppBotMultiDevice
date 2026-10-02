@@ -27,7 +27,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["welcome"],
-	desc: "Set welcome message",
+	desc: "Set the welcome message for new members, or reset it.",
 	usage: "welcome <message> | reset",
 	handler,
 });

@@ -10,13 +10,13 @@ const removebgAPI = REMOVE_BG_KEY;
 import { writeFile } from "fs/promises";
 
 import { downloadContentFromMessage } from "baileys";
+import memoryManager from "../../../utils/memory.js";
+import { getMediaFlags } from "../../../utils/mediaFlags.js";
 
-const getRandom = (ext) => {
-	return `${Math.floor(Math.random() * 10000)}${ext}`;
-};
+const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 
 const getRemoveBg = async (Path, outputPath) => {
-	const inputPath = `./${Path}`;
+	const inputPath = Path;
 	const formData = new FormData();
 	formData.append("size", "auto");
 	formData.append("image_file", fs.createReadStream(inputPath), path.basename(inputPath));
@@ -30,6 +30,7 @@ const getRemoveBg = async (Path, outputPath) => {
 			"X-Api-Key": removebgAPI,
 		},
 		encoding: null,
+		timeout: 20000,
 	});
 	await fs.promises.writeFile(outputPath, response.data);
 	console.log("DONE");
@@ -41,7 +42,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	if (!REMOVE_BG_KEY)
 		return sendMessageWTyping(from, { text: "```Remove BG API Key is Missing```" }, { quoted: msg });
 
-	const isTaggedImage = type === "extendedTextMessage" && content.includes("imageMessage");
+	const { isTaggedImage } = getMediaFlags(type, content);
 
 	if (isTaggedImage || msg.message.imageMessage) {
 		let downloadFilePath;
@@ -69,13 +70,13 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			} catch (err) {
 				sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
 			} finally {
-				try { fs.unlinkSync(media); } catch {}
-				try { fs.unlinkSync(outputPath); } catch {}
+				memoryManager.safeUnlink(media);
+				memoryManager.safeUnlink(outputPath);
 			}
 		} catch (err) {
 			console.log("Status : ", err.status);
 			sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-			try { fs.unlinkSync(media); } catch {}
+			memoryManager.safeUnlink(media);
 		}
 	} else {
 		sendMessageWTyping(from, { text: `*Reply to image only*` }, { quoted: msg });
@@ -84,7 +85,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["removebg", "bg"],
-	desc: "Remove background from image",
+	desc: "Remove the background from an image. Reply to the image.",
 	usage: "removebg | reply to image",
 	handler,
 });

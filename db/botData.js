@@ -1,7 +1,5 @@
 import mdClient from "./client.js";
 
-mdClient.connect();
-
 const bot = mdClient.db("MyBotDataDB").collection("AuthTable");
 
 const createBotData = async () => {
@@ -26,7 +24,8 @@ const getBotData = async () => {
 		const res = await bot.findOne({ _id: "bot" });
 		return res;
 	} catch (err) {
-		return -1;
+		console.error("[botDataDb error]", err.message);
+		return null;
 	}
 };
 

@@ -5,9 +5,9 @@ import nodeWebpmux from "node-webpmux";
 const { Image: WebpImage } = nodeWebpmux;
 
 import fs from "fs";
-import os from "os";
-import path from "path";
-const getRandom = (ext) => path.join(os.tmpdir(), `${Math.floor(Math.random() * 10000)}${ext}`);
+import memoryManager from "../../utils/memory.js";
+// unique temp name (was one of only 10,000 names in the shared tmp dir, so two users could collide)
+const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 
 async function addExifNodeWebpmux(buffer, pack, author) {
 	const json = JSON.stringify({
@@ -94,7 +94,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["steal", "stealn"],
-	desc: "Steal stickers with custom pack and author names or default ones.",
+	desc: "Copy a sticker into your own pack, with a custom or default pack and author name.",
 	usage: "steal | steal pack <name> author <name>",
 	handler,
 });

@@ -24,7 +24,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["clearhistory", "cleareva", "reseteva", "forgeteva"],
-	desc: "Clear Eva's conversation history for this group",
+	desc: "Clear Eva's chat memory for this group.",
 	usage: "clearhistory",
 	handler,
 });

@@ -33,7 +33,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["ranknotif", "rkn"],
-	desc: "Toggle rank-up notifications for this group.",
+	desc: "Turn rank-up notifications on or off for this group.",
 	usage: "ranknotif on/off",
 	handler,
 });

@@ -79,7 +79,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["say", "tts"],
-	desc: "Convert text to speech (supports English and Hindi)",
+	desc: "Turn text into a voice message, in English or Hindi.",
 	usage: "say <text> | say hin <hindi text> | Reply to message with say",
 	handler,
 });

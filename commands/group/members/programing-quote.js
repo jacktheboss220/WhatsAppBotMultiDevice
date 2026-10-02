@@ -3,7 +3,7 @@ import axios from "axios";
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping } = msgInfoObj;
 	const proURl = "https://programming-quotesapi.vercel.app/api/random";
-	await axios(proURl)
+	await axios(proURl, { timeout: 8000 })
 		.then((res) => {
 			let mess = `💻 *Programming Quote*\n\n_"${res.data.quote}"_\n\n— *${res.data.author}*`;
 			sendMessageWTyping(from, { text: mess }, { quoted: msg });
@@ -16,7 +16,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["proquote", "pqoute"],
-	desc: "Get random programming quote",
+	desc: "Get a random programming quote.",
 	usage: "proquote",
 	handler,
 });

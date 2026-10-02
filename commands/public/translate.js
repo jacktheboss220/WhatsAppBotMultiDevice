@@ -58,7 +58,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["tr", "translate"],
-	desc: "Translate text to any language",
+	desc: "Translate text into another language. Use a language code like en or hi.",
 	usage: "tr <lang_code> <text> | reply to a message",
 	handler,
 });

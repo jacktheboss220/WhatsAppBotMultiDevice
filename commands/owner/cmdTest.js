@@ -4,7 +4,15 @@ import axios from "axios";
 import fs from "fs";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, evv, command, extendedMessageOriginal } = msgInfoObj;
+	const { sendMessageWTyping, evv, extendedMessageOriginal, isOwner } = msgInfoObj;
+
+	// eval = full server access (env secrets, DB). Real owner only, and off unless explicitly enabled.
+	if (process.env.ENABLE_EVAL !== "true") {
+		return sendMessageWTyping(from, { text: "❌ Disabled. Set ENABLE_EVAL=true to use it." }, { quoted: msg });
+	}
+	if (!isOwner) {
+		return sendMessageWTyping(from, { text: "❌ Owner only." }, { quoted: msg });
+	}
 
 	let taggedJid;
 	if (extendedMessageOriginal) {
@@ -26,7 +34,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["test", "code"],
-	desc: "Test your code",
+	desc: "Run a piece of code to test it.",
 	usage: "test | code",
 	handler,
 });

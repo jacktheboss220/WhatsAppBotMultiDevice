@@ -1,6 +1,6 @@
 import NodeCache from "node-cache";
 
-const GROUP_META_TTL = 10 * 60;
+const GROUP_META_TTL = 60 * 60;
 const RATE_LIMIT_WINDOW = 5;
 
 const gmCache = new NodeCache({ stdTTL: GROUP_META_TTL, checkperiod: 120 });

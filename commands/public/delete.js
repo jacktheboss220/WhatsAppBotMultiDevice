@@ -60,7 +60,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["delete", "d", "dd"],
-	desc: "Delete a message",
+	desc: "Delete a bot message. Reply to it.",
 	usage: "delete <reply to message>",
 	handler,
 });

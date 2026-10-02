@@ -5,7 +5,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["jid", "lid"],
-	desc: "Get your jid or lid",
+	desc: "Show your JID or LID.",
 	usage: "jid | lid",
 	handler,
 });

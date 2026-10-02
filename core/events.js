@@ -2,6 +2,7 @@ import getConnectionUpdate from "./connectionUpdate.js";
 import getCommand from "./messages.js";
 import getGroupEvent from "./groupEvent.js";
 import getCallEvent from "./callEvents.js";
+import groupMetaStore from "../cache/groupMetaStore.js";
 
 const events = async (sock, startSock, cache) => {
 	sock.ev.process(async (event) => {
@@ -31,6 +32,18 @@ const events = async (sock, startSock, cache) => {
 
 			if (event["connection.update"]) {
 				await getConnectionUpdate(startSock, event["connection.update"]);
+				if (event["connection.update"].connection === "open") {
+					// Pre-load every group so the first message after a restart isn't slow (not awaited)
+					sock.groupFetchAllParticipating()
+						.then((groups) => {
+							for (const [jid, meta] of Object.entries(groups)) {
+								groupMetaStore.set(jid, meta);
+								cache.set(jid + ":groupMetadata", meta, 60 * 60);
+							}
+							console.log(`⚡ Warmed metadata for ${Object.keys(groups).length} groups`);
+						})
+						.catch((e) => console.error("Group warm-up failed:", e.message));
+				}
 			}
 
 			if (event["group-participants.update"]) {

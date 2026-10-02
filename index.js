@@ -49,8 +49,16 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// The dashboard and the QR page are served by this server (same origin; the vite dev server proxies /api),
+// so no CORS headers are needed. This used to answer "Access-Control-Allow-Origin: *" with credentials to
+// every site. CORS_ORIGINS (comma-separated) is an explicit opt-in for anything else.
+const corsOrigins = (process.env.CORS_ORIGINS || "")
+	.split(",")
+	.map((o) => o.trim())
+	.filter(Boolean);
 app.use(
 	cors({
+		origin: corsOrigins.length ? corsOrigins : false,
 		credentials: true,
 		optionsSuccessStatus: 200,
 	})
@@ -61,15 +69,24 @@ if (!process.env.SESSION_SECRET) {
   process.exit(1);
 }
 
-app.use(
-	session({
-		secret: process.env.SESSION_SECRET,
-		resave: false,
-		saveUninitialized: false,
-		store: MongoStore.create({ mongoUrl: process.env.MONGODB_KEY, ttl: 8 * 60 * 60 }),
-		cookie: { secure: false, httpOnly: true, maxAge: 8 * 60 * 60 * 1000 },
-	})
-);
+if (!process.env.ADMIN_PASSWORD) {
+	console.warn("ADMIN_PASSWORD is not set — password login is disabled (Google login only).");
+}
+
+// Behind nginx: req.ip must be the client IP (login rate limit keys on it). Keep the app port
+// bound to localhost, otherwise X-Forwarded-For can be spoofed by direct connections.
+app.set("trust proxy", 1);
+
+const sessionMiddleware = session({
+	secret: process.env.SESSION_SECRET,
+	resave: false,
+	saveUninitialized: false,
+	rolling: true, // every visit pushes the 30-day expiry forward
+	store: MongoStore.create({ mongoUrl: process.env.MONGODB_KEY, ttl: 30 * 24 * 60 * 60, touchAfter: 60 * 60 }),
+	// "auto": Secure flag when the request came in over HTTPS (nginx sends X-Forwarded-Proto), plain over local HTTP
+	cookie: { secure: "auto", httpOnly: true, sameSite: "lax", maxAge: 30 * 24 * 60 * 60 * 1000 },
+});
+app.use(sessionMiddleware);
 
 // ── Passport / Google OAuth ────────────────────────────────────────────────────
 const baseUrl = (process.env.HOST_URL || "http://localhost:8000").replace(/\/$/, "");
@@ -122,6 +139,9 @@ app.get("/", (_req, res) => {
 	res.render("index");
 });
 
+// Liveness probe for the Docker healthcheck / build.sh health (process is up; says nothing about WhatsApp).
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
 app.use("/", adminRouter);
 
 // SPA catch-all: any /admin/* path that wasn't handled above → serve React index.html
@@ -157,12 +177,21 @@ let botConnected = false;
 let lastQR       = null;   // Last QR code received; replayed to late-joining browser clients
 let lastQRTimer  = null;   // Timer to clear lastQR after it expires (~60 s)
 
+// Only QR + connection status are public (the QR login page needs them). Everything else
+// (logs, activity, sending) is admin-only: the socket is tied to the admin session cookie.
+const PUBLIC_WS_EVENTS = new Set(["qr", "status"]);
+
 function broadcast(payload) {
 	const msg = JSON.stringify(payload);
+	const isPublic = PUBLIC_WS_EVENTS.has(payload.type);
 	wss.clients.forEach((client) => {
-		if (client.readyState === WebSocket.OPEN) client.send(msg);
+		if (client.readyState === WebSocket.OPEN && (isPublic || client.isAdmin)) client.send(msg);
 	});
 }
+
+// Runs the express-session middleware on the upgrade request to read the admin flag.
+const isAdminRequest = (req) =>
+	new Promise((resolve) => sessionMiddleware(req, {}, () => resolve(req.session?.isAdmin === true))).catch(() => false);
 
 // ── Called for every new sock — including reconnects ─────────────────────────
 // This is the fix for the stale-sock bug: we always attach our listener to
@@ -206,7 +235,19 @@ subscribeAdminEvents(event => broadcast(event));
 app.locals.reconnect = () => startSock("manual-reconnect");
 
 // ── WebSocket server ──────────────────────────────────────────────────────────
-wss.on("connection", (ws) => {
+wss.on("connection", async (ws, req) => {
+	// Browsers always send Origin; reject cross-site pages trying to open this socket.
+	const origin = req.headers.origin;
+	if (origin) {
+		let sameHost = false;
+		try { sameHost = new URL(origin).host === req.headers.host; } catch { /* malformed origin */ }
+		if (!sameHost) return ws.close(1008, "Forbidden origin");
+	}
+
+	ws.on("error", () => {}); // covers the gap while the session is looked up; real handler is attached below
+	ws.isAdmin = await isAdminRequest(req);
+	if (ws.readyState !== WebSocket.OPEN) return;
+
 	// Tell newly connected browser clients the current state immediately.
 	// Also check sock.user as a live fallback in case botConnected is stale.
 	const isConnected = botConnected || app.locals.sock?.user != null;
@@ -218,9 +259,11 @@ wss.on("connection", (ws) => {
 		ws.send(JSON.stringify({ type: "qr", qr: lastQR }));
 	}
 
-	// Replay recent logs + activity to newly connected clients
-	ws.send(JSON.stringify({ type: 'log_snapshot',      logs:     getLogs(100) }));
-	ws.send(JSON.stringify({ type: 'activity_snapshot', activity: getActivity() }));
+	// Replay recent logs + activity to admins only
+	if (ws.isAdmin) {
+		ws.send(JSON.stringify({ type: 'log_snapshot',      logs:     getLogs(100) }));
+		ws.send(JSON.stringify({ type: 'activity_snapshot', activity: getActivity() }));
+	}
 
 	const heartbeat = setInterval(() => {
 		if (ws.readyState === WebSocket.OPEN) ws.ping();
@@ -229,6 +272,10 @@ wss.on("connection", (ws) => {
 	ws.on("pong", () => {});
 
 	ws.on("message", async (raw) => {
+		if (!ws.isAdmin) {
+			ws.send(JSON.stringify({ type: "error", error: "Unauthorized" }));
+			return;
+		}
 		try {
 			const { to, message } = JSON.parse(raw);
 			if (!to || !message) {

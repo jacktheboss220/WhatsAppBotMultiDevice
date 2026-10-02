@@ -10,11 +10,13 @@ import {
   Legend,
 } from 'chart.js'
 import { PolarArea, Bar } from 'react-chartjs-2'
-import { getAnalytics } from '../lib/api.js'
+import { getAnalytics, getCommandStats, getCommands } from '../lib/api.js'
+import { Card, ChartTitle, Empty, ErrorState, Loading, PageHeader, ProgressBar, StatCard, StatGrid } from '../components/ui.jsx'
 
 ChartJS.register(ArcElement, RadialLinearScale, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 const PIE_COLORS  = ['#0ea5e9', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+const PIE_BARS    = ['bg-accent', 'bg-success', 'bg-warning', 'bg-purple', 'bg-danger']
 const BAR_COLORS  = ['#0ea5e9', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#eff6ff',
                      '#0ea5e9', '#60a5fa', '#93c5fd', '#bfdbfe']
 
@@ -46,28 +48,34 @@ const POLAR_OPTS = {
   },
 }
 
-const BAR_OPTS = {
+const barOpts = unit => ({
   indexAxis: 'y',
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
-    tooltip: { ...TOOLTIP, callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} msgs` } },
+    tooltip: { ...TOOLTIP, callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} ${unit}` } },
   },
   scales: {
     x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#4b5d72', font: { size: 11 } }, border: { display: false } },
     y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } }, border: { display: false } },
   },
-}
+})
 
-function Stat({ label, value, color }) {
+function BarCard({ title, labels, values, color, unit, emptyText }) {
   return (
-    <div className="stat-card">
-      <div className="stat-body">
-        <strong style={{ fontSize: '1.6rem', color: color || 'var(--text)' }}>{(value ?? 0).toLocaleString()}</strong>
-        <span>{label}</span>
-      </div>
-    </div>
+    <Card className="mb-3.5">
+      <ChartTitle>{title}</ChartTitle>
+      {labels.length ? (
+        // height depends on the row count, so it stays inline (a dynamic Tailwind class would not be generated)
+        <div style={{ height: `clamp(${Math.max(labels.length * 38 + 24, 300)}px, 42vh, 700px)` }}>
+          <Bar
+            data={{ labels, datasets: [{ data: values, backgroundColor: color, borderRadius: 4, barThickness: 18 }] }}
+            options={barOpts(unit)}
+          />
+        </div>
+      ) : <Empty>{emptyText}</Empty>}
+    </Card>
   )
 }
 
@@ -75,16 +83,26 @@ export default function Analytics() {
   const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
+  const [cmds,    setCmds]    = useState(null) // { top: [[cmd, count]], unused: [cmd] }
 
   useEffect(() => {
+    Promise.all([getCommandStats(), getCommands()])
+      .then(([{ stats }, list]) => {
+        const all = [...list.publicCommands, ...list.groupCommands, ...list.adminCommands, ...list.ownerCommands]
+        setCmds({
+          top: Object.entries(stats).sort((a, b) => b[1] - a[1]).slice(0, 10),
+          unused: all.filter(c => !c.cmd.some(k => stats[k])).map(c => c.cmd[0]),
+        })
+      })
+      .catch(() => {}) // command usage is optional, the rest of the page still works
     getAnalytics()
       .then(setData)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="loading-state"><span className="spinner" /></div>
-  if (error)   return <p className="error-state">{error}</p>
+  if (loading) return <Loading />
+  if (error)   return <ErrorState>{error}</ErrorState>
   if (!data)   return null
 
   const { topGroups, topMembers, typeBreakdown, totalMessages, activeGroups, blockedMembers, totalGroups, totalMembers } = data
@@ -107,47 +125,32 @@ export default function Analytics() {
     }],
   }
 
-  const groupBarData = {
-    labels: topGroups.map(g => g.name),
-    datasets: [{ data: topGroups.map(g => g.messages), backgroundColor: BAR_COLORS, borderRadius: 4, barThickness: 18 }],
-  }
-
-  const memberBarData = {
-    labels: topMembers.map(m => m.name),
-    datasets: [{ data: topMembers.map(m => m.messages), backgroundColor: '#10b981', borderRadius: 4, barThickness: 18 }],
-  }
-
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h2>Analytics</h2>
-          <p className="sub">Message statistics across all groups and members.</p>
-        </div>
-      </div>
+      <PageHeader title="Analytics" sub="Message statistics across all groups and members." />
 
-      <div className="stats-grid" style={{ marginBottom: 20 }}>
-        <Stat label="Total Messages"  value={totalMessages} color="#3b82f6" />
-        <Stat label="Active Groups"   value={activeGroups}  color="#10b981" />
-        <Stat label="Blocked Members" value={blockedMembers} color="#ef4444" />
-        <Stat label="Total Groups"    value={totalGroups} />
-        <Stat label="Total Members"   value={totalMembers} />
-        <Stat label="Avg Msgs/Member" value={totalMembers ? Math.round(totalMessages / totalMembers) : 0} />
-      </div>
+      <StatGrid>
+        <StatCard label="Total Messages"  value={(totalMessages ?? 0).toLocaleString()} color="text-blue-500" />
+        <StatCard label="Active Groups"   value={(activeGroups ?? 0).toLocaleString()}  color="text-success" />
+        <StatCard label="Blocked Members" value={(blockedMembers ?? 0).toLocaleString()} color="text-danger" />
+        <StatCard label="Total Groups"    value={(totalGroups ?? 0).toLocaleString()} />
+        <StatCard label="Total Members"   value={(totalMembers ?? 0).toLocaleString()} />
+        <StatCard label="Avg Msgs/Member" value={totalMembers ? Math.round(totalMessages / totalMembers).toLocaleString() : 0} />
+      </StatGrid>
 
-      <div className="charts-row" style={{ marginBottom: 14 }}>
-        <div className="chart-card">
-          <p className="chart-title">Message Type Distribution</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 mb-3.5">
+        <Card>
+          <ChartTitle>Message Type Distribution</ChartTitle>
           {typeData.length ? (
-            <div style={{ height: 'clamp(260px, 32vh, 560px)' }}>
+            <div className="h-[clamp(260px,32vh,560px)]">
               <PolarArea data={polarData} options={POLAR_OPTS} />
             </div>
-          ) : <p className="empty-state">No message data yet.</p>}
-        </div>
+          ) : <Empty>No message data yet.</Empty>}
+        </Card>
 
-        <div className="chart-card">
-          <p className="chart-title">Type Breakdown (count)</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+        <Card>
+          <ChartTitle>Type Breakdown (count)</ChartTitle>
+          <div className="flex flex-col gap-2.5 mt-2">
             {[
               { icon: '💬', label: 'Text',    value: typeBreakdown.text },
               { icon: '🖼️', label: 'Image',   value: typeBreakdown.image },
@@ -158,37 +161,62 @@ export default function Analytics() {
               const pct = totalMessages ? Math.round((value / totalMessages) * 100) : 0
               return (
                 <div key={label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
-                    <span style={{ color: '#94a3b8' }}>{icon} {label}</span>
-                    <span style={{ color: '#4b5d72' }}>{value.toLocaleString()} ({pct}%)</span>
+                  <div className="flex justify-between text-[0.8rem] mb-1">
+                    <span className="text-soft">{icon} {label}</span>
+                    <span className="text-muted">{value.toLocaleString()} ({pct}%)</span>
                   </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${pct}%`, background: PIE_COLORS[i] }} />
-                  </div>
+                  <ProgressBar pct={pct} tone={PIE_BARS[i]} />
                 </div>
               )
             })}
           </div>
-        </div>
+        </Card>
       </div>
 
-      <div className="chart-card" style={{ marginBottom: 14 }}>
-        <p className="chart-title">Top 10 Groups by Messages</p>
-        {topGroups.length ? (
-          <div style={{ height: `clamp(${Math.max(topGroups.length * 38 + 24, 300)}px, 42vh, 700px)` }}>
-            <Bar data={groupBarData} options={BAR_OPTS} />
-          </div>
-        ) : <p className="empty-state">No group data yet.</p>}
-      </div>
+      <BarCard
+        title="Top 10 Groups by Messages"
+        labels={topGroups.map(g => g.name)}
+        values={topGroups.map(g => g.messages)}
+        color={BAR_COLORS}
+        unit="msgs"
+        emptyText="No group data yet."
+      />
 
-      <div className="chart-card">
-        <p className="chart-title">Top 10 Members by Messages</p>
-        {topMembers.length ? (
-          <div style={{ height: `clamp(${Math.max(topMembers.length * 38 + 24, 300)}px, 42vh, 700px)` }}>
-            <Bar data={memberBarData} options={BAR_OPTS} />
-          </div>
-        ) : <p className="empty-state">No member data yet.</p>}
-      </div>
+      {cmds && (
+        <>
+          <BarCard
+            title="Top 10 Commands"
+            labels={cmds.top.map(([c]) => c)}
+            values={cmds.top.map(([, n]) => n)}
+            color="#f59e0b"
+            unit="uses"
+            emptyText="No command usage recorded yet."
+          />
+
+          <Card className="mb-3.5">
+            <ChartTitle>
+              Never Used Commands{' '}
+              <span className="ml-1 px-1.5 py-px rounded-lg bg-s2 text-[0.68rem] text-muted">{cmds.unused.length}</span>
+            </ChartTitle>
+            {cmds.unused.length ? (
+              <div className="flex flex-wrap gap-[5px]">
+                {cmds.unused.map(c => (
+                  <span key={c} className="px-2 py-[3px] rounded-md border border-line bg-s2 text-soft font-mono text-[0.71rem]">{c}</span>
+                ))}
+              </div>
+            ) : <Empty>Every command has been used.</Empty>}
+          </Card>
+        </>
+      )}
+
+      <BarCard
+        title="Top 10 Members by Messages"
+        labels={topMembers.map(m => m.name)}
+        values={topMembers.map(m => m.messages)}
+        color="#10b981"
+        unit="msgs"
+        emptyText="No member data yet."
+      />
     </div>
   )
 }

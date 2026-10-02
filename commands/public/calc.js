@@ -29,7 +29,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["calc", "calculate"],
-	desc: "Evaluate a math expression",
+	desc: "Solve a math expression.",
 	usage: "calc <expression>",
 	handler,
 });

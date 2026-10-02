@@ -28,7 +28,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["chat"],
-	desc: "Enable/disable group chat for members.",
+	desc: "Turn group chat on (everyone) or off (admins only).",
 	usage: "chat on/off",
 	handler,
 });

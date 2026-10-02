@@ -12,7 +12,7 @@ const asciiScore = (name1, name2) => {
 
 const fetchGender = async (name) => {
 	try {
-		const { data } = await axios.get(`https://api.genderize.io/?name=${encodeURIComponent(name.split(" ")[0])}`);
+		const { data } = await axios.get(`https://api.genderize.io/?name=${encodeURIComponent(name.split(" ")[0])}`, { timeout: 5000 });
 		return data.gender ? { gender: data.gender, prob: data.probability || 0 } : null;
 	} catch {
 		return null;
@@ -41,7 +41,7 @@ const shipMessage = (pct) => {
 
 const resolveFromJid = async (jid, fallbackName) => {
 	const d = await getMemberData(jid);
-	return (d !== -1 ? d.username : null) || fallbackName || jid.split("@")[0];
+	return (d ? d.username : null) || fallbackName || jid.split("@")[0];
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
@@ -107,7 +107,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["love", "couple"],
-	desc: "Ship two people by name or tag. ASCII values + gender for score.",
+	desc: "Get a love score for two names or tagged people.",
 	usage: "love name1 name2 | love name | love @user1 @user2 | reply",
 	handler,
 });

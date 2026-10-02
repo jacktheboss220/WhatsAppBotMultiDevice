@@ -1,6 +1,10 @@
 import { useEffect, useState, useMemo } from 'react'
 import { getCommands, toggleCommand, getCommandStats } from '../lib/api.js'
 import { useToast } from '../App.jsx'
+import {
+  Badge, Chip, Chips, Code, Empty, Loading, PageHeader, ProgressBar, SearchInput,
+  Table, TableWrap, Td, Th, Toggle, Tr, cx,
+} from '../components/ui.jsx'
 
 const TYPE_FILTERS = ['all', 'public', 'group', 'admin', 'owner']
 
@@ -60,48 +64,40 @@ export default function Commands() {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h2>Commands</h2>
-          <p className="sub">
-            {all.length} total &nbsp;·&nbsp;
-            <span style={{ color: 'var(--success)' }}>{enabledCount} enabled</span>
-            &nbsp;·&nbsp;
-            <span style={{ color: 'var(--danger)' }}>{disabledCount} disabled</span>
-          </p>
-        </div>
-        <div className="page-actions">
-          <input
-            className="search-input"
-            placeholder="Search commands…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
+      <PageHeader
+        title="Commands"
+        sub={
+          <>
+            {all.length} total · <span className="text-success">{enabledCount} enabled</span> ·{' '}
+            <span className="text-danger">{disabledCount} disabled</span>
+          </>
+        }
+      >
+        <SearchInput placeholder="Search commands…" value={search} onChange={e => setSearch(e.target.value)} />
+      </PageHeader>
 
-      <div className="chips">
+      <Chips>
         {TYPE_FILTERS.map(f => (
-          <button key={f} className={`chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
+          <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
+          </Chip>
         ))}
-      </div>
+      </Chips>
 
       {loading ? (
-        <div className="loading-state"><span className="spinner" /></div>
+        <Loading />
       ) : (
-        <div className="table-wrap">
+        <TableWrap>
           {rows.length ? (
-            <table>
+            <Table>
               <thead>
                 <tr>
-                  <th>Command(s)</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                  <th>Usage</th>
-                  <th>Uses</th>
-                  <th>Enabled</th>
+                  <Th>Command(s)</Th>
+                  <Th>Type</Th>
+                  <Th>Description</Th>
+                  <Th>Usage</Th>
+                  <Th>Uses</Th>
+                  <Th>Enabled</Th>
                 </tr>
               </thead>
               <tbody>
@@ -109,37 +105,31 @@ export default function Commands() {
                   const uses = c.cmd.reduce((acc, k) => acc + (stats[k] || 0), 0)
                   const pct  = Math.round((uses / maxUses) * 100)
                   return (
-                  <tr key={c.cmd[0]} className={c.disabledGlobally ? 'row-disabled' : ''}>
-                    <td><strong style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{c.cmd.join(', ')}</strong></td>
-                    <td><span className={`badge badge-${c.type}`}>{c.type}</span></td>
-                    <td style={{ color: 'var(--text-soft)', maxWidth: 280 }}>{c.desc || '—'}</td>
-                    <td><code>{c.usage || c.cmd[0]}</code></td>
-                    <td style={{ minWidth: 80 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div className="progress-bar" style={{ flex: 1, height: 4 }}>
-                          <div className="progress-fill" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
+                    <Tr key={`${c.type}-${c.cmd[0]}`}>
+                      <Td className={cx(c.disabledGlobally && 'opacity-35')}>
+                        <strong className="font-mono text-[0.82rem]">{c.cmd.join(', ')}</strong>
+                      </Td>
+                      <Td className={cx(c.disabledGlobally && 'opacity-35')}><Badge tone={c.type}>{c.type}</Badge></Td>
+                      <Td className={cx('text-soft max-w-[280px]', c.disabledGlobally && 'opacity-35')}>{c.desc || '—'}</Td>
+                      <Td className={cx(c.disabledGlobally && 'opacity-35')}><Code>{c.usage || c.cmd[0]}</Code></Td>
+                      <Td className={cx('min-w-[80px]', c.disabledGlobally && 'opacity-35')}>
+                        <div className="flex items-center gap-1.5">
+                          <ProgressBar pct={pct} className="flex-1 h-1" />
+                          <span className="min-w-6 text-right text-[0.72rem] text-muted">{uses || 0}</span>
                         </div>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', minWidth: 24, textAlign: 'right' }}>{uses || 0}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <label className="toggle">
-                        <input
-                          type="checkbox"
-                          checked={!c.disabledGlobally}
-                          onChange={() => handleToggle(c.cmd[0], c.cmd, c.disabledGlobally)}
-                        />
-                        <span className="slider" />
-                      </label>
-                    </td>
-                  </tr>
-                )})}
+                      </Td>
+                      <Td>
+                        <Toggle checked={!c.disabledGlobally} onChange={() => handleToggle(c.cmd[0], c.cmd, c.disabledGlobally)} />
+                      </Td>
+                    </Tr>
+                  )
+                })}
               </tbody>
-            </table>
+            </Table>
           ) : (
-            <p className="empty-state">No commands match your search.</p>
+            <Empty>No commands match your search.</Empty>
           )}
-        </div>
+        </TableWrap>
       )}
     </div>
   )

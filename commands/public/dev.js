@@ -19,7 +19,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["dev", "developer"],
-	desc: "Developer info",
+	desc: "Show info about the developer.",
 	usage: "dev | developer",
 	handler,
 });

@@ -94,8 +94,10 @@ class MessageQueue {
 				}
 			}
 
-			// Send batch in parallel
-			const batchPromises = batch.map(async (message) => {
+			// Fire the batch without awaiting it: a slow send (big media upload) must not block later
+			// messages in this chat. Concurrency is still capped by maxConcurrent/activeSends.
+			// ponytail: no per-chat ordering guarantee now; add a per-chat chain if order ever matters.
+			batch.forEach(async (message) => {
 				try {
 					await message.sendFunction();
 				} catch (err) {
@@ -104,9 +106,6 @@ class MessageQueue {
 					this.activeSends--;
 				}
 			});
-
-			// Wait for batch to complete
-			await Promise.all(batchPromises);
 
 			// Apply delay between batches
 			if (queue.length > 0) {

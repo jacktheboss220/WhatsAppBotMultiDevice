@@ -1,41 +1,15 @@
 import fs from "fs";
-import ffmpeg from "ffmpeg-static";
-import defaultYoutubedl, { create } from "youtube-dl-exec";
 import memoryManager from "../../../utils/memory.js";
 import { readFileEfficiently } from "../../../utils/file.js";
+import { youtubedl, ytdlpOpts, parseYouTubeUrl, downloadLimits } from "../../../utils/ytdlp.js";
 
 const getRandom = (ext) => memoryManager.generateTempFileName(ext);
-
-// Use the system yt-dlp binary when YTDLP_PATH is set (e.g. /usr/local/bin/yt-dlp on
-// the server). Otherwise fall back to the binary bundled with youtube-dl-exec.
-const youtubedl = process.env.YTDLP_PATH ? create(process.env.YTDLP_PATH) : defaultYoutubedl;
-
-import { getCookiePath } from "../../../functions/cookieManager.js";
-
-const ytdlpOpts = async (extra = {}) => {
-	const opts = {
-		noCheckCertificates: true,
-		noWarnings: true,
-		noPlaylist: true,
-		forceIpv4: true,
-		ffmpegLocation: ffmpeg,
-		// tv + android_vr work without a PO token (server-side, no browser). web is
-		// kept last as a cookie-backed extra. android/ios are dead on modern YouTube.
-		extractorArgs: "youtube:player_client=tv,android_vr,web",
-		// yt-dlp now requires an EJS runtime to solve YouTube JS challenges (2026+).
-		// Node.js is available in the container, so use it.
-		jsRuntimes: "node",
-		...extra,
-	};
-	const cookiePath = await getCookiePath();
-	if (cookiePath) opts.cookies = cookiePath;
-	return opts;
-};
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { sendMessageWTyping } = msgInfoObj;
 
-	if (!args[0] || !args[0].startsWith("http")) {
+	const url = args[0] && parseYouTubeUrl(args[0]);
+	if (!url) {
 		return sendMessageWTyping(from, { text: `❌ *Enter Youtube link*` }, { quoted: msg });
 	}
 
@@ -43,17 +17,18 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	try {
 		await youtubedl(
-			args[0],
+			url,
 			await ytdlpOpts({
 				format: "bestaudio/best",
 				extractAudio: true,
 				audioFormat: "mp3",
 				audioQuality: 0,
 				output: fileDown,
+				...downloadLimits,
 			})
 		);
 
-		if (!fs.existsSync(fileDown)) throw new Error("Audio file was not created");
+		if (!fs.existsSync(fileDown)) throw new Error("Audio file was not created"); // also what yt-dlp leaves when the length/size limit rejects it
 		console.log("Audio downloaded");
 
 		const audioBuffer = await readFileEfficiently(fileDown);
@@ -67,6 +42,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			errorMsg += "YouTube is blocking this server. Set YTDLP_COOKIES to fix.";
 		} else if (m.includes("age")) {
 			errorMsg += "Age-restricted. Set YTDLP_COOKIES to download.";
+		} else if (m.includes("not created")) {
+			errorMsg += "Video is too long (max 30 min), too large (max 60MB) or live.";
 		} else {
 			errorMsg += "Please try a different link.";
 		}
@@ -78,7 +55,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["yta"],
-	desc: "Download youtube audio",
+	desc: "Download the audio of a YouTube video.",
 	usage: "yta <youtube link>",
 	handler,
 });

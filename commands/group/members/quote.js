@@ -5,7 +5,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 	let url = "https://zenquotes.io/api/random";
 	try {
-		const res = await axios(url);
+		const res = await axios(url, { timeout: 8000 });
 		const { q, a } = res.data[0];
 		sendMessageWTyping(from, { text: `✨ *Quote of the Day*\n\n_"${q}"_\n\n— *${a}*` }, { quoted: msg });
 	} catch (err) {
@@ -16,7 +16,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["quote"],
-	desc: "Get random quote",
+	desc: "Get a random quote.",
 	usage: "quote",
 	handler,
 });

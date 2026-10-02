@@ -1,11 +1,10 @@
 import ffmpeg from "fluent-ffmpeg";
-import fs from "fs";
 import { downloadMediaMessage } from "baileys";
 import { writeFile, readFile } from "fs/promises";
+import memoryManager from "../../../utils/memory.js";
+import { getMediaFlags } from "../../../utils/mediaFlags.js";
 
-const getRandom = (ext) => {
-	return `${Math.floor(Math.random() * 10000)}${ext}`;
-};
+const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
 	const { type, content, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
@@ -14,8 +13,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 		msg["message"] = extendedMessageOriginal.quotedMessage;
 	}
 
-	const isMedia = type === "imageMessage" || type === "videoMessage";
-	const isTaggedSticker = type === "extendedTextMessage" && content.includes("stickerMessage");
+	const { isMedia, isTaggedSticker } = getMediaFlags(type, content);
 
 	const media = getRandom(".webp");
 
@@ -33,7 +31,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	async function sendImage(media) {
 		const ran = getRandom(".png");
 		try {
-			const file = ffmpeg(`./${media}`).fromFormat("webp_pipe").save(ran);
+			const file = ffmpeg(media).fromFormat("webp_pipe").save(ran);
 			file.on("error", (err) => {
 				console.log(err);
 				sendMessageWTyping(
@@ -41,10 +39,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 					{ text: "❌ There is some problem!\nOnly non-animated stickers can be convert to image!" },
 					{ quoted: msg }
 				);
-				try {
-					fs.unlinkSync(media);
-					fs.unlinkSync(ran);
-				} catch {}
+				memoryManager.safeUnlink(media);
+				memoryManager.safeUnlink(ran);
 			}).on("end", async () => {
 				// Read into a buffer before sending: sendMessageWTyping enqueues to BullMQ
 				// and returns before the worker consumes it, so deleting the temp file by
@@ -63,10 +59,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				} catch (err) {
 					console.log(err);
 				} finally {
-					try {
-						fs.unlinkSync(media);
-						fs.unlinkSync(ran);
-					} catch {}
+					memoryManager.safeUnlink(media);
+					memoryManager.safeUnlink(ran);
 				}
 			});
 		} catch (err) {
@@ -78,7 +72,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["image", "toimg"],
-	desc: "Convert sticker to image",
+	desc: "Convert a sticker back into an image.",
 	usage: "image | reply to a sticker",
 	handler,
 });

@@ -21,7 +21,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 	// 	}
 	// 	member.updateOne({ _id: senderJid }, { $inc: { dmLimit: -1 } });
 	// }
-	await axiox("https://redditsave.com/info?url=" + args[0])
+	await axiox("https://redditsave.com/info?url=" + args[0], { timeout: 10000 })
 		.then((res) => {
 			const dom = new JSDOM(res.data);
 			try {
@@ -63,7 +63,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["reddit"],
-	desc: "Download post from reddit",
+	desc: "Download a Reddit post from its link.",
 	usage: "reddit | post link",
 	handler,
 });

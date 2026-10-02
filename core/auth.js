@@ -55,8 +55,15 @@ const useMongoDBAuthState = async () => {
 			});
 		}
 
+		const entries = [...buffer];
 		buffer.clear();
-		await collection.bulkWrite(ops, { ordered: false });
+		try {
+			await collection.bulkWrite(ops, { ordered: false });
+		} catch (err) {
+			// put them back (unless newer values arrived meanwhile) so a failed flush isn't silent data loss
+			for (const [k, v] of entries) if (!buffer.has(k)) buffer.set(k, v);
+			throw err;
+		}
 	};
 
 	// background flush loop
@@ -74,10 +81,19 @@ const useMongoDBAuthState = async () => {
 			keys: {
 				get: async (type, ids) => {
 					const keys = ids.map((id) => `${type}-${id}`);
-					const docs = await collection.find({ _id: { $in: keys } }).toArray();
 					const byKey = {};
-					for (const doc of docs) {
-						if (doc?.value) byKey[doc._id] = JSON.parse(doc.value, BufferJSON.reviver);
+					// Non-critical keys can still be waiting in the flush buffer: read those first, else a get
+					// within 5s of a set returns stale/missing data.
+					const missing = [];
+					for (const key of keys) {
+						if (buffer.has(key)) byKey[key] = buffer.get(key);
+						else missing.push(key);
+					}
+					if (missing.length) {
+						const docs = await collection.find({ _id: { $in: missing } }).toArray();
+						for (const doc of docs) {
+							if (doc?.value) byKey[doc._id] = JSON.parse(doc.value, BufferJSON.reviver);
+						}
 					}
 					const data = {};
 					for (const id of ids) {
@@ -98,7 +114,13 @@ const useMongoDBAuthState = async () => {
 							const value = data[category][id];
 							const key = `${category}-${id}`;
 
-							if (value == null) continue;
+							// Baileys signals deletion (used pre-keys, dropped sessions, ...) with null. These were skipped,
+							// so nothing was ever removed. Drop any pending buffered write first so it can't resurrect the key.
+							if (value == null) {
+								buffer.delete(key);
+								criticalOps.push({ deleteOne: { filter: { _id: key } } });
+								continue;
+							}
 
 							if (isCritical(key)) {
 								criticalOps.push({

@@ -46,7 +46,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["l", "lyric"],
-	desc: "Get lyrics of a song",
+	desc: "Get the lyrics of a song.",
 	usage: "lyric <song name>",
 	handler,
 });

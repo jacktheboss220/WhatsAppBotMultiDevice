@@ -3,10 +3,9 @@ dotenv.config();
 import { TwitterApi } from "twitter-api-v2";
 import fs from "fs";
 import axios from "axios";
+import memoryManager from "../../../utils/memory.js";
 
-const getRandom = (ext) => {
-	return `${Math.floor(Math.random() * 10000)}${ext}`;
-};
+const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 
 const client = new TwitterApi(process.env.TWITTER_BEARER_TOKEN);
 
@@ -44,22 +43,30 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			url: videoUrl,
 			method: "GET",
 			responseType: "stream",
+			timeout: 20000,
 		});
 
 		const writer = fs.createWriteStream(fileDown);
 		response.data.pipe(writer);
+		// pipe() doesn't forward source errors: an unhandled 'error' here reaches uncaughtException and shuts the bot down
+		response.data.on("error", (err) => {
+			console.error("Error reading video stream:", err.message);
+			writer.destroy();
+			sendMessageWTyping(from, { text: "Error downloading video." }, { quoted: msg });
+			memoryManager.safeUnlink(fileDown);
+		});
 
 		writer.on("finish", () => {
 			console.log("Video downloaded successfully.");
 			url += "🎬 " + videoUrl + "\n\n";
 			sendMessageWTyping(from, { video: fs.readFileSync(fileDown), mimetype: "video/mp4" }, { quoted: msg });
-			fs.unlinkSync(fileDown);
+			memoryManager.safeUnlink(fileDown);
 		});
 
 		writer.on("error", (err) => {
 			console.error("Error downloading video:", err);
 			sendMessageWTyping(from, { text: "Error downloading video." }, { quoted: msg });
-			fs.unlinkSync(fileDown);
+			memoryManager.safeUnlink(fileDown);
 		});
 	} catch (error) {
 		console.error("Error fetching tweet:", error);
@@ -73,7 +80,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["twitter", "tw", "x"],
-	desc: "Download Twitter Video",
+	desc: "Download a video from a Twitter/X post link.",
 	usage: "twitter <tweet url>",
 	handler,
 });

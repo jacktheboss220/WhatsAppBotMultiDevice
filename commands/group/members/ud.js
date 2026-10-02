@@ -22,7 +22,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["ud", "urban"],
-	desc: "Get Urban Dictionary meaning",
+	desc: "Get the Urban Dictionary meaning of a word.",
 	usage: "ud <word>",
 	handler,
 });

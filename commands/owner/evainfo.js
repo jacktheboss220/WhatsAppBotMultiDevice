@@ -44,7 +44,7 @@ ${
 
 export default () => ({
 	cmd: ["evainfo", "evastat", "evastatus"],
-	desc: "Get Eva's conversation history info for this group",
+	desc: "Show details of Eva's chat memory for this group.",
 	usage: "evainfo",
 	handler,
 });

@@ -11,6 +11,10 @@ import {
 import { Radar } from 'react-chartjs-2'
 import { getMembers, memberAction } from '../lib/api.js'
 import { useToast } from '../App.jsx'
+import {
+  Badge, Btn, ChartTitle, Empty, Jid, Loading, Modal, ModalHeader, PageHeader, SearchInput,
+  Chip, Chips, Table, TableWrap, Td, Th, Tr, cx,
+} from '../components/ui.jsx'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip)
 
@@ -22,6 +26,8 @@ const SORTS = [
   { key: 'stickertotal',label: '🎭 Sticker' },
   { key: 'pdftotal',    label: '📄 PDF' },
 ]
+
+const COLUMNS = [['totalmsg','Total'],['texttotal','Text'],['imagetotal','Image'],['videototal','Video'],['stickertotal','Sticker'],['pdftotal','PDF']]
 
 const LIMIT = 50
 
@@ -98,68 +104,66 @@ function MemberModal({ member, onClose, onAction, onDM }) {
   }, [onClose])
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div>
-            <div className="modal-title">{member.username || 'Unknown User'}</div>
-            <code className="jid-sm">{member._id}</code>
+    <Modal onClose={onClose}>
+      <ModalHeader
+        title={member.username || 'Unknown User'}
+        sub={<Jid>{member._id}</Jid>}
+        onClose={onClose}
+      />
+
+      <ChartTitle>Message Profile</ChartTitle>
+      <div className="h-[clamp(180px,24vh,360px)] mb-[18px]">
+        <Radar data={radarData} options={radarOpts} />
+      </div>
+
+      <ChartTitle>All Fields</ChartTitle>
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-1.5 mb-4">
+        {entries.map(([key, val]) => (
+          <div key={key} className="flex flex-col gap-[3px] bg-s2 border border-line rounded-md px-2.5 py-2">
+            <span className="font-mono text-[0.62rem] font-semibold text-muted uppercase tracking-wide">{key}</span>
+            <span className="font-mono text-[0.8rem] break-all">{fmtVal(val)}</span>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
+        ))}
+      </div>
 
-        <p className="chart-title" style={{ marginBottom: 8 }}>Message Profile</p>
-        <div style={{ height: 'clamp(180px, 24vh, 360px)', marginBottom: 18 }}>
-          <Radar data={radarData} options={radarOpts} />
-        </div>
-
-        <p className="chart-title" style={{ marginBottom: 8 }}>All Fields</p>
-        <div className="modal-fields">
-          {entries.map(([key, val]) => (
-            <div key={key} className="modal-field">
-              <span className="modal-field-key">{key}</span>
-              <span className="modal-field-val">{fmtVal(val)}</span>
-            </div>
-          ))}
-        </div>
-
-        {Array.isArray(member.warning) && member.warning.length > 0 && (
-          <>
-            <p className="chart-title" style={{ marginBottom: 8, marginTop: 4 }}>Warnings</p>
-            <div className="table-wrap" style={{ marginBottom: 16 }}>
-              <table>
+      {Array.isArray(member.warning) && member.warning.length > 0 && (
+        <>
+          <ChartTitle>Warnings</ChartTitle>
+          <div className="mb-4">
+            <TableWrap>
+              <Table>
                 <thead>
                   <tr>
-                    <th>Group JID</th>
-                    <th style={{ textAlign: 'right' }}>Count</th>
+                    <Th>Group JID</Th>
+                    <Th className="text-right">Count</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {member.warning.map((w, i) => (
-                    <tr key={i}>
-                      <td><code className="jid-sm">{w.group || w.groupJid || '—'}</code></td>
-                      <td style={{ textAlign: 'right', color: w.count >= 3 ? '#ef4444' : 'var(--text)' }}>
+                    <Tr key={i}>
+                      <Td><Jid>{w.group || w.groupJid || '—'}</Jid></Td>
+                      <Td className={cx('text-right', w.count >= 3 && 'text-danger')}>
                         <strong>{w.count}</strong>
-                      </td>
-                    </tr>
+                      </Td>
+                    </Tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
-          </>
-        )}
+              </Table>
+            </TableWrap>
+          </div>
+        </>
+      )}
 
-        <div className="modal-actions">
-          {member.isBlock
-            ? <button className="btn-sm" onClick={() => onAction(member._id, 'unblock')}>Unblock</button>
-            : <button className="btn-sm danger" onClick={() => onAction(member._id, 'block')}>Block</button>
-          }
-          <button className="btn-sm" onClick={() => onAction(member._id, 'resetWarnings')}>Reset Warns</button>
-          <button className="btn-sm" onClick={() => onAction(member._id, 'resetMsgCount')}>Reset Count</button>
-          <button className="btn-sm" style={{ background: 'rgba(14,165,233,0.12)', color: '#0ea5e9', borderColor: 'rgba(14,165,233,0.3)' }} onClick={() => onDM(member._id)}>✉️ Message</button>
-        </div>
+      <div className="flex flex-wrap gap-2 pt-3.5 border-t border-line">
+        {member.isBlock
+          ? <Btn variant="sm" onClick={() => onAction(member._id, 'unblock')}>Unblock</Btn>
+          : <Btn variant="smDanger" onClick={() => onAction(member._id, 'block')}>Block</Btn>
+        }
+        <Btn variant="sm" onClick={() => onAction(member._id, 'resetWarnings')}>Reset Warns</Btn>
+        <Btn variant="sm" onClick={() => onAction(member._id, 'resetMsgCount')}>Reset Count</Btn>
+        <Btn variant="smAccent" onClick={() => onDM(member._id)}>✉️ Message</Btn>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -210,103 +214,92 @@ export default function Members() {
     } catch (err) { toast(err.message, false) }
   }
 
-  function Arrow({ field }) {
-    if (sort !== field) return <span style={{ opacity: 0.22 }}>↕</span>
-    return order === 'desc' ? '↓' : '↑'
-  }
+  const arrow = field => (sort !== field ? <span className="opacity-20">↕</span> : order === 'desc' ? '↓' : '↑')
 
   const pages = data ? Math.ceil(data.total / LIMIT) : 0
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h2>Members</h2>
-          <p className="sub">{data ? `${data.total.toLocaleString()} members found` : 'Loading…'}</p>
-        </div>
-        <div className="page-actions">
-          <input
-            className="search-input"
-            placeholder="Search by JID or name…"
-            value={search}
-            onChange={e => handleSearch(e.target.value)}
-          />
-        </div>
-      </div>
+      <PageHeader title="Members" sub={data ? `${data.total.toLocaleString()} members found` : 'Loading…'}>
+        <SearchInput placeholder="Search by JID or name…" value={search} onChange={e => handleSearch(e.target.value)} />
+      </PageHeader>
 
-      <div className="chips">
+      <Chips>
         {SORTS.map(s => (
-          <button key={s.key} className={`chip ${sort === s.key ? 'active' : ''}`} onClick={() => handleSort(s.key)}>
-            {s.label}
-          </button>
+          <Chip key={s.key} active={sort === s.key} onClick={() => handleSort(s.key)}>{s.label}</Chip>
         ))}
-      </div>
+      </Chips>
 
-      <div className="table-wrap">
+      <TableWrap>
         {loading ? (
-          <div className="loading-state"><span className="spinner" /></div>
+          <Loading />
         ) : !data?.members?.length ? (
-          <p className="empty-state">No members found.</p>
+          <Empty>No members found.</Empty>
         ) : (
-          <table>
+          <Table>
             <thead>
               <tr>
-                <th>JID</th>
-                <th>Name</th>
-                {[['totalmsg','Total'],['texttotal','Text'],['imagetotal','Image'],['videototal','Video'],['stickertotal','Sticker'],['pdftotal','PDF']].map(([f,l]) => (
-                  <th key={f} className="sortable" onClick={() => handleSort(f)}>
-                    {l} <Arrow field={f} />
-                  </th>
+                <Th>JID</Th>
+                <Th>Name</Th>
+                {COLUMNS.map(([f, l]) => (
+                  <Th key={f} className="cursor-pointer select-none hover:text-soft" onClick={() => handleSort(f)}>
+                    {l} {arrow(f)}
+                  </Th>
                 ))}
-                <th>Status</th>
-                <th>Warns</th>
-                <th>Actions</th>
+                <Th>Status</Th>
+                <Th>Warns</Th>
+                <Th>Actions</Th>
               </tr>
             </thead>
             <tbody>
               {data.members.map(m => (
-                <tr
+                <Tr
                   key={m._id}
-                  className={m.isBlock ? 'row-blocked' : ''}
-                  style={{ cursor: 'pointer' }}
+                  className={cx('cursor-pointer', m.isBlock && 'bg-danger/[0.04]')}
                   onClick={() => setSelectedMember(m)}
                 >
-                  <td><code className="jid-sm">{m._id}</code></td>
-                  <td style={{ color: '#94a3b8' }}>{m.username || '—'}</td>
-                  <td>{m.totalmsg    || 0}</td>
-                  <td>{m.texttotal  || 0}</td>
-                  <td>{m.imagetotal || 0}</td>
-                  <td>{m.videototal || 0}</td>
-                  <td>{m.stickertotal || 0}</td>
-                  <td>{m.pdftotal   || 0}</td>
-                  <td>
-                    <span className={`badge ${m.isBlock ? 'badge-err' : 'badge-on'}`}>
-                      {m.isBlock ? 'Blocked' : 'Active'}
-                    </span>
-                  </td>
-                  <td>{(m.warning || []).length}</td>
-                  <td>
-                    <div className="actions" onClick={e => e.stopPropagation()}>
+                  <Td><Jid>{m._id}</Jid></Td>
+                  <Td className="text-soft">{m.username || '—'}</Td>
+                  <Td>{m.totalmsg      || 0}</Td>
+                  <Td>{m.texttotal     || 0}</Td>
+                  <Td>{m.imagetotal    || 0}</Td>
+                  <Td>{m.videototal    || 0}</Td>
+                  <Td>{m.stickertotal  || 0}</Td>
+                  <Td>{m.pdftotal      || 0}</Td>
+                  <Td>
+                    <Badge tone={m.isBlock ? 'err' : 'on'}>{m.isBlock ? 'Blocked' : 'Active'}</Badge>
+                  </Td>
+                  <Td>{(m.warning || []).length}</Td>
+                  <Td>
+                    <div className="flex flex-wrap gap-[5px]" onClick={e => e.stopPropagation()}>
                       {m.isBlock
-                        ? <button className="btn-sm" onClick={() => handleAction(m._id, 'unblock')}>Unblock</button>
-                        : <button className="btn-sm danger" onClick={() => handleAction(m._id, 'block')}>Block</button>
+                        ? <Btn variant="sm" onClick={() => handleAction(m._id, 'unblock')}>Unblock</Btn>
+                        : <Btn variant="smDanger" onClick={() => handleAction(m._id, 'block')}>Block</Btn>
                       }
-                      <button className="btn-sm" onClick={() => handleAction(m._id, 'resetWarnings')}>Reset Warns</button>
-                      <button className="btn-sm" onClick={() => handleAction(m._id, 'resetMsgCount')}>Reset Count</button>
+                      <Btn variant="sm" onClick={() => handleAction(m._id, 'resetWarnings')}>Reset Warns</Btn>
+                      <Btn variant="sm" onClick={() => handleAction(m._id, 'resetMsgCount')}>Reset Count</Btn>
                     </div>
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         )}
-      </div>
+      </TableWrap>
 
       {pages > 1 && (
-        <div className="pagination">
-          <button disabled={page <= 1} onClick={() => handlePage(page - 1)}>← Prev</button>
-          <span>Page {page} / {pages} &nbsp;({data?.total?.toLocaleString()} total)</span>
-          <button disabled={page >= pages} onClick={() => handlePage(page + 1)}>Next →</button>
+        <div className="flex items-center gap-3 py-3.5 text-[0.78rem] text-muted">
+          <button
+            className="px-3.5 py-1.5 bg-s1 border border-line rounded-md text-soft text-[0.78rem] font-medium hover:enabled:border-accent/30 hover:enabled:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition"
+            disabled={page <= 1}
+            onClick={() => handlePage(page - 1)}
+          >← Prev</button>
+          <span>Page {page} / {pages} ({data?.total?.toLocaleString()} total)</span>
+          <button
+            className="px-3.5 py-1.5 bg-s1 border border-line rounded-md text-soft text-[0.78rem] font-medium hover:enabled:border-accent/30 hover:enabled:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition"
+            disabled={page >= pages}
+            onClick={() => handlePage(page + 1)}
+          >Next →</button>
         </div>
       )}
 

@@ -1,37 +1,10 @@
 import fs from "fs";
 import yts from "yt-search";
-import ffmpeg from "ffmpeg-static";
-import defaultYoutubedl, { create } from "youtube-dl-exec";
 import memoryManager from "../../../utils/memory.js";
 import { readFileEfficiently, isValidAudioFile } from "../../../utils/file.js";
+import { youtubedl, ytdlpOpts, downloadLimits } from "../../../utils/ytdlp.js";
 
 const getRandom = (ext) => memoryManager.generateTempFileName(ext);
-
-// Use the system yt-dlp binary when YTDLP_PATH is set (e.g. /usr/local/bin/yt-dlp on
-// the server). Otherwise fall back to the binary bundled with youtube-dl-exec.
-const youtubedl = process.env.YTDLP_PATH ? create(process.env.YTDLP_PATH) : defaultYoutubedl;
-
-import { getCookiePath } from "../../../functions/cookieManager.js";
-
-const ytdlpOpts = async (extra = {}) => {
-	const opts = {
-		noCheckCertificates: true,
-		noWarnings: true,
-		noPlaylist: true,
-		forceIpv4: true,
-		ffmpegLocation: ffmpeg,
-		// tv + android_vr work without a PO token (server-side, no browser). web is
-		// kept last as a cookie-backed extra. android/ios are dead on modern YouTube.
-		extractorArgs: "youtube:player_client=tv,android_vr,web",
-		// yt-dlp now requires an EJS runtime to solve YouTube JS challenges (2026+).
-		// Node.js is available in the container, so use it.
-		jsRuntimes: "node",
-		...extra,
-	};
-	const cookiePath = await getCookiePath();
-	if (cookiePath) opts.cookies = cookiePath;
-	return opts;
-};
 
 const findSongURL = async (name) => {
 	const r = await yts(`${name}`);
@@ -62,16 +35,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 		await sendMessageWTyping(from, { text: `⏳ Downloading audio...` }, { quoted: msg });
 
-		// Title (best-effort)
-		try {
-			const info = await youtubedl(URL, await ytdlpOpts({ dumpSingleJson: true }));
-			title = info.title || "Unknown Song";
-		} catch (e) {
-			console.log("Title fetch failed:", e.message);
-		}
+		// Title (best-effort) runs alongside the actual download instead of before it —
+		// the two yt-dlp invocations are independent, no need to serialize them.
+		const titlePromise = youtubedl(URL, await ytdlpOpts({ dumpSingleJson: true }))
+			.then((info) => { title = info.title || "Unknown Song"; })
+			.catch((e) => console.log("Title fetch failed:", e.message));
 
 		// Download + extract to mp3 (yt-dlp uses ffmpeg-static)
-		await youtubedl(
+		const downloadPromise = youtubedl(
 			URL,
 			await ytdlpOpts({
 				format: "bestaudio/best",
@@ -79,8 +50,11 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 				audioFormat: "mp3",
 				audioQuality: 0,
 				output: fileDown,
+				...downloadLimits,
 			})
 		);
+
+		await Promise.all([titlePromise, downloadPromise]);
 
 		if (!fs.existsSync(fileDown)) throw new Error("Audio file was not created");
 		if (!isValidAudioFile(fileDown)) throw new Error("Invalid audio file generated");
@@ -120,6 +94,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			errorMsg += "YouTube is blocking this server. Set YTDLP_COOKIES to fix.";
 		} else if (m.includes("age")) {
 			errorMsg += "Age-restricted. Set YTDLP_COOKIES to download.";
+		} else if (m.includes("not created")) {
+			errorMsg += "That result is too long (max 30 min) or live. Try a more specific name.";
 		} else if (m.includes("too large")) {
 			errorMsg += err.message;
 		} else {
@@ -133,7 +109,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["song", "play"],
-	desc: "Download song",
+	desc: "Download a song by name.",
 	usage: "song | play | song [song name]",
 	handler,
 });

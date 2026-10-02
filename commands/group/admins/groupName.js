@@ -10,7 +10,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["setname", "setsubject"],
-	desc: "Set Group Name",
+	desc: "Change the group name.",
 	usage: "setname <name>",
 	handler,
 });

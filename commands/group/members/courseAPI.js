@@ -18,7 +18,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 			"&search=" +
 			arg_keyword +
 			"&language=" +
-			arg_language
+			arg_language,
+		{ timeout: 8000 }
 	)
 		.then((res) => {
 			mess = `🎓 *Free Udemy Courses*\n\n`;
@@ -35,7 +36,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["un"],
-	desc: "Get Udemy courses for free",
+	desc: "Get free Udemy courses. Add a page number for more.",
 	usage: "un | <page number>",
 	handler,
 });

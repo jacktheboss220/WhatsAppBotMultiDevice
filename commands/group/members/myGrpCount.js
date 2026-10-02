@@ -53,7 +53,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
 export default () => ({
 	cmd: ["totalg"],
-	desc: "Get your message count in all groups",
+	desc: "Show your message count across all groups.",
 	usage: "totalg | reply to a message to get message count of that member",
 	handler,
 });

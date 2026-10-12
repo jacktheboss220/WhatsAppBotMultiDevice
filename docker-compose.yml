@@ -1,39 +1,39 @@
 services:
-    whatsapp-bot:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        container_name: whatsapp-bot
-        restart: unless-stopped
-        ports:
-            # localhost only: nginx (host) proxies to it. Publishing it to the world would bypass TLS and the proxy.
-            - "127.0.0.1:${PORT:-8080}:${PORT:-8080}"
-        env_file:
-            - .env
-        environment:
-            # These override .env if set — safe defaults for Docker
-            - NODE_ENV=production
-            - PORT=${PORT:-8080}
-            - FFMPEG_PATH=ffmpeg
-            - YTDL_EXTRACTOR_ARGS=youtube:player_client=default,web
-        volumes:
-            - bot-temp:/app/temp
-            - bot-metrics:/app/performance-metrics.json
-        networks:
-            - bot-network
-        mem_limit: 1g
-        mem_reservation: 512m
-        healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 60s
+  whatsapp-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsapp-bot
+    restart: unless-stopped
+    ports:
+      # localhost only: nginx (host) proxies to it. Publishing it to the world would bypass TLS and the proxy.
+      - "127.0.0.1:${PORT:-8080}:${PORT:-8080}"
+    env_file:
+      - .env
+    environment:
+      # These override .env if set — safe defaults for Docker
+      - NODE_ENV=production
+      - PORT=${PORT:-8080}
+      - FFMPEG_PATH=ffmpeg
+      - YTDL_EXTRACTOR_ARGS=youtube:player_client=default,web
+    volumes:
+      - bot-temp:/app/temp
+      - bot-metrics:/app/performance-metrics.json
+    networks:
+      - bot-network
+    mem_limit: 1g
+    mem_reservation: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 networks:
-    bot-network:
-        driver: bridge
+  bot-network:
+    driver: bridge
 
 volumes:
-    bot-temp:
-    bot-metrics:
+  bot-temp:
+  bot-metrics:

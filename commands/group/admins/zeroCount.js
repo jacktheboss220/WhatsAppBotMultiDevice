@@ -5,69 +5,95 @@ const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 const typeFieldMap = {
-	text: "texttotal",
-	image: "imagetotal",
-	video: "videototal",
-	sticker: "stickertotal",
-	pdf: "pdftotal",
-	doc: "pdftotal",
+  text: "texttotal",
+  image: "imagetotal",
+  video: "videototal",
+  sticker: "stickertotal",
+  pdf: "pdftotal",
+  doc: "pdftotal",
 };
 
 const typeLabels = {
-	texttotal: "Text",
-	imagetotal: "Image",
-	videototal: "Video",
-	stickertotal: "Sticker",
-	pdftotal: "PDF/Doc",
-	count: "Total",
+  texttotal: "Text",
+  imagetotal: "Image",
+  videototal: "Video",
+  stickertotal: "Sticker",
+  pdftotal: "PDF/Doc",
+  count: "Total",
 };
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { sendMessageWTyping, groupMetadata } = msgInfoObj;
-	const allParticipants = groupMetadata.participants.filter((p) => p.admin == null).map((p) => p.id);
+  const { sendMessageWTyping, groupMetadata } = msgInfoObj;
+  const allParticipants = groupMetadata.participants
+    .filter((p) => p.admin == null)
+    .map((p) => p.id);
 
-	// Parse args: zero | zero 5 | zero text | zero text 5
-	let filterField = "count";
-	let threshold = 0;
+  // Parse args: zero | zero 5 | zero text | zero text 5
+  let filterField = "count";
+  let threshold = 0;
 
-	if (args?.length >= 1) {
-		if (typeFieldMap[args[0].toLowerCase()]) {
-			filterField = typeFieldMap[args[0].toLowerCase()];
-			threshold = args[1] ? parseInt(args[1]) || 0 : 0;
-		} else {
-			threshold = parseInt(args[0]) || 0;
-		}
-	}
+  if (args?.length >= 1) {
+    if (typeFieldMap[args[0].toLowerCase()]) {
+      filterField = typeFieldMap[args[0].toLowerCase()];
+      threshold = args[1] ? parseInt(args[1]) || 0 : 0;
+    } else {
+      threshold = parseInt(args[0]) || 0;
+    }
+  }
 
-	const res = await group.findOne({ _id: from });
-	if (!res) return sendMessageWTyping(from, { text: "❌ No data found in DB for this group." }, { quoted: msg });
+  const res = await group.findOne({ _id: from });
+  if (!res)
+    return sendMessageWTyping(
+      from,
+      { text: "❌ No data found in DB for this group." },
+      { quoted: msg },
+    );
 
-	const items = res.members || [];
-	let filtered = allParticipants
-		.map((p) => {
-			let found = items.find((m) => m.id == p);
-			return found ?? { id: p, count: 0, texttotal: 0, imagetotal: 0, videototal: 0, stickertotal: 0, pdftotal: 0 };
-		})
-		.filter((p) => (p[filterField] || 0) <= threshold);
+  const items = res.members || [];
+  let filtered = allParticipants
+    .map((p) => {
+      let found = items.find((m) => m.id == p);
+      return (
+        found ?? {
+          id: p,
+          count: 0,
+          texttotal: 0,
+          imagetotal: 0,
+          videototal: 0,
+          stickertotal: 0,
+          pdftotal: 0,
+        }
+      );
+    })
+    .filter((p) => (p[filterField] || 0) <= threshold);
 
-	const label = typeLabels[filterField];
-	let mess =
-		"____________________________\n\n" +
-		"*Group Name:* " + res.grpName + "\n" +
-		"*Filter:* " + label + " <= " + threshold + "\n" +
-		"*Total Members:* " + filtered.length + "\n" +
-		"____________________________\n\n" +
-		readMore + "\n";
+  const label = typeLabels[filterField];
+  let mess =
+    "____________________________\n\n" +
+    "*Group Name:* " +
+    res.grpName +
+    "\n" +
+    "*Filter:* " +
+    label +
+    " <= " +
+    threshold +
+    "\n" +
+    "*Total Members:* " +
+    filtered.length +
+    "\n" +
+    "____________________________\n\n" +
+    readMore +
+    "\n";
 
-	filtered.forEach((element) => {
-		mess += extractPhoneNumber(element.id) + ",\n";
-	});
-	sendMessageWTyping(from, { text: mess }, { quoted: msg });
+  filtered.forEach((element) => {
+    mess += extractPhoneNumber(element.id) + ",\n";
+  });
+  sendMessageWTyping(from, { text: mess }, { quoted: msg });
 };
 
 export default () => ({
-	cmd: ["zero"],
-	desc: "List members with zero or low message counts, optionally by message type.",
-	usage: "zero | zero <number> | zero <text|image|video|sticker|pdf> | zero <type> <number>",
-	handler,
+  cmd: ["zero"],
+  desc: "List members with zero or low message counts, optionally by message type.",
+  usage: "zero | zero <number> | zero <text|image|video|sticker|pdf> | zero <type> <number>",
+  handler,
 });

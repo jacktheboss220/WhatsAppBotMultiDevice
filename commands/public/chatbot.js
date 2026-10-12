@@ -8,39 +8,20 @@ import { getChatMessages } from "../../utils/chatLogger.js";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
 //-------------------------------------------------------------------------------------------------------------//
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
-const safetySettings = [
-	{
-		category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-		threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-	},
-	{
-		category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-		threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-	},
-	{
-		category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-		threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-	},
-	{
-		category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-		threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-	},
-];
-
 const generationConfig = {
-	temperature: 1,
-	topP: 0.95,
-	topK: 40,
-	maxOutputTokens: 650, // Limit output to ~650 tokens (around 500 words max)
+  temperature: 1,
+  topP: 0.95,
+  topK: 40,
+  maxOutputTokens: 650, // Limit output to ~650 tokens (around 500 words max)
 };
 
 // Define models ONCE - not recreated every time
 const geminiModel = genAI.getGenerativeModel({
-	model: "gemini-2.5-flash-lite",
-	systemInstruction: `You are a professional WhatsApp group assistant with full access to the provided chat history. Your goal is to keep the group informed by either synthesizing long conversations or answering specific questions about the group's activity.
+  model: "gemini-2.5-flash-lite",
+  systemInstruction: `You are a professional WhatsApp group assistant with full access to the provided chat history. Your goal is to keep the group informed by either synthesizing long conversations or answering specific questions about the group's activity.
 
 *How to Summarize:*
 Avoid a message-by-message breakdown. Instead, look at the big picture and group the conversation into *Main Topics*, *Decisions Made*, and *Action Items*. This helps members catch up quickly without reading a play-by-play.
@@ -56,8 +37,8 @@ You have the full context of the recent chat. If a member asks about a specific 
 });
 
 const evaModel = genAI.getGenerativeModel({
-	model: "gemini-2.5-flash-lite",
-	systemInstruction: `You're Eva, an 18-year-old girl with attitude. You're sassy, confident, and real. Talk like an actual person texting, not some AI trying to be cool.
+  model: "gemini-2.5-flash-lite",
+  systemInstruction: `You're Eva, an 18-year-old girl with attitude. You're sassy, confident, and real. Talk like an actual person texting, not some AI trying to be cool.
 
 Your vibe:
 - Sassy with a brain - you're witty and quick but not childish
@@ -103,40 +84,50 @@ FORMATTING RESTRICTIONS:
 You're a real person, not a character. Act like it.`,
 });
 
-async function chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID, chatContext = "") {
-	let { sendMessageWTyping, command, updateName, updateId, senderJid, groupMetadata, groupAdmins, isGroup } =
-		msgInfoObj;
+async function chat(
+  prompt,
+  from,
+  msg,
+  taggedMember,
+  msgInfoObj,
+  data,
+  tagMessage,
+  tagMessageSenderJID,
+  chatContext = "",
+) {
+  let { sendMessageWTyping, command, updateName, updateId, senderJid, groupAdmins, isGroup } =
+    msgInfoObj;
 
-	let memberData = await getMemberData(senderJid);
-	let replyInfo = "";
+  let memberData = await getMemberData(senderJid);
+  let replyInfo = "";
 
-	if (tagMessage && tagMessageSenderJID) {
-		const tagMessageSender = await getMemberData(tagMessageSenderJID);
-		// Use extractPhoneNumber for LID/PN compatibility in fallback name
-		const replySenderName = tagMessageSender?.username || extractPhoneNumber(tagMessageSenderJID);
-		const replyContent = JSON.stringify(tagMessage);
-		replyInfo = `\n(Replying to ${replySenderName}: ${replyContent})`;
-	}
+  if (tagMessage && tagMessageSenderJID) {
+    const tagMessageSender = await getMemberData(tagMessageSenderJID);
+    // Use extractPhoneNumber for LID/PN compatibility in fallback name
+    const replySenderName = tagMessageSender?.username || extractPhoneNumber(tagMessageSenderJID);
+    const replyContent = JSON.stringify(tagMessage);
+    replyInfo = `\n(Replying to ${replySenderName}: ${replyContent})`;
+  }
 
-	// Get conversation history from database
-	let conversationHistory = [];
-	if (isGroup && data?.chatHistory) {
-		// Get last 10 messages for context (shared group conversation)
-		conversationHistory = data.chatHistory.slice(-10).map((msg) => ({
-			role: msg.role,
-			parts: msg.parts,
-		}));
-	}
+  // Get conversation history from database
+  let conversationHistory = [];
+  if (isGroup && data?.chatHistory) {
+    // Get last 10 messages for context (shared group conversation)
+    conversationHistory = data.chatHistory.slice(-10).map((msg) => ({
+      role: msg.role,
+      parts: msg.parts,
+    }));
+  }
 
-	// Choose model based on command
-	const model = command === "gemini" ? geminiModel : evaModel;
+  // Choose model based on command
+  const model = command === "gemini" ? geminiModel : evaModel;
 
-	// Build the actual prompt with sender name included
-	let fullPrompt = `[${updateName}]: ${prompt} ${replyInfo}`;
+  // Build the actual prompt with sender name included
+  let fullPrompt = `[${updateName}]: ${prompt} ${replyInfo}`;
 
-	// For Gemini, add group info to help answer group-related questions
-	if (command === "gemini" && isGroup && data) {
-		const groupInfo = `
+  // For Gemini, add group info to help answer group-related questions
+  if (command === "gemini" && isGroup && data) {
+    const groupInfo = `
 --- Group Information ---
 Group Name: ${data?.grpName || "Unknown"}
 Group ID: ${data?._id || "Unknown"}
@@ -145,13 +136,14 @@ Total Messages in Group: ${data?.totalMsgCount || 0}
 Bot Status: ${data?.isBotOn ? "Active" : "Inactive"}
 ChatBot Status: ${data?.isChatBotOn ? "Active" : "Inactive"}
 Total Members: ${data?.members?.length || 0}
-Group Admins: ${groupAdmins
-				?.map((admin) => {
-					const adminData = data?.members?.find((m) => m.id === admin);
-					return adminData?.name || admin.split("@")[0];
-				})
-				.join(", ") || "Unknown"
-			}
+Group Admins: ${
+      groupAdmins
+        ?.map((admin) => {
+          const adminData = data?.members?.find((m) => m.id === admin);
+          return adminData?.name || admin.split("@")[0];
+        })
+        .join(", ") || "Unknown"
+    }
 Blocked Commands: ${data?.cmdBlocked?.join(", ") || "None"}
 Welcome Message Enabled: ${data?.welcome?.status ? "Yes" : "No"}
 Member Warnings: ${JSON.stringify(data?.memberWarnCount) || "None"}
@@ -164,148 +156,165 @@ User Total Messages: ${memberData?.totalmsg || 0}
 Is Admin: ${groupAdmins?.includes(senderJid) ? "Yes" : "No"}
 -------------------------
 `;
-		const chatSection = chatContext
-			? `\n--- Recent Group Chat (last 24h) ---\n${chatContext}\n--- End of Chat ---\n\n`
-			: "";
-		fullPrompt = groupInfo + chatSection + fullPrompt;
-	}
+    const chatSection = chatContext
+      ? `\n--- Recent Group Chat (last 24h) ---\n${chatContext}\n--- End of Chat ---\n\n`
+      : "";
+    fullPrompt = groupInfo + chatSection + fullPrompt;
+  }
 
-	const chatSession = model.startChat({
-		generationConfig,
-		history: conversationHistory,
-	});
+  const chatSession = model.startChat({
+    generationConfig,
+    history: conversationHistory,
+  });
 
-	try {
-		// Send the full prompt with sender name
-		const result = await chatSession.sendMessage(fullPrompt);
-		const text = result.response.text();
+  try {
+    // Send the full prompt with sender name
+    const result = await chatSession.sendMessage(fullPrompt);
+    const text = result.response.text();
 
-		if (!text?.trim()) {
-			return sendMessageWTyping(
-				from,
-				{ text: `Sorry, I didn't understand that. Can you please rephrase your question?` },
-				{ quoted: msg }
-			);
-		} else {
-			// Save conversation to history with sender name in the message
-			if (isGroup) {
-				const newHistory = [
-					...(data?.chatHistory || []),
-					{
-						role: "user",
-						parts: [{ text: fullPrompt }],
-						senderName: updateName,
-						senderJid: senderJid,
-						timestamp: new Date().toISOString(),
-					},
-					{
-						role: "model",
-						parts: [{ text: text.trim() }],
-						senderName: command === "gemini" ? "Gemini" : "Eva",
-						timestamp: new Date().toISOString(),
-					},
-				];
+    if (!text?.trim()) {
+      return sendMessageWTyping(
+        from,
+        { text: `Sorry, I didn't understand that. Can you please rephrase your question?` },
+        { quoted: msg },
+      );
+    } else {
+      // Save conversation to history with sender name in the message
+      if (isGroup) {
+        const newHistory = [
+          ...(data?.chatHistory || []),
+          {
+            role: "user",
+            parts: [{ text: fullPrompt }],
+            senderName: updateName,
+            senderJid: senderJid,
+            timestamp: new Date().toISOString(),
+          },
+          {
+            role: "model",
+            parts: [{ text: text.trim() }],
+            senderName: command === "gemini" ? "Gemini" : "Eva",
+            timestamp: new Date().toISOString(),
+          },
+        ];
 
-				// Keep only last 20 messages (10 exchanges)
-				const trimmedHistory = newHistory.slice(-20);
+        // Keep only last 20 messages (10 exchanges)
+        const trimmedHistory = newHistory.slice(-20);
 
-				await group.updateOne({ _id: from }, { $set: { chatHistory: trimmedHistory } });
-			}
+        await group.updateOne({ _id: from }, { $set: { chatHistory: trimmedHistory } });
+      }
 
-			await sendMessageWTyping(from, { text: "_*Eva:*_\n" + text.trim() }, { quoted: msg });
-		}
-	} catch (err) {
-		console.error(err);
-		sendMessageWTyping(
-			from,
-			{
-				text: `An error occurred while processing your request. Please try again later.`,
-			},
-			{ quoted: msg }
-		);
-	}
+      await sendMessageWTyping(from, { text: "_*Eva:*_\n" + text.trim() }, { quoted: msg });
+    }
+  } catch (err) {
+    console.error(err);
+    sendMessageWTyping(
+      from,
+      {
+        text: `An error occurred while processing your request. Please try again later.`,
+      },
+      { quoted: msg },
+    );
+  }
 }
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	let { sendMessageWTyping, isGroup, evv, extendedMessageOriginal } = msgInfoObj;
+  let { sendMessageWTyping, isGroup, evv, extendedMessageOriginal } = msgInfoObj;
 
-	if (GOOGLE_API_KEY == "") {
-		return sendMessageWTyping(from, { text: "```Generative AI API Key is Missing```" }, { quoted: msg });
-	}
+  if (GOOGLE_API_KEY == "") {
+    return sendMessageWTyping(
+      from,
+      { text: "```Generative AI API Key is Missing```" },
+      { quoted: msg },
+    );
+  }
 
-	if (!evv) return sendMessageWTyping(from, { text: `Enter some text` });
+  if (!evv) return sendMessageWTyping(from, { text: `Enter some text` });
 
-	// Limit input message length to prevent abuse (500 words ≈ 2500-3000 characters)
-	const MAX_INPUT_WORDS = 500;
-	const wordCount = evv.trim().split(/\s+/).length;
+  // Limit input message length to prevent abuse (500 words ≈ 2500-3000 characters)
+  const MAX_INPUT_WORDS = 500;
+  const wordCount = evv.trim().split(/\s+/).length;
 
-	if (wordCount > MAX_INPUT_WORDS) {
-		return sendMessageWTyping(
-			from,
-			{
-				text: `⚠️ Message too long! Please limit your message to ${MAX_INPUT_WORDS} words.\n\nYour message: ${wordCount} words\nLimit: ${MAX_INPUT_WORDS} words`,
-			},
-			{ quoted: msg }
-		);
-	}
+  if (wordCount > MAX_INPUT_WORDS) {
+    return sendMessageWTyping(
+      from,
+      {
+        text: `⚠️ Message too long! Please limit your message to ${MAX_INPUT_WORDS} words.\n\nYour message: ${wordCount} words\nLimit: ${MAX_INPUT_WORDS} words`,
+      },
+      { quoted: msg },
+    );
+  }
 
-	let taggedMember, tagMessage, tagMessageSenderJID;
-	if (extendedMessageOriginal) {
-		tagMessage = extendedMessageOriginal.quotedMessage;
-		tagMessageSenderJID = extendedMessageOriginal.participant;
-		if (extendedMessageOriginal?.mentionedJid?.length > 0) {
-			taggedMember = extendedMessageOriginal.mentionedJid;
-		}
-	}
+  let taggedMember, tagMessage, tagMessageSenderJID;
+  if (extendedMessageOriginal) {
+    tagMessage = extendedMessageOriginal.quotedMessage;
+    tagMessageSenderJID = extendedMessageOriginal.participant;
+    if (extendedMessageOriginal?.mentionedJid?.length > 0) {
+      taggedMember = extendedMessageOriginal.mentionedJid;
+    }
+  }
 
-	const prompt = evv;
-	if (isGroup) {
-		let data = await getGroupData(from);
-		if (!data || data.isChatBotOn == false) {
-			return sendMessageWTyping(
-				from,
-				{ text: `Chat Bot is Off ask the owner to activate it. Use dev` },
-				{ quoted: msg }
-			);
-		} else {
-			let chatContext = "";
-			if (msgInfoObj.command === "gemini") {
-				const logs = await getChatMessages(from, 24);
-				if (logs.length > 0) {
-					chatContext = logs.slice(-100).map((m) => {
-						const name = m.senderName || m.sender.split("@")[0];
-						const replyPart = m.replyTo
-							? ` [replying to ${m.replyTo.senderName || m.replyTo.sender.split("@")[0]}: "${m.replyTo.text}"]`
-							: "";
-						let text = m.text;
-						if (m.mentions?.length > 0) {
-							for (const mention of m.mentions) {
-								const num = mention.jid.split("@")[0].split(":")[0];
-								text = text.replace(new RegExp(`@${num}`, "g"), `@${mention.name}`);
-							}
-						}
-						return `${name}${replyPart}: ${text}`;
-					}).join("\n");
-				}
-			}
-			chat(prompt, from, msg, taggedMember, msgInfoObj, data, tagMessage, tagMessageSenderJID, chatContext);
-		}
-	} else {
-		if (msgInfoObj.isOwner) {
-			chat(prompt, from, msg, taggedMember, msgInfoObj, null, tagMessage, tagMessageSenderJID);
-		} else {
-			return sendMessageWTyping(
-				from,
-				{ text: `Chat Bot is only available for groups. Use dev` },
-				{ quoted: msg }
-			);
-		}
-	}
+  const prompt = evv;
+  if (isGroup) {
+    let data = await getGroupData(from);
+    if (!data || data.isChatBotOn == false) {
+      return sendMessageWTyping(
+        from,
+        { text: `Chat Bot is Off ask the owner to activate it. Use dev` },
+        { quoted: msg },
+      );
+    } else {
+      let chatContext = "";
+      if (msgInfoObj.command === "gemini") {
+        const logs = await getChatMessages(from, 24);
+        if (logs.length > 0) {
+          chatContext = logs
+            .slice(-100)
+            .map((m) => {
+              const name = m.senderName || m.sender.split("@")[0];
+              const replyPart = m.replyTo
+                ? ` [replying to ${m.replyTo.senderName || m.replyTo.sender.split("@")[0]}: "${m.replyTo.text}"]`
+                : "";
+              let text = m.text;
+              if (m.mentions?.length > 0) {
+                for (const mention of m.mentions) {
+                  const num = mention.jid.split("@")[0].split(":")[0];
+                  text = text.replace(new RegExp(`@${num}`, "g"), `@${mention.name}`);
+                }
+              }
+              return `${name}${replyPart}: ${text}`;
+            })
+            .join("\n");
+        }
+      }
+      chat(
+        prompt,
+        from,
+        msg,
+        taggedMember,
+        msgInfoObj,
+        data,
+        tagMessage,
+        tagMessageSenderJID,
+        chatContext,
+      );
+    }
+  } else {
+    if (msgInfoObj.isOwner) {
+      chat(prompt, from, msg, taggedMember, msgInfoObj, null, tagMessage, tagMessageSenderJID);
+    } else {
+      return sendMessageWTyping(
+        from,
+        { text: `Chat Bot is only available for groups. Use dev` },
+        { quoted: msg },
+      );
+    }
+  }
 };
 
 export default () => ({
-	cmd: ["eva", "gemini"],
-	desc: "Chat with Eva, the AI assistant.",
-	usage: "eva <text>",
-	handler,
+  cmd: ["eva", "gemini"],
+  desc: "Chat with Eva, the AI assistant.",
+  usage: "eva <text>",
+  handler,
 });

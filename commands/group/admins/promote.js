@@ -1,39 +1,41 @@
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { groupAdmins, groupMetadata, sendMessageWTyping, botNumber, extendedMessageOriginal } = msgInfoObj;
-	// return sendMessageWTyping(
-	//     from,
-	//     { text: "```❌ The admin commands are blocked for sometime to avoid ban on whatsapp!```" },
-	//     { quoted: msg }
-	// );
+  const { groupAdmins, groupMetadata, sendMessageWTyping, botNumber, extendedMessageOriginal } =
+    msgInfoObj;
+  // return sendMessageWTyping(
+  //     from,
+  //     { text: "```❌ The admin commands are blocked for sometime to avoid ban on whatsapp!```" },
+  //     { quoted: msg }
+  // );
 
-	if (!groupAdmins.includes(botNumber[0]) && !groupAdmins.includes(botNumber[1])) {
-		return sendMessageWTyping(from, { text: "❌ I'm not admin here." }, { quoted: msg });
-	}
+  if (!groupAdmins.includes(botNumber[0]) && !groupAdmins.includes(botNumber[1])) {
+    return sendMessageWTyping(from, { text: "❌ I'm not admin here." }, { quoted: msg });
+  }
 
-	if (!extendedMessageOriginal) {
-		return sendMessageWTyping(from, { text: "Mention or tag member." }, { quoted: msg });
-	}
+  if (!extendedMessageOriginal) {
+    return sendMessageWTyping(from, { text: "Mention or tag member." }, { quoted: msg });
+  }
 
-	const taggedJid = extendedMessageOriginal.participant || extendedMessageOriginal.mentionedJid?.[0];
-	if (!taggedJid) {
-		return sendMessageWTyping(from, { text: "Mention or tag member." }, { quoted: msg });
-	}
-	if (taggedJid === groupMetadata.owner) {
-		return sendMessageWTyping(from, { text: "❌ *Group Owner Tagged*" }, { quoted: msg });
-	}
+  const taggedJid =
+    extendedMessageOriginal.participant || extendedMessageOriginal.mentionedJid?.[0];
+  if (!taggedJid) {
+    return sendMessageWTyping(from, { text: "Mention or tag member." }, { quoted: msg });
+  }
+  if (taggedJid === groupMetadata.owner) {
+    return sendMessageWTyping(from, { text: "❌ *Group Owner Tagged*" }, { quoted: msg });
+  }
 
-	try {
-		await sock.groupParticipantsUpdate(from, [taggedJid], "promote");
-		sendMessageWTyping(from, { text: `✅ *Promoted*` }, { quoted: msg });
-	} catch (err) {
-		sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-		console.error(err);
-	}
+  try {
+    await sock.groupParticipantsUpdate(from, [taggedJid], "promote");
+    sendMessageWTyping(from, { text: `✅ *Promoted*` }, { quoted: msg });
+  } catch (err) {
+    sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+    console.error(err);
+  }
 };
 
 export default () => ({
-	cmd: ["promote"],
-	desc: "Make a member admin. Tag them or reply to their message.",
-	usage: "promote @mention | reply",
-	handler,
+  cmd: ["promote"],
+  desc: "Make a member admin. Tag them or reply to their message.",
+  usage: "promote @mention | reply",
+  handler,
 });

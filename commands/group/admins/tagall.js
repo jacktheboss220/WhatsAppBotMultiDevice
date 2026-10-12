@@ -4,67 +4,76 @@ import { extractPhoneNumber } from "../../../utils/lid.js";
 import { getMediaFlags } from "../../../utils/mediaFlags.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { prefix, sendMessageWTyping, groupMetadata, type, content, extendedMessageOriginal } = msgInfoObj;
-	if (extendedMessageOriginal?.quotedMessage) {
-		let temp =
-			extendedMessageOriginal?.quotedMessage?.extendedTextMessage?.text ||
-			extendedMessageOriginal?.quotedMessage?.conversation ||
-			msg.message?.conversation;
-		msg["message"] = extendedMessageOriginal.quotedMessage;
-		msg["message"]["conversation"] = temp;
-	}
+  const { prefix, sendMessageWTyping, groupMetadata, type, content, extendedMessageOriginal } =
+    msgInfoObj;
+  if (extendedMessageOriginal?.quotedMessage) {
+    let temp =
+      extendedMessageOriginal?.quotedMessage?.extendedTextMessage?.text ||
+      extendedMessageOriginal?.quotedMessage?.conversation ||
+      msg.message?.conversation;
+    msg["message"] = extendedMessageOriginal.quotedMessage;
+    msg["message"]["conversation"] = temp;
+  }
 
-	const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
+  const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
 
-	try {
-		if (isMedia || isTaggedImage || isTaggedVideo) {
-			delete msg["message"]["conversation"];
-			let tempMess = Object.assign({}, msg.message);
-			const tempCaption = tempMess[Object.keys(tempMess)[0]]["caption"] ?? "";
-			tempMess[Object.keys(tempMess)[0]]["caption"] = tempCaption.includes(prefix + "tagall")
-				? tempCaption.split(prefix + "tagall")[1].trim()
-				: tempCaption;
-			// Use extractPhoneNumber for LID/PN compatibility
-			const tags = groupMetadata.participants.map((i) => "👉🏻 @" + extractPhoneNumber(i.id)).join("\n");
-			await sendMessageWTyping(from, {
-				forward: {
-					key: {
-						remoteJid: msg.key.remoteJid,
-						fromMe: msg.key.fromMe,
-						id: msg.key.id,
-						participant: msg.key.participant ? msg.key.participant : null,
-					},
-					messageTimestamp: msg.messageTimestamp,
-					pushName: msg.pushName,
-					broadcast: msg.broadcast,
-					message: tempMess,
-				},
-				contextInfo: { forwardingScore: 0, isForwarded: false },
-			});
-			await sendMessageWTyping(from, {
-				text: `👥 *Total Members:* ${groupMetadata.participants.length}\n\n${tags}`,
-				mentions: [...groupMetadata.participants.map((e) => e.id)],
-			});
-		} else {
-			let message = msg.message.conversation ?? "";
-			message = message.includes(prefix + "tagall") ? message.split(prefix + "tagall")[1].trim() : message;
-			message = message ? message + "\n\n" : `👥 *Total Members:* ${groupMetadata.participants.length}\n\n`;
-			// Use extractPhoneNumber for LID/PN compatibility
-			message += groupMetadata.participants.map((i) => "👉🏻 @" + extractPhoneNumber(i.id)).join("\n");
-			sendMessageWTyping(from, {
-				text: message,
-				mentions: [...groupMetadata.participants.map((e) => e.id)],
-			});
-		}
-	} catch (err) {
-		console.log(err);
-		sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-	}
+  try {
+    if (isMedia || isTaggedImage || isTaggedVideo) {
+      delete msg["message"]["conversation"];
+      let tempMess = Object.assign({}, msg.message);
+      const tempCaption = tempMess[Object.keys(tempMess)[0]]["caption"] ?? "";
+      tempMess[Object.keys(tempMess)[0]]["caption"] = tempCaption.includes(prefix + "tagall")
+        ? tempCaption.split(prefix + "tagall")[1].trim()
+        : tempCaption;
+      // Use extractPhoneNumber for LID/PN compatibility
+      const tags = groupMetadata.participants
+        .map((i) => "👉🏻 @" + extractPhoneNumber(i.id))
+        .join("\n");
+      await sendMessageWTyping(from, {
+        forward: {
+          key: {
+            remoteJid: msg.key.remoteJid,
+            fromMe: msg.key.fromMe,
+            id: msg.key.id,
+            participant: msg.key.participant ? msg.key.participant : null,
+          },
+          messageTimestamp: msg.messageTimestamp,
+          pushName: msg.pushName,
+          broadcast: msg.broadcast,
+          message: tempMess,
+        },
+        contextInfo: { forwardingScore: 0, isForwarded: false },
+      });
+      await sendMessageWTyping(from, {
+        text: `👥 *Total Members:* ${groupMetadata.participants.length}\n\n${tags}`,
+        mentions: groupMetadata.participants.map((e) => e.id),
+      });
+    } else {
+      let message = msg.message.conversation ?? "";
+      message = message.includes(prefix + "tagall")
+        ? message.split(prefix + "tagall")[1].trim()
+        : message;
+      message = message
+        ? message + "\n\n"
+        : `👥 *Total Members:* ${groupMetadata.participants.length}\n\n`;
+      // Use extractPhoneNumber for LID/PN compatibility
+      message += groupMetadata.participants
+        .map((i) => "👉🏻 @" + extractPhoneNumber(i.id))
+        .join("\n");
+      sendMessageWTyping(from, {
+        text: message,
+        mentions: groupMetadata.participants.map((e) => e.id),
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+  }
 };
 
 export default () => ({
-	cmd: ["tagall"],
-	desc: "Mention every member of the group, with an optional message.",
-	usage: "tagall | tagall <message> | reply with tagall",
-	handler,
+  cmd: ["tagall"],
+  desc: "Mention every member of the group, with an optional message.",
+  usage: "tagall | tagall <message> | reply with tagall",
+  handler,
 });

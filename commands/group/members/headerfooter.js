@@ -8,112 +8,116 @@ import { getMediaFlags } from "../../../utils/mediaFlags.js";
 const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { type, content, evv, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
-	const { isMedia, isTaggedImage } = getMediaFlags(type, content);
+  const { type, content, evv, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
+  const { isMedia, isTaggedImage } = getMediaFlags(type, content);
 
-	if (!args[0]) {
-		return sendMessageWTyping(
-			from,
-			{ text: `*Use* -textmeme _FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_` },
-			{ quoted: msg }
-		);
-	}
+  if (!args[0]) {
+    return sendMessageWTyping(
+      from,
+      { text: `*Use* -textmeme _FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_` },
+      { quoted: msg },
+    );
+  }
 
-	console.log("content", evv);
-	let TopText = "",
-		BottomText = "",
-		FontColor = "Black",
-		FontStroke = "Black",
-		FontSize = 0;
+  console.log("content", evv);
+  let TopText = "",
+    BottomText = "",
+    FontColor = "Black",
+    FontStroke = "Black",
+    FontSize = 0;
 
-	const evvSplit = evv.split(";");
-	const evvLength = evvSplit.length;
+  const evvSplit = evv.split(";");
+  const evvLength = evvSplit.length;
 
-	if (evvLength >= 1) {
-		if (evvLength === 1) {
-			BottomText = evvSplit[0].trim();
-		} else if (evvLength >= 2) {
-			const parsedFontSize = parseInt(evvSplit[1].trim());
-			if (!isNaN(parsedFontSize)) {
-				FontSize = parsedFontSize;
-				BottomText = evvSplit[0].trim();
-			} else {
-				TopText = evvSplit[0].trim();
-				BottomText = evvSplit[1].trim();
-			}
-		}
+  if (evvLength >= 1) {
+    if (evvLength === 1) {
+      BottomText = evvSplit[0].trim();
+    } else if (evvLength >= 2) {
+      const parsedFontSize = parseInt(evvSplit[1].trim());
+      if (!isNaN(parsedFontSize)) {
+        FontSize = parsedFontSize;
+        BottomText = evvSplit[0].trim();
+      } else {
+        TopText = evvSplit[0].trim();
+        BottomText = evvSplit[1].trim();
+      }
+    }
 
-		if (evvLength >= 3) {
-			const parsedFontSize = parseInt(evvSplit[2].trim());
-			if (!isNaN(parsedFontSize)) {
-				FontSize = parsedFontSize;
-			} else {
-				FontColor = evvSplit[2].trim();
-			}
-		}
+    if (evvLength >= 3) {
+      const parsedFontSize = parseInt(evvSplit[2].trim());
+      if (!isNaN(parsedFontSize)) {
+        FontSize = parsedFontSize;
+      } else {
+        FontColor = evvSplit[2].trim();
+      }
+    }
 
-		if (evvLength >= 4) {
-			const parsedFontSize = parseInt(evvSplit[3].trim());
-			if (!isNaN(parsedFontSize)) {
-				FontSize = parsedFontSize;
-			} else {
-				FontColor = evvSplit[3].trim();
-				FontStroke = evvSplit[3].trim();
-			}
-		}
+    if (evvLength >= 4) {
+      const parsedFontSize = parseInt(evvSplit[3].trim());
+      if (!isNaN(parsedFontSize)) {
+        FontSize = parsedFontSize;
+      } else {
+        FontColor = evvSplit[3].trim();
+        FontStroke = evvSplit[3].trim();
+      }
+    }
 
-		if (evvLength >= 5) {
-			FontColor = evvSplit[3].trim();
-			FontStroke = evvSplit[4].trim();
-		}
-	}
+    if (evvLength >= 5) {
+      FontColor = evvSplit[3].trim();
+      FontStroke = evvSplit[4].trim();
+    }
+  }
 
-	if ((isMedia && !msg.message.videoMessage) || isTaggedImage) {
-		let downloadFilePath;
-		if (msg.message.imageMessage) {
-			downloadFilePath = msg.message.imageMessage;
-		} else {
-			downloadFilePath = extendedMessageOriginal?.quotedMessage?.imageMessage;
-		}
-		const stream = await downloadContentFromMessage(downloadFilePath, "image");
-		let buffer = Buffer.from([]);
-		for await (const chunk of stream) {
-			buffer = Buffer.concat([buffer, chunk]);
-		}
-		const media = getRandom(".jpeg");
-		await writeFile(media, buffer);
-		const MemePath = getRandom(".png");
+  if ((isMedia && !msg.message.videoMessage) || isTaggedImage) {
+    let downloadFilePath;
+    if (msg.message.imageMessage) {
+      downloadFilePath = msg.message.imageMessage;
+    } else {
+      downloadFilePath = extendedMessageOriginal?.quotedMessage?.imageMessage;
+    }
+    const stream = await downloadContentFromMessage(downloadFilePath, "image");
+    let buffer = Buffer.from([]);
+    for await (const chunk of stream) {
+      buffer = Buffer.concat([buffer, chunk]);
+    }
+    const media = getRandom(".jpeg");
+    await writeFile(media, buffer);
+    const MemePath = getRandom(".png");
 
-		const options = {
-			image: media,
-			outfile: MemePath,
-			topText: TopText,
-			bottomText: BottomText,
-			fontSize: FontSize === 0 ? 50 : FontSize,
-			fontFill: FontColor,
-			strokeColor: FontStroke,
-			strokeWeight: 1,
-		};
+    const options = {
+      image: media,
+      outfile: MemePath,
+      topText: TopText,
+      bottomText: BottomText,
+      fontSize: FontSize === 0 ? 50 : FontSize,
+      fontFill: FontColor,
+      strokeColor: FontStroke,
+      strokeWeight: 1,
+    };
 
-		try {
-			await memeMaker(options);
-			await sendMessageWTyping(from, { image: await fs.promises.readFile(MemePath) }, { quoted: msg });
-			console.log("Sent");
-		} catch (error) {
-			console.error(error);
-			sendMessageWTyping(from, { text: `*Failed to create meme*` }, { quoted: msg });
-		} finally {
-			memoryManager.safeUnlink(MemePath);
-			memoryManager.safeUnlink(media);
-		}
-	} else {
-		sendMessageWTyping(from, { text: `*Reply to Image Only*` }, { quoted: msg });
-	}
+    try {
+      await memeMaker(options);
+      await sendMessageWTyping(
+        from,
+        { image: await fs.promises.readFile(MemePath) },
+        { quoted: msg },
+      );
+      console.log("Sent");
+    } catch (error) {
+      console.error(error);
+      sendMessageWTyping(from, { text: `*Failed to create meme*` }, { quoted: msg });
+    } finally {
+      memoryManager.safeUnlink(MemePath);
+      memoryManager.safeUnlink(media);
+    }
+  } else {
+    sendMessageWTyping(from, { text: `*Reply to Image Only*` }, { quoted: msg });
+  }
 };
 
 export default () => ({
-	cmd: ["text", "txt", "texmeme"],
-	desc: "Make a meme by adding top and bottom text to an image.",
-	usage: "textmeme _FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_ | reply to an image",
-	handler,
+  cmd: ["text", "txt", "texmeme"],
+  desc: "Make a meme by adding top and bottom text to an image.",
+  usage: "textmeme _FontTop;FontBottom;FontSize;FontColor;FontStrokeColor_ | reply to an image",
+  handler,
 });

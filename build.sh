@@ -85,7 +85,7 @@ case "${1:-help}" in
         # Installs Nginx, drops the conf with the right domain, enables it.
         command -v nginx >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y nginx; }
         sudo cp deploy/nginx/wabot.conf /etc/nginx/sites-available/wabot.conf
-        sudo sed -i "s/your-domain\.example\.com/${DOMAIN}/g" /etc/nginx/sites-available/wabot.conf
+        sudo sed -i "s/subdomain\.domain\.com/${DOMAIN}/g" /etc/nginx/sites-available/wabot.conf
         sudo ln -sf /etc/nginx/sites-available/wabot.conf /etc/nginx/sites-enabled/wabot.conf
         sudo rm -f /etc/nginx/sites-enabled/default
         sudo nginx -t && sudo systemctl reload nginx

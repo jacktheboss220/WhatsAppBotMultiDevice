@@ -2,57 +2,57 @@
 // Single connection, distributes typed events to registered listeners.
 // Re-exports nothing React-specific — plain JS module.
 
-const listeners = new Map()
+const listeners = new Map();
 
 function emit(type, data) {
-  listeners.get(type)?.forEach(fn => fn(data))
+  listeners.get(type)?.forEach((fn) => fn(data));
 }
 
 export function addWsListener(type, fn) {
-  if (!listeners.has(type)) listeners.set(type, new Set())
-  listeners.get(type).add(fn)
+  if (!listeners.has(type)) listeners.set(type, new Set());
+  listeners.get(type).add(fn);
 }
 
 export function removeWsListener(type, fn) {
-  listeners.get(type)?.delete(fn)
+  listeners.get(type)?.delete(fn);
 }
 
-let reconnectTimer = null
-let current = null
+let reconnectTimer = null;
+let current = null;
 
 function connect() {
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const ws    = new WebSocket(`${proto}//${location.host}`)
-  current = ws
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${proto}//${location.host}`);
+  current = ws;
 
-  ws.onopen  = () => emit('_status', { status: 'connecting' })
+  ws.onopen = () => emit('_status', { status: 'connecting' });
   ws.onclose = () => {
-    if (ws !== current) return // replaced by reconnectWs(): don't schedule a second connection
-    emit('_status', { status: 'disconnected' })
-    clearTimeout(reconnectTimer)
-    reconnectTimer = setTimeout(connect, 5000)
-  }
-  ws.onerror = () => emit('_status', { status: 'disconnected' })
+    if (ws !== current) return; // replaced by reconnectWs(): don't schedule a second connection
+    emit('_status', { status: 'disconnected' });
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, 5000);
+  };
+  ws.onerror = () => emit('_status', { status: 'disconnected' });
 
-  ws.onmessage = evt => {
+  ws.onmessage = (evt) => {
     try {
-      const data = JSON.parse(evt.data)
+      const data = JSON.parse(evt.data);
       if (data.type === 'status') {
         // Server broadcasts both 'connected' and 'disconnected' (bot connection
         // dropping while the browser<->server socket stays open) — reflect both.
-        emit('_status', { status: data.status === 'connected' ? 'connected' : 'disconnected' })
+        emit('_status', { status: data.status === 'connected' ? 'connected' : 'disconnected' });
       }
-      emit(data.type, data)
-    } catch (_) {}
-  }
+      emit(data.type, data);
+    } catch {}
+  };
 }
 
 // The server ties the socket to the login cookie at connect time, so call this after login/logout.
 export function reconnectWs() {
-  clearTimeout(reconnectTimer)
-  const old = current
-  connect()
-  old?.close()
+  clearTimeout(reconnectTimer);
+  const old = current;
+  connect();
+  old?.close();
 }
 
-connect()
+connect();

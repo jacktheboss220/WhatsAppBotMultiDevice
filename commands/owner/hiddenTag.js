@@ -1,62 +1,65 @@
 import { getMediaFlags } from "../../utils/mediaFlags.js";
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
-	const { prefix, sendMessageWTyping, groupMetadata, type, content, extendedMessageOriginal } = msgInfoObj;
-	if (extendedMessageOriginal?.quotedMessage) {
-		let temp =
-			extendedMessageOriginal?.quotedMessage?.extendedTextMessage?.text ||
-			extendedMessageOriginal?.quotedMessage?.conversation ||
-			msg.message?.conversation;
-		msg["message"] = extendedMessageOriginal.quotedMessage;
-		msg["message"]["conversation"] = temp;
-	}
-	const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
+  const { prefix, sendMessageWTyping, groupMetadata, type, content, extendedMessageOriginal } =
+    msgInfoObj;
+  if (extendedMessageOriginal?.quotedMessage) {
+    let temp =
+      extendedMessageOriginal?.quotedMessage?.extendedTextMessage?.text ||
+      extendedMessageOriginal?.quotedMessage?.conversation ||
+      msg.message?.conversation;
+    msg["message"] = extendedMessageOriginal.quotedMessage;
+    msg["message"]["conversation"] = temp;
+  }
+  const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);
 
-	try {
-		if (isMedia || isTaggedImage || isTaggedVideo) {
-			delete msg["message"]["conversation"];
-			let tempMess = Object.assign({}, msg.message);
-			tempMess[Object.keys(tempMess)[0]]["contextInfo"] = {
-				mentionedJid: [...groupMetadata.participants.map((e) => e.id)],
-			};
-			const tempCaption = tempMess[Object.keys(tempMess)[0]]["caption"] ?? "";
-			tempMess[Object.keys(tempMess)[0]]["caption"] = tempCaption.includes(prefix + "hidetag")
-				? tempCaption.split(prefix + "hidetag")[1].trim()
-				: tempCaption;
-			await sendMessageWTyping(from, {
-				forward: {
-					key: {
-						remoteJid: msg.key.remoteJid,
-						fromMe: msg.key.fromMe,
-						id: msg.key.id,
-						participant: msg.key.participant ? msg.key.participant : null,
-					},
-					messageTimestamp: msg.messageTimestamp,
-					pushName: msg.pushName,
-					broadcast: msg.broadcast,
-					message: tempMess,
-				},
-				mentions: [...groupMetadata.participants.map((e) => e.id)],
-				contextInfo: { forwardingScore: 0, isForwarded: false },
-			});
-		} else {
-			let message = msg.message.conversation ?? "";
-			message = message.includes(prefix + "hidetag") ? message.split(prefix + "hidetag")[1].trim() : message;
-			message = message ? message : "Hidden Tag by Eva";
-			sendMessageWTyping(from, {
-				text: message,
-				mentions: [...groupMetadata.participants.map((e) => e.id)],
-			});
-		}
-	} catch (err) {
-		console.log(err);
-		sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
-	}
+  try {
+    if (isMedia || isTaggedImage || isTaggedVideo) {
+      delete msg["message"]["conversation"];
+      let tempMess = Object.assign({}, msg.message);
+      tempMess[Object.keys(tempMess)[0]]["contextInfo"] = {
+        mentionedJid: groupMetadata.participants.map((e) => e.id),
+      };
+      const tempCaption = tempMess[Object.keys(tempMess)[0]]["caption"] ?? "";
+      tempMess[Object.keys(tempMess)[0]]["caption"] = tempCaption.includes(prefix + "hidetag")
+        ? tempCaption.split(prefix + "hidetag")[1].trim()
+        : tempCaption;
+      await sendMessageWTyping(from, {
+        forward: {
+          key: {
+            remoteJid: msg.key.remoteJid,
+            fromMe: msg.key.fromMe,
+            id: msg.key.id,
+            participant: msg.key.participant ? msg.key.participant : null,
+          },
+          messageTimestamp: msg.messageTimestamp,
+          pushName: msg.pushName,
+          broadcast: msg.broadcast,
+          message: tempMess,
+        },
+        mentions: groupMetadata.participants.map((e) => e.id),
+        contextInfo: { forwardingScore: 0, isForwarded: false },
+      });
+    } else {
+      let message = msg.message.conversation ?? "";
+      message = message.includes(prefix + "hidetag")
+        ? message.split(prefix + "hidetag")[1].trim()
+        : message;
+      message = message ? message : "Hidden Tag by Eva";
+      sendMessageWTyping(from, {
+        text: message,
+        mentions: groupMetadata.participants.map((e) => e.id),
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    sendMessageWTyping(from, { text: err.toString() }, { quoted: msg });
+  }
 };
 
 export default () => ({
-	cmd: ["hidetag"],
-	desc: "Send a message that silently mentions everyone.",
-	usage: "hidetag <message>",
-	handler,
+  cmd: ["hidetag"],
+  desc: "Send a message that silently mentions everyone.",
+  usage: "hidetag <message>",
+  handler,
 });

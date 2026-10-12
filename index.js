@@ -4,34 +4,47 @@ import getDate from "./utils/date.js";
 import { normalizeJID } from "./utils/lid.js";
 import adminRouter from "./routes/admin.js";
 import messageQueue from "./queue/messageQueue.js";
-import { pushLog, subscribe as subscribeAdminEvents, getLogs, getActivity } from "./notify/adminEvents.js";
+import {
+  pushLog,
+  subscribe as subscribeAdminEvents,
+  getLogs,
+  getActivity,
+} from "./notify/adminEvents.js";
 
 // ── Console interceptor — feeds log ring buffer + deduplication ──────────────
-const _log   = console.log.bind(console);
-const _info  = console.info.bind(console);
-const _warn  = console.warn.bind(console);
+const _log = console.log.bind(console);
+const _info = console.info.bind(console);
+const _warn = console.warn.bind(console);
 const _error = console.error.bind(console);
 
-const _SESSION_SPAM = ['Closing session:', 'Removing old closed session:'];
+const _SESSION_SPAM = ["Closing session:", "Removing old closed session:"];
 
 // Suppress "Credentials saved to MongoDB" within 10s of startup (creds flush storm)
 let _startupTime = Date.now();
 function _suppressStartupNoise(msg) {
-	if (msg === '💾 Credentials saved to MongoDB' && Date.now() - _startupTime < 10000) return true;
-	return false;
+  if (msg === "💾 Credentials saved to MongoDB" && Date.now() - _startupTime < 10000) return true;
+  return false;
 }
 
-console.log   = (...a) => {
-	const s = String(a[0]);
-	if (_suppressStartupNoise(s)) return;
-	_log(...a); pushLog('info', ...a);
+console.log = (...a) => {
+  const s = String(a[0]);
+  if (_suppressStartupNoise(s)) return;
+  _log(...a);
+  pushLog("info", ...a);
 };
-console.info  = (...a) => {
-	if (_SESSION_SPAM.some(s => String(a[0]).startsWith(s))) return;
-	_info(...a); pushLog('info', ...a);
+console.info = (...a) => {
+  if (_SESSION_SPAM.some((s) => String(a[0]).startsWith(s))) return;
+  _info(...a);
+  pushLog("info", ...a);
 };
-console.warn  = (...a) => { _warn(...a);  pushLog('warn',  ...a) };
-console.error = (...a) => { _error(...a); pushLog('error', ...a) };
+console.warn = (...a) => {
+  _warn(...a);
+  pushLog("warn", ...a);
+};
+console.error = (...a) => {
+  _error(...a);
+  pushLog("error", ...a);
+};
 
 import cors from "cors";
 import express from "express";
@@ -53,24 +66,26 @@ const app = express();
 // so no CORS headers are needed. This used to answer "Access-Control-Allow-Origin: *" with credentials to
 // every site. CORS_ORIGINS (comma-separated) is an explicit opt-in for anything else.
 const corsOrigins = (process.env.CORS_ORIGINS || "")
-	.split(",")
-	.map((o) => o.trim())
-	.filter(Boolean);
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 app.use(
-	cors({
-		origin: corsOrigins.length ? corsOrigins : false,
-		credentials: true,
-		optionsSuccessStatus: 200,
-	})
+  cors({
+    origin: corsOrigins.length ? corsOrigins : false,
+    credentials: true,
+    optionsSuccessStatus: 200,
+  }),
 );
 
 if (!process.env.SESSION_SECRET) {
-  console.error("FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.");
+  console.error(
+    "FATAL: SESSION_SECRET environment variable is not set. Cannot run application securely.",
+  );
   process.exit(1);
 }
 
 if (!process.env.ADMIN_PASSWORD) {
-	console.warn("ADMIN_PASSWORD is not set — password login is disabled (Google login only).");
+  console.warn("ADMIN_PASSWORD is not set — password login is disabled (Google login only).");
 }
 
 // Behind nginx: req.ip must be the client IP (login rate limit keys on it). Keep the app port
@@ -78,13 +93,17 @@ if (!process.env.ADMIN_PASSWORD) {
 app.set("trust proxy", 1);
 
 const sessionMiddleware = session({
-	secret: process.env.SESSION_SECRET,
-	resave: false,
-	saveUninitialized: false,
-	rolling: true, // every visit pushes the 30-day expiry forward
-	store: MongoStore.create({ mongoUrl: process.env.MONGODB_KEY, ttl: 30 * 24 * 60 * 60, touchAfter: 60 * 60 }),
-	// "auto": Secure flag when the request came in over HTTPS (nginx sends X-Forwarded-Proto), plain over local HTTP
-	cookie: { secure: "auto", httpOnly: true, sameSite: "lax", maxAge: 30 * 24 * 60 * 60 * 1000 },
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  rolling: true, // every visit pushes the 30-day expiry forward
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_KEY,
+    ttl: 30 * 24 * 60 * 60,
+    touchAfter: 60 * 60,
+  }),
+  // "auto": Secure flag when the request came in over HTTPS (nginx sends X-Forwarded-Proto), plain over local HTTP
+  cookie: { secure: "auto", httpOnly: true, sameSite: "lax", maxAge: 30 * 24 * 60 * 60 * 1000 },
 });
 app.use(sessionMiddleware);
 
@@ -93,18 +112,18 @@ const baseUrl = (process.env.HOST_URL || "http://localhost:8000").replace(/\/$/,
 const googleAuthEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 
 if (googleAuthEnabled) {
-	passport.use(
-		new GoogleStrategy(
-			{
-				clientID:     process.env.GOOGLE_CLIENT_ID,
-				clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-				callbackURL:  `${baseUrl}/auth/google/callback`,
-			},
-			(_accessToken, _refreshToken, profile, done) => done(null, profile)
-		)
-	);
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: `${baseUrl}/auth/google/callback`,
+      },
+      (_accessToken, _refreshToken, profile, done) => done(null, profile),
+    ),
+  );
 } else {
-	console.log("Google OAuth disabled — GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set.");
+  console.log("Google OAuth disabled — GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set.");
 }
 
 passport.serializeUser((user, done) => done(null, user));
@@ -116,16 +135,16 @@ app.locals.googleAuthEnabled = googleAuthEnabled;
 
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(
-	express.static(path.join(__dirname, "public"), {
-		maxAge: "1d",
-		etag: false,
-	})
+  express.static(path.join(__dirname, "public"), {
+    maxAge: "1d",
+    etag: false,
+  }),
 );
 
 // Serve the React dashboard build (public/app/) at /admin
 app.use(
-	"/admin",
-	express.static(path.join(__dirname, "public", "app"), { maxAge: "1d", etag: false })
+  "/admin",
+  express.static(path.join(__dirname, "public", "app"), { maxAge: "1d", etag: false }),
 );
 
 app.set("views", path.join(__dirname, "./public"));
@@ -136,7 +155,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 const port = process.env.PORT || 8000;
 
 app.get("/", (_req, res) => {
-	res.render("index");
+  res.render("index");
 });
 
 // Liveness probe for the Docker healthcheck / build.sh health (process is up; says nothing about WhatsApp).
@@ -148,223 +167,242 @@ app.use("/", adminRouter);
 const reactIndex = path.join(__dirname, "public", "app", "index.html");
 app.get("/admin", (_req, res) => res.sendFile(reactIndex));
 app.get("/admin/*", (req, res, next) => {
-	if (req.path.startsWith("/api/")) return next();
-	res.sendFile(reactIndex);
+  if (req.path.startsWith("/api/")) return next();
+  res.sendFile(reactIndex);
 });
 
 const server = app.listen(port, () => {
-	const mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
-	_log(`\n${"═".repeat(50)}`);
-	_log(`  Eva Bot  ·  ${getDate()}`);
-	_log(`  Port: ${port}  ·  Heap: ${mem}MB`);
-	_log(`${"═".repeat(50)}\n`);
-	startServer();
+  const mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  _log(`\n${"═".repeat(50)}`);
+  _log(`  Eva Bot  ·  ${getDate()}`);
+  _log(`  Port: ${port}  ·  Heap: ${mem}MB`);
+  _log(`${"═".repeat(50)}\n`);
+  startServer();
 });
 
 app.on("error", (error) => {
-	console.error("Web-server error:", error.message);
+  console.error("Web-server error:", error.message);
 });
 
 const wss = new WebSocketServer({
-	server,
-	maxPayload: 10 * 1024 * 1024,
-	perMessageDeflate: true,
+  server,
+  maxPayload: 10 * 1024 * 1024,
+  perMessageDeflate: true,
 });
 
 // ── Bot connection state ───────────────────────────────────────────────────────
 // Persists across sock reconnections via the onNewSock hook in connection.js
 let botConnected = false;
-let lastQR       = null;   // Last QR code received; replayed to late-joining browser clients
-let lastQRTimer  = null;   // Timer to clear lastQR after it expires (~60 s)
+let lastQR = null; // Last QR code received; replayed to late-joining browser clients
+let lastQRTimer = null; // Timer to clear lastQR after it expires (~60 s)
 
 // Only QR + connection status are public (the QR login page needs them). Everything else
 // (logs, activity, sending) is admin-only: the socket is tied to the admin session cookie.
 const PUBLIC_WS_EVENTS = new Set(["qr", "status"]);
 
 function broadcast(payload) {
-	const msg = JSON.stringify(payload);
-	const isPublic = PUBLIC_WS_EVENTS.has(payload.type);
-	wss.clients.forEach((client) => {
-		if (client.readyState === WebSocket.OPEN && (isPublic || client.isAdmin)) client.send(msg);
-	});
+  const msg = JSON.stringify(payload);
+  const isPublic = PUBLIC_WS_EVENTS.has(payload.type);
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN && (isPublic || client.isAdmin)) client.send(msg);
+  });
 }
 
 // Runs the express-session middleware on the upgrade request to read the admin flag.
 const isAdminRequest = (req) =>
-	new Promise((resolve) => sessionMiddleware(req, {}, () => resolve(req.session?.isAdmin === true))).catch(() => false);
+  new Promise((resolve) =>
+    sessionMiddleware(req, {}, () => resolve(req.session?.isAdmin === true)),
+  ).catch(() => false);
 
 // ── Called for every new sock — including reconnects ─────────────────────────
 // This is the fix for the stale-sock bug: we always attach our listener to
 // whichever sock is currently live, and always keep app.locals.sock current.
 function handleNewSock(sock) {
-	app.locals.sock = sock; // always up-to-date reference for admin routes
+  app.locals.sock = sock; // always up-to-date reference for admin routes
 
-	sock.ev.on("connection.update", (update) => {
-		const { qr, isOnline, connection } = update;
+  sock.ev.on("connection.update", (update) => {
+    const { qr, isOnline, connection } = update;
 
-		if (qr) {
-			botConnected = false;
-			lastQR = qr;
-			// QR codes expire (~60 s); clear stored copy so stale QR isn't replayed
-			clearTimeout(lastQRTimer);
-			lastQRTimer = setTimeout(() => { lastQR = null; }, 60_000);
-			broadcast({ type: "qr", qr });
-		}
+    if (qr) {
+      botConnected = false;
+      lastQR = qr;
+      // QR codes expire (~60 s); clear stored copy so stale QR isn't replayed
+      clearTimeout(lastQRTimer);
+      lastQRTimer = setTimeout(() => {
+        lastQR = null;
+      }, 60_000);
+      broadcast({ type: "qr", qr });
+    }
 
-		if (isOnline || connection === "open") {
-			botConnected = true;
-			lastQR = null;
-			clearTimeout(lastQRTimer);
-			broadcast({ type: "status", status: "connected" });
-		}
+    if (isOnline || connection === "open") {
+      botConnected = true;
+      lastQR = null;
+      clearTimeout(lastQRTimer);
+      broadcast({ type: "status", status: "connected" });
+    }
 
-		if (connection === "close") {
-			botConnected = false;
-			broadcast({ type: "status", status: "disconnected" });
-		}
-	});
+    if (connection === "close") {
+      botConnected = false;
+      broadcast({ type: "status", status: "disconnected" });
+    }
+  });
 }
 
 // Register hook before calling startSock so it fires for the very first sock too
 onNewSock(handleNewSock);
 
 // Forward admin events (logs, activity) to all connected WS clients
-subscribeAdminEvents(event => broadcast(event));
+subscribeAdminEvents((event) => broadcast(event));
 
 // Expose startSock so admin routes can trigger a reconnect without restarting the process
 app.locals.reconnect = () => startSock("manual-reconnect");
 
 // ── WebSocket server ──────────────────────────────────────────────────────────
 wss.on("connection", async (ws, req) => {
-	// Browsers always send Origin; reject cross-site pages trying to open this socket.
-	const origin = req.headers.origin;
-	if (origin) {
-		let sameHost = false;
-		try { sameHost = new URL(origin).host === req.headers.host; } catch { /* malformed origin */ }
-		if (!sameHost) return ws.close(1008, "Forbidden origin");
-	}
+  // Browsers always send Origin; reject cross-site pages trying to open this socket.
+  const origin = req.headers.origin;
+  if (origin) {
+    let sameHost = false;
+    try {
+      sameHost = new URL(origin).host === req.headers.host;
+    } catch {
+      /* malformed origin */
+    }
+    if (!sameHost) return ws.close(1008, "Forbidden origin");
+  }
 
-	ws.on("error", () => {}); // covers the gap while the session is looked up; real handler is attached below
-	ws.isAdmin = await isAdminRequest(req);
-	if (ws.readyState !== WebSocket.OPEN) return;
+  ws.on("error", () => {}); // covers the gap while the session is looked up; real handler is attached below
+  ws.isAdmin = await isAdminRequest(req);
+  if (ws.readyState !== WebSocket.OPEN) return;
 
-	// Tell newly connected browser clients the current state immediately.
-	// Also check sock.user as a live fallback in case botConnected is stale.
-	const isConnected = botConnected || app.locals.sock?.user != null;
-	if (isConnected) {
-		botConnected = true; // sync flag
-		ws.send(JSON.stringify({ type: "status", status: "connected" }));
-	} else if (lastQR) {
-		// Browser missed the QR broadcast — replay the stored copy
-		ws.send(JSON.stringify({ type: "qr", qr: lastQR }));
-	}
+  // Tell newly connected browser clients the current state immediately.
+  // Also check sock.user as a live fallback in case botConnected is stale.
+  const isConnected = botConnected || app.locals.sock?.user != null;
+  if (isConnected) {
+    botConnected = true; // sync flag
+    ws.send(JSON.stringify({ type: "status", status: "connected" }));
+  } else if (lastQR) {
+    // Browser missed the QR broadcast — replay the stored copy
+    ws.send(JSON.stringify({ type: "qr", qr: lastQR }));
+  }
 
-	// Replay recent logs + activity to admins only
-	if (ws.isAdmin) {
-		ws.send(JSON.stringify({ type: 'log_snapshot',      logs:     getLogs(100) }));
-		ws.send(JSON.stringify({ type: 'activity_snapshot', activity: getActivity() }));
-	}
+  // Replay recent logs + activity to admins only
+  if (ws.isAdmin) {
+    ws.send(JSON.stringify({ type: "log_snapshot", logs: getLogs(100) }));
+    ws.send(JSON.stringify({ type: "activity_snapshot", activity: getActivity() }));
+  }
 
-	const heartbeat = setInterval(() => {
-		if (ws.readyState === WebSocket.OPEN) ws.ping();
-	}, 30_000);
+  const heartbeat = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) ws.ping();
+  }, 30_000);
 
-	ws.on("pong", () => {});
+  ws.on("pong", () => {});
 
-	ws.on("message", async (raw) => {
-		if (!ws.isAdmin) {
-			ws.send(JSON.stringify({ type: "error", error: "Unauthorized" }));
-			return;
-		}
-		try {
-			const { to, message } = JSON.parse(raw);
-			if (!to || !message) {
-				ws.send(JSON.stringify({ type: "error", error: "Invalid request" }));
-				return;
-			}
-			if (message.length > 4096) {
-				ws.send(JSON.stringify({ type: "error", error: "Message too long" }));
-				return;
-			}
-			// Always use the live sock reference (fixes stale-sock bug for messages too)
-			const sock = app.locals.sock;
-			const jid = await normalizeJID(sock, to);
-			await messageQueue.enqueue(jid, () => sock.sendMessage(jid, { text: message }), 0);
-			console.log("Message sent to", to, ":", message);
-			ws.send(JSON.stringify({ type: "success", success: "Message sent" }));
-		} catch (err) {
-			console.error("Error handling WebSocket message:", err);
-			ws.send(JSON.stringify({ type: "error", error: "Failed to send message" }));
-		}
-	});
+  ws.on("message", async (raw) => {
+    if (!ws.isAdmin) {
+      ws.send(JSON.stringify({ type: "error", error: "Unauthorized" }));
+      return;
+    }
+    try {
+      const { to, message } = JSON.parse(raw);
+      if (!to || !message) {
+        ws.send(JSON.stringify({ type: "error", error: "Invalid request" }));
+        return;
+      }
+      if (message.length > 4096) {
+        ws.send(JSON.stringify({ type: "error", error: "Message too long" }));
+        return;
+      }
+      // Always use the live sock reference (fixes stale-sock bug for messages too)
+      const sock = app.locals.sock;
+      const jid = await normalizeJID(sock, to);
+      await messageQueue.enqueue(jid, () => sock.sendMessage(jid, { text: message }), 0);
+      console.log("Message sent to", to, ":", message);
+      ws.send(JSON.stringify({ type: "success", success: "Message sent" }));
+    } catch (err) {
+      console.error("Error handling WebSocket message:", err);
+      ws.send(JSON.stringify({ type: "error", error: "Failed to send message" }));
+    }
+  });
 
-	ws.on("close", () => clearInterval(heartbeat));
-	ws.on("error", (err) => { console.error("WebSocket error:", err); clearInterval(heartbeat); });
+  ws.on("close", () => clearInterval(heartbeat));
+  ws.on("error", (err) => {
+    console.error("WebSocket error:", err);
+    clearInterval(heartbeat);
+  });
 });
 
 // ── Bot start ─────────────────────────────────────────────────────────────────
 async function startServer() {
-	await startSock("start");
-	startReminderScheduler();
-	// handleNewSock() is called by the onNewSock hook inside connection.js,
-	// so app.locals.sock and connection.update listener are both set up there.
+  await startSock("start");
+  startReminderScheduler();
+  // handleNewSock() is called by the onNewSock hook inside connection.js,
+  // so app.locals.sock and connection.update listener are both set up there.
 
-	app.post("/send", async (req, res) => {
-		const { to, message } = req.body;
-		if (!to || !message) {
-			return res.status(400).send({ message: "Invalid request" });
-		}
+  app.post("/send", async (req, res) => {
+    const { to, message } = req.body;
+    if (!to || !message) {
+      return res.status(400).send({ message: "Invalid request" });
+    }
 
-		try {
-			const sock = app.locals.sock; // live reference
-			if (Array.isArray(to)) {
-				const jids = await Promise.all(to.map((r) => normalizeJID(sock, r)));
-				await Promise.all(jids.map((jid) => messageQueue.enqueue(jid, () => sock.sendMessage(jid, { text: message }), 0)));
-				console.log("Message queued for multiple recipients");
-				return res.send({ message: "Messages queued" });
-			} else {
-				const recipientJid = await normalizeJID(sock, to);
-				await messageQueue.enqueue(recipientJid, () => sock.sendMessage(recipientJid, { text: message }), 0);
-				console.log("Message queued for:", to);
-				return res.send({ message: "Message queued" });
-			}
-		} catch (error) {
-			console.error("Error sending message:", error);
-			return res.status(500).send({ message: "Failed to send message" });
-		}
-	});
+    try {
+      const sock = app.locals.sock; // live reference
+      if (Array.isArray(to)) {
+        const jids = await Promise.all(to.map((r) => normalizeJID(sock, r)));
+        await Promise.all(
+          jids.map((jid) =>
+            messageQueue.enqueue(jid, () => sock.sendMessage(jid, { text: message }), 0),
+          ),
+        );
+        console.log("Message queued for multiple recipients");
+        return res.send({ message: "Messages queued" });
+      } else {
+        const recipientJid = await normalizeJID(sock, to);
+        await messageQueue.enqueue(
+          recipientJid,
+          () => sock.sendMessage(recipientJid, { text: message }),
+          0,
+        );
+        console.log("Message queued for:", to);
+        return res.send({ message: "Message queued" });
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      return res.status(500).send({ message: "Failed to send message" });
+    }
+  });
 }
 
 process.on("unhandledRejection", (reason, p) => {
-	console.error("Unhandled Rejection at: ", p, "reason:", reason);
+  console.error("Unhandled Rejection at: ", p, "reason:", reason);
 });
 
 process.on("uncaughtException", function (err) {
-	console.error("Uncaught Exception:", err);
-	gracefulShutdown("UNCAUGHT_EXCEPTION");
+  console.error("Uncaught Exception:", err);
+  gracefulShutdown("UNCAUGHT_EXCEPTION");
 });
 
 function gracefulShutdown(signal) {
-	console.log(`\n🔄 Received ${signal}. Starting graceful shutdown...`);
-	// End WA socket first so its ws "close" handler flushes pending session
-	// keys to Mongo — skip this and a crash mid-write leaves a stale session,
-	// which shows up next boot as Bad MAC until the ratchet resyncs.
-	try {
-		app.locals.sock?.end(undefined);
-	} catch (err) {
-		console.error("Error ending WA socket during shutdown:", err.message);
-	}
-	server.close(() => {
-		console.log("✅ HTTP server closed");
-		wss.clients.forEach((client) => client.close());
-		console.log("✅ Graceful shutdown completed");
-		process.exit(0);
-	});
-	setTimeout(() => {
-		console.error("❌ Forced shutdown due to timeout");
-		process.exit(1);
-	}, 10_000);
+  console.log(`\n🔄 Received ${signal}. Starting graceful shutdown...`);
+  // End WA socket first so its ws "close" handler flushes pending session
+  // keys to Mongo — skip this and a crash mid-write leaves a stale session,
+  // which shows up next boot as Bad MAC until the ratchet resyncs.
+  try {
+    app.locals.sock?.end(undefined);
+  } catch (err) {
+    console.error("Error ending WA socket during shutdown:", err.message);
+  }
+  server.close(() => {
+    console.log("✅ HTTP server closed");
+    wss.clients.forEach((client) => client.close());
+    console.log("✅ Graceful shutdown completed");
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.error("❌ Forced shutdown due to timeout");
+    process.exit(1);
+  }, 10_000);
 }
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT",  () => gracefulShutdown("SIGINT"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

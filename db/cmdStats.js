@@ -4,22 +4,22 @@ import mdClient from "./client.js";
 const cmdStats = mdClient.db("MyBotDataDB").collection("CmdStats");
 
 const recordCommand = (cmd, groupJid) =>
-	cmdStats
-		.updateOne(
-			{ _id: `${cmd}|${groupJid || "DM"}` },
-			{ $inc: { count: 1 }, $set: { cmd, group: groupJid || "DM", last: new Date() } },
-			{ upsert: true },
-		)
-		.catch((e) => console.error("[cmdStats error]", e.message));
+  cmdStats
+    .updateOne(
+      { _id: `${cmd}|${groupJid || "DM"}` },
+      { $inc: { count: 1 }, $set: { cmd, group: groupJid || "DM", last: new Date() } },
+      { upsert: true },
+    )
+    .catch((e) => console.error("[cmdStats error]", e.message));
 
 // groupJid omitted => all groups + DMs. Returns [{ _id: cmd, count }] sorted desc.
 const getCommandStats = (groupJid) =>
-	cmdStats
-		.aggregate([
-			...(groupJid ? [{ $match: { group: groupJid } }] : []),
-			{ $group: { _id: "$cmd", count: { $sum: "$count" } } },
-			{ $sort: { count: -1 } },
-		])
-		.toArray();
+  cmdStats
+    .aggregate([
+      ...(groupJid ? [{ $match: { group: groupJid } }] : []),
+      { $group: { _id: "$cmd", count: { $sum: "$count" } } },
+      { $sort: { count: -1 } },
+    ])
+    .toArray();
 
 export { recordCommand, getCommandStats };

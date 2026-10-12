@@ -9,22 +9,30 @@ const rlCache = new NodeCache({ stdTTL: RATE_LIMIT_WINDOW, checkperiod: 5 });
 export const getGroupMeta = async (jid) => gmCache.get(`gm:${jid}`) ?? null;
 
 export const setGroupMeta = async (jid, metadata) => {
-	gmCache.set(`gm:${jid}`, metadata, GROUP_META_TTL);
+  gmCache.set(`gm:${jid}`, metadata, GROUP_META_TTL);
 };
 
 export const delGroupMeta = async (jid) => {
-	gmCache.del(`gm:${jid}`);
+  gmCache.del(`gm:${jid}`);
+};
+
+export const clearGroupMeta = async () => {
+  const n = gmCache.keys().length;
+  gmCache.flushAll();
+  return n;
 };
 
 export const checkRateLimit = async (senderJid, command, limit = 3) => {
-	const key = `rl:${senderJid}:${command}`;
-	const current = rlCache.get(key);
-	if (current === undefined) {
-		rlCache.set(key, 1, RATE_LIMIT_WINDOW);
-		return true;
-	}
-	const ttlMs = rlCache.getTtl(key);
-	const remainingSecs = ttlMs ? Math.max(1, Math.ceil((ttlMs - Date.now()) / 1000)) : RATE_LIMIT_WINDOW;
-	rlCache.set(key, current + 1, remainingSecs);
-	return current + 1 <= limit;
+  const key = `rl:${senderJid}:${command}`;
+  const current = rlCache.get(key);
+  if (current === undefined) {
+    rlCache.set(key, 1, RATE_LIMIT_WINDOW);
+    return true;
+  }
+  const ttlMs = rlCache.getTtl(key);
+  const remainingSecs = ttlMs
+    ? Math.max(1, Math.ceil((ttlMs - Date.now()) / 1000))
+    : RATE_LIMIT_WINDOW;
+  rlCache.set(key, current + 1, remainingSecs);
+  return current + 1 <= limit;
 };

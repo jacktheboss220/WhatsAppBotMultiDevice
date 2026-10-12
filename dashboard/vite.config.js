@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss()],
@@ -21,4 +21,4 @@ export default defineConfig(({ command }) => ({
     outDir: '../public/app',
     emptyOutDir: true,
   },
-}))
+}));

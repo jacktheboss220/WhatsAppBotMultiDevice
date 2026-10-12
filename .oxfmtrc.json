@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": false,
+  "ignorePatterns": ["**/dist", "**/node_modules"],
+  "overrides": [
+    {
+      "files": ["dashboard/**"],
+      "options": {
+        "singleQuote": true,
+        "jsxSingleQuote": true
+      }
+    }
+  ]
+}

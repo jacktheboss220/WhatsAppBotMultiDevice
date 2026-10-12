@@ -4,7 +4,7 @@
  * @returns {boolean} True if the JID is in LID format
  */
 export function isLID(jid) {
-	return jid && jid.includes("@lid");
+  return jid && jid.includes("@lid");
 }
 
 /**
@@ -13,7 +13,7 @@ export function isLID(jid) {
  * @returns {boolean} True if the JID is in PN format
  */
 export function isPN(jid) {
-	return jid && jid.includes("@s.whatsapp.net");
+  return jid && jid.includes("@s.whatsapp.net");
 }
 
 /**
@@ -22,7 +22,7 @@ export function isPN(jid) {
  * @returns {boolean} True if the JID is a group
  */
 export function isGroup(jid) {
-	return jid && jid.includes("@g.us");
+  return jid && jid.includes("@g.us");
 }
 
 /**
@@ -32,23 +32,23 @@ export function isGroup(jid) {
  * @returns {Promise<string>} The LID if found, otherwise returns PN format
  */
 export async function getLIDFromPN(sock, phoneNumber) {
-	try {
-		// Remove @s.whatsapp.net if present
-		const cleanNumber = phoneNumber.replace("@s.whatsapp.net", "");
+  try {
+    // Remove @s.whatsapp.net if present
+    const cleanNumber = phoneNumber.replace("@s.whatsapp.net", "");
 
-		// Try to get LID from the mapping repository
-		if (sock?.signalRepository?.lidMapping) {
-			const lid = await sock.signalRepository.lidMapping.getLIDForPN(cleanNumber);
-			if (lid) return lid;
-		}
+    // Try to get LID from the mapping repository
+    if (sock?.signalRepository?.lidMapping) {
+      const lid = await sock.signalRepository.lidMapping.getLIDForPN(cleanNumber);
+      if (lid) return lid;
+    }
 
-		// Fallback to PN format
-		return cleanNumber + "@s.whatsapp.net";
-	} catch (error) {
-		console.error("Error getting LID from PN:", error);
-		const cleanNumber = phoneNumber.replace("@s.whatsapp.net", "");
-		return cleanNumber + "@s.whatsapp.net";
-	}
+    // Fallback to PN format
+    return cleanNumber + "@s.whatsapp.net";
+  } catch (error) {
+    console.error("Error getting LID from PN:", error);
+    const cleanNumber = phoneNumber.replace("@s.whatsapp.net", "");
+    return cleanNumber + "@s.whatsapp.net";
+  }
 }
 
 /**
@@ -58,15 +58,15 @@ export async function getLIDFromPN(sock, phoneNumber) {
  * @returns {string|null} The phone number in PN format, or null if not found
  */
 export function getPNFromLID(sock, lid) {
-	try {
-		if (sock?.signalRepository?.lidMapping) {
-			return sock.signalRepository.lidMapping.getPNForLID(lid);
-		}
-		return null;
-	} catch (error) {
-		console.error("Error getting PN from LID:", error);
-		return null;
-	}
+  try {
+    if (sock?.signalRepository?.lidMapping) {
+      return sock.signalRepository.lidMapping.getPNForLID(lid);
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting PN from LID:", error);
+    return null;
+  }
 }
 
 /**
@@ -75,16 +75,16 @@ export function getPNFromLID(sock, lid) {
  * @returns {string} The phone number without domain
  */
 export function extractPhoneNumber(jid) {
-	if (typeof jid !== "string") return jid;
-	if (!jid) return "";
+  if (typeof jid !== "string") return jid;
+  if (!jid) return "";
 
-	// Handle colon format (some special cases)
-	if (jid?.includes(":")) {
-		return jid.split(":")[0];
-	}
+  // Handle colon format (some special cases)
+  if (jid?.includes(":")) {
+    return jid.split(":")[0];
+  }
 
-	// Extract the part before @
-	return jid.split("@")[0];
+  // Extract the part before @
+  return jid.split("@")[0];
 }
 
 /**
@@ -95,25 +95,25 @@ export function extractPhoneNumber(jid) {
  * @returns {Promise<string>} Normalized JID
  */
 export async function normalizeJID(sock, identifier) {
-	if (!identifier) return "";
+  if (!identifier) return "";
 
-	// If already a JID (contains @), return as-is
-	if (identifier.includes("@")) {
-		return identifier;
-	}
+  // If already a JID (contains @), return as-is
+  if (identifier.includes("@")) {
+    return identifier;
+  }
 
-	// Try to get LID (preferred format)
-	try {
-		if (sock?.signalRepository?.lidMapping) {
-			const lid = await sock.signalRepository.lidMapping.getLIDForPN(identifier);
-			if (lid) return lid;
-		}
-	} catch (error) {
-		console.error("Error normalizing JID:", error);
-	}
+  // Try to get LID (preferred format)
+  try {
+    if (sock?.signalRepository?.lidMapping) {
+      const lid = await sock.signalRepository.lidMapping.getLIDForPN(identifier);
+      if (lid) return lid;
+    }
+  } catch (error) {
+    console.error("Error normalizing JID:", error);
+  }
 
-	// Fallback to PN format
-	return identifier + "@s.whatsapp.net";
+  // Fallback to PN format
+  return identifier + "@s.whatsapp.net";
 }
 
 /**
@@ -122,5 +122,5 @@ export async function normalizeJID(sock, identifier) {
  * @returns {string} Formatted phone number for display
  */
 export function formatJIDForDisplay(jid) {
-	return extractPhoneNumber(jid);
+  return extractPhoneNumber(jid);
 }

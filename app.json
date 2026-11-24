@@ -34,6 +34,10 @@
       "description": "Remove.bg API key for background removal feature",
       "required": false
     },
+    "REMOVE_BG_API_URL": {
+      "description": "Optional endpoint of a remove.bg-compatible API (default: https://api.remove.bg/v1.0/removebg)",
+      "required": false
+    },
     "GOOGLE_API_KEY": {
       "description": "Google API Key for search and image search features",
       "required": false

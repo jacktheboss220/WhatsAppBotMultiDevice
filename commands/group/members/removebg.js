@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 const REMOVE_BG_KEY = process.env.REMOVE_BG_KEY || "";
+const REMOVE_BG_API_URL = process.env.REMOVE_BG_API_URL || "https://api.remove.bg/v1.0/removebg";
 
 import axios from "axios";
 import FormData from "form-data";
@@ -22,7 +23,7 @@ const getRemoveBg = async (Path, outputPath) => {
   formData.append("image_file", fs.createReadStream(inputPath), path.basename(inputPath));
   const response = await axios({
     method: "post",
-    url: "https://api.remove.bg/v1.0/removebg",
+    url: REMOVE_BG_API_URL,
     data: formData,
     responseType: "arraybuffer",
     headers: {

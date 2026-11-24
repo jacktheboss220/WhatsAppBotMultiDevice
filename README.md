@@ -66,6 +66,7 @@ Copy `.env.example` to `.env`. Never commit it.
 | `GOOGLE_API_KEY`                                                      | Gemini key for Eva                                                    |
 | `GOOGLE_API_KEY_SEARCH`, `SEARCH_ENGINE_KEY`                          | Google Custom Search (`img`, `search`)                                |
 | `REMOVE_BG_KEY`                                                       | [remove.bg](https://www.remove.bg/api) (`removebg`)                   |
+| `REMOVE_BG_API_URL`                                                   | Optional endpoint of a remove.bg-compatible API                       |
 | `GENIUS_ACCESS_SECRET`                                                | [Genius](https://docs.genius.com/) (`lyric`)                          |
 | `YTDLP_PATH`, `YTDLP_COOKIES`                                         | yt-dlp binary and optional cookies.txt for sign-in / age checks       |
 | `FFMPEG_PATH`                                                         | ffmpeg binary (blank = bundled)                                       |

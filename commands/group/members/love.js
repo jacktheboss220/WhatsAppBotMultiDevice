@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getMemberData } from "../../../db/members.js";
+import { askHeavy } from "../../../utils/chat.js";
 
 // Deterministic ASCII-based score — sorted so order doesn't matter
 const asciiScore = (name1, name2) => {
@@ -40,6 +41,24 @@ const shipMessage = (pct) => {
   if (pct <= 85) return ["💕", "Strong connection! You two fit well."];
   if (pct <= 95) return ["💖", "Almost soulmates! Very strong bond!"];
   return ["💘", "SOULMATES! A perfect match! 🎉"];
+};
+
+const CAPTION_SYSTEM = `Write one playful line (max 20 words) reacting to a love-compatibility score between two people. Match the tone to the score: roast gently when low, swoon when high. Harmless fun: no insults about looks, religion, caste or family. Plain text, no emoji, no quotes.`;
+
+// The score stays deterministic; the model only words the verdict. Null falls back to the fixed lines.
+const aiCaption = async (name1, name2, pct) => {
+  try {
+    return await askHeavy(
+      [
+        { role: "system", content: CAPTION_SYSTEM },
+        { role: "user", content: `${name1} and ${name2}: ${pct}%` },
+      ],
+      { maxTokens: 60 },
+    );
+  } catch (err) {
+    console.error("love caption failed:", err.message);
+    return null;
+  }
 };
 
 const resolveFromJid = async (jid, fallbackName) => {
@@ -105,7 +124,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
   const base = asciiScore(name1, name2);
   const pct = applyGender(base, g1, g2);
 
-  const [emoji, caption] = shipMessage(pct);
+  const [emoji, fixedCaption] = shipMessage(pct);
+  const caption = (await aiCaption(name1, name2, pct)) || fixedCaption;
   const shipName =
     name1.slice(0, Math.ceil(name1.length / 2)) + name2.slice(Math.floor(name2.length / 2));
   const filled = Math.round(pct / 10);

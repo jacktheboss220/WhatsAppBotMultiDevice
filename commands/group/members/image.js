@@ -9,7 +9,7 @@ const getRandom = (ext) => memoryManager.generateTempFileName(ext);
 const handler = async (sock, msg, from, args, msgInfoObj) => {
   const { type, content, sendMessageWTyping, extendedMessageOriginal } = msgInfoObj;
 
-  if (extendedMessageOriginal) {
+  if (extendedMessageOriginal?.quotedMessage) {
     msg["message"] = extendedMessageOriginal.quotedMessage;
   }
 

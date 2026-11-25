@@ -1,4 +1,5 @@
 import axios from "axios";
+import { askHeavy } from "../../utils/chat.js";
 
 const LANG_NAMES = {
   en: "English",
@@ -21,7 +22,11 @@ const LANG_NAMES = {
   mr: "Marathi",
   gu: "Gujarati",
   ml: "Malayalam",
+  hinglish: "Hinglish",
 };
+
+const TRANSLATE_SYSTEM = (to) =>
+  `Translate the user's message into ${to}. Keep the tone, slang and emoji. Reply with only the translation, nothing else.`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
   const { sendMessageWTyping, prefix, extendedMessageOriginal } = msgInfoObj;
@@ -53,22 +58,27 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
       { quoted: msg },
     );
 
+  const toName = LANG_NAMES[targetLang] || targetLang.toUpperCase();
   try {
-    const res = await axios.get("https://translate.googleapis.com/translate_a/single", {
-      params: {
-        client: "gtx",
-        sl: "auto",
-        tl: targetLang,
-        dt: "t",
-        q: text,
-      },
-      timeout: 8000,
-    });
-
-    const translated = res.data[0].map((s) => s[0]).join("");
-    const detectedLang = res.data[2];
-    const fromName = LANG_NAMES[detectedLang] || detectedLang?.toUpperCase() || "Auto";
-    const toName = LANG_NAMES[targetLang] || targetLang.toUpperCase();
+    let fromName = "Auto";
+    let translated;
+    try {
+      translated = await askHeavy(
+        [
+          { role: "system", content: TRANSLATE_SYSTEM(LANG_NAMES[targetLang] || targetLang) },
+          { role: "user", content: text },
+        ],
+        { maxTokens: 1000 },
+      );
+    } catch (err) {
+      console.warn("translate: LLM unavailable, using Google:", err.message);
+      const res = await axios.get("https://translate.googleapis.com/translate_a/single", {
+        params: { client: "gtx", sl: "auto", tl: targetLang, dt: "t", q: text },
+        timeout: 8000,
+      });
+      translated = res.data[0].map((s) => s[0]).join("");
+      fromName = LANG_NAMES[res.data[2]] || res.data[2]?.toUpperCase() || "Auto";
+    }
 
     sendMessageWTyping(
       from,

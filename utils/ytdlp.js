@@ -21,8 +21,17 @@ export const ytdlpOpts = async (extra = {}) => {
     jsRuntimes: "node",
     ...extra,
   };
-  const cookiePath = await getCookiePath();
-  if (cookiePath) opts.cookies = cookiePath;
+  // A live browser profile (yt-dlp's own `--cookies-from-browser`, e.g. "brave" or
+  // "firefox:/path/to/profile") beats an exported cookies.txt, which goes stale.
+  if (process.env.YTDLP_COOKIES_BROWSER) {
+    opts.cookiesFromBrowser = process.env.YTDLP_COOKIES_BROWSER;
+    // tv errors out and android_vr/web only expose 360p once cookies are sent. web_embedded (DASH up
+    // to 1080p+, exact sizes) and web_safari (HLS up to 1080p) give the full ladder; mweb is the fallback.
+    opts.extractorArgs = "youtube:player_client=web_embedded,web_safari,mweb";
+  } else {
+    const cookiePath = await getCookiePath();
+    if (cookiePath) opts.cookies = cookiePath;
+  }
   return opts;
 };
 

@@ -1,6 +1,11 @@
 import { createCanvas } from "@napi-rs/canvas";
 import { Sticker } from "wa-sticker-formatter";
 
+// @napi-rs/canvas does not resolve "Arial"/"sans-serif" through fontconfig on Linux (every glyph
+// renders as a box), so name installed families explicitly; later entries are per-glyph fallbacks.
+const FONT_STACK =
+  '"Noto Sans", "Noto Sans Devanagari", "DejaVu Sans", "Liberation Sans", "Noto Color Emoji", Arial, sans-serif';
+
 const handler = async (sock, msg, from, args, msgInfoObj) => {
   const { sendMessageWTyping, evv, extendedMessageOriginal } = msgInfoObj;
 
@@ -27,7 +32,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
     const lines = message.split("\n");
     let size = 80;
     for (; size > 16; size -= 4) {
-      ctx.font = `${size}px Arial`;
+      ctx.font = `${size}px ${FONT_STACK}`;
       if (Math.max(...lines.map((l) => ctx.measureText(l).width)) <= canvas.width - 32) break;
     }
     const lineHeight = size * 1.2;

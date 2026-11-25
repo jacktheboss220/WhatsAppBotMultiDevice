@@ -1,4 +1,12 @@
 import axios from "axios";
+import { askHeavy } from "../../../utils/chat.js";
+
+const DICT_SYSTEM = `You are a dictionary. The user gives a word or phrase (English, Hindi, Hinglish or slang). Reply in this exact WhatsApp format, using *single asterisks* for bold, no headers:
+*Term:* ...
+*Type:* ...
+*Meaning:* ...
+*Example:* _..._
+If it is not a real word or phrase, reply with exactly: NOT_FOUND`;
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
   const { sendMessageWTyping } = msgInfoObj;
@@ -38,10 +46,25 @@ ${definition}
 _${example}_`;
 
     await sendMessageWTyping(from, { text }, { quoted: msg });
-  } catch (err) {
-    console.error(err);
-
-    // User-friendly error
+  } catch {
+    // dictionaryapi.dev is English-only: let the LLM try Hindi, Hinglish, slang and phrases
+    try {
+      const answer = await askHeavy(
+        [
+          { role: "system", content: DICT_SYSTEM },
+          { role: "user", content: args.join(" ").slice(0, 100) },
+        ],
+        { maxTokens: 300 },
+      );
+      if (!answer.includes("NOT_FOUND"))
+        return sendMessageWTyping(
+          from,
+          { text: `*📚 Dictionary Result*\n\n${answer}` },
+          { quoted: msg },
+        );
+    } catch (llmErr) {
+      console.error("dictionary LLM fallback failed:", llmErr.message);
+    }
     return sendMessageWTyping(
       from,
       { text: `Couldn't find the word *${word}*. Try another one.` },
@@ -52,7 +75,7 @@ _${example}_`;
 
 export default () => ({
   cmd: ["dictionary", "dict"],
-  desc: "Look up the meaning of a word.",
+  desc: "Look up the meaning of a word (English, Hindi, Hinglish or slang).",
   usage: "dict <word>",
   handler,
 });

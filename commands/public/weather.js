@@ -1,4 +1,23 @@
 import axios from "axios";
+import { askHeavy } from "../../utils/chat.js";
+
+const TIP_SYSTEM = `Give one short sentence (max 20 words) of practical advice for someone heading out in this weather, such as clothing, umbrella or sun protection. Plain text, no emoji.`;
+
+// One-line advice from the numbers above; null when the model is unavailable.
+const weatherTip = async (summary) => {
+  try {
+    return await askHeavy(
+      [
+        { role: "system", content: TIP_SYSTEM },
+        { role: "user", content: summary },
+      ],
+      { maxTokens: 60 },
+    );
+  } catch (err) {
+    console.error("weather tip failed:", err.message);
+    return null;
+  }
+};
 
 const handler = async (sock, msg, from, args, msgInfoObj) => {
   const { sendMessageWTyping, prefix } = msgInfoObj;
@@ -35,6 +54,9 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     const weatherEmoji = getWeatherEmoji(desc);
 
+    const tip = await weatherTip(
+      `${areaName}: ${desc}, ${tempC}°C (feels ${feelsC}°C), humidity ${humidity}%, wind ${wind} km/h, UV ${uvIndex}`,
+    );
     const text =
       `${weatherEmoji} *Weather — ${areaName}, ${country}*\n\n` +
       `🌡️ *Temperature:* ${tempC}°C / ${tempF}°F\n` +
@@ -43,7 +65,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
       `💧 *Humidity:* ${humidity}%\n` +
       `💨 *Wind:* ${wind} km/h ${windDir}\n` +
       `👁️ *Visibility:* ${visibility} km\n` +
-      `☀️ *UV Index:* ${uvIndex}`;
+      `☀️ *UV Index:* ${uvIndex}` +
+      (tip ? `\n\n💡 _${tip}_` : "");
 
     sendMessageWTyping(from, { text }, { quoted: msg });
   } catch (err) {

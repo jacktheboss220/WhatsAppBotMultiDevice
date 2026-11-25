@@ -24,6 +24,8 @@ const messageCache = new NodeCache({
 // INCOMING messages instead, which getMessage() never needs, and it hit its size cap within minutes.
 export const cacheOutgoing = (sock, cache) => {
   const send = sock.sendMessage.bind(sock);
+  // For senders that use relayMessage directly (sound stickers) and bypass the wrapper below.
+  sock.cacheSent = ({ remoteJid, id }, message) => cache.set(`${remoteJid}:${id}`, message);
   sock.sendMessage = async (...args) => {
     const sent = await send(...args);
     try {

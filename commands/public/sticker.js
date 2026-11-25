@@ -32,8 +32,8 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
   const { senderJid, type, content, sendMessageWTyping, evv, extendedMessageOriginal } = msgInfoObj;
   const memberData = await getMemberData(senderJid);
 
-  if (msg.message.extendedTextMessage) {
-    msg.message = extendedMessageOriginal?.quotedMessage;
+  if (extendedMessageOriginal?.quotedMessage) {
+    msg.message = extendedMessageOriginal.quotedMessage;
   }
 
   const { isMedia, isTaggedImage, isTaggedVideo } = getMediaFlags(type, content);

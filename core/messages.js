@@ -67,6 +67,9 @@ const getCommand = async (sock, msg, cache) => {
 
   try {
     if (!sock || !sock.user) return;
+    // Groups with disappearing messages on deliver the real content wrapped in ephemeralMessage;
+    // Baileys only unwraps it internally, so without this the type check below drops every message.
+    if (msg.message?.ephemeralMessage?.message) msg.message = msg.message.ephemeralMessage.message;
     const messageKeys = Object.keys(msg.message);
     if (messageKeys.length === 0) return;
     if (msg.key.fromMe && !msg.key.remoteJid) return;
@@ -475,6 +478,7 @@ const getCommand = async (sock, msg, cache) => {
       if (
         body.split(" ")[0].toLowerCase() == "eva" ||
         (isTaggedBot &&
+          /[\p{L}\p{N}]/u.test(body) && // skip emoji/punctuation-only replies
           Object.keys(tagMessage)[0] == "conversation" &&
           tagMessage?.conversation.startsWith("_*Eva:*_"))
       ) {

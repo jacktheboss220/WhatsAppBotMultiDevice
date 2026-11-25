@@ -72,13 +72,14 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
 
     console.log("Downloading:", title, URL);
 
-    // Prefer a pre-muxed mp4 (no ffmpeg merge needed) → avoids merge failures on servers.
-    // Falls back to merged streams only when no single-stream mp4 exists.
+    // Best H.264 (+AAC, so WhatsApp can play it) up to 1080p whose streams fit under the 60MB send
+    // limit (50MB video + <10MB audio), merged by ffmpeg. HLS formats only report filesize_approx,
+    // hence the second tier. Falls back to YouTube's pre-muxed 360p when nothing larger fits.
     const result = await youtubedl(
       URL,
       await ytdlpOpts({
         format:
-          "best[height<=720][ext=mp4]/bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best",
+          "bv[height<=1080][vcodec^=avc1][filesize<50M]+ba[ext=m4a][filesize<10M]/best[height<=1080][vcodec^=avc1][filesize_approx<55M]/best[height<=720][ext=mp4]/best[height<=720]/best",
         mergeOutputFormat: "mp4",
         output: fileDown,
         ...downloadLimits,

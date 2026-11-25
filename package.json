@@ -1,6 +1,6 @@
 {
   "name": "whatsappbot",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "description": "well...Unique and intreating project",
   "keywords": [],
@@ -28,10 +28,10 @@
   "dependencies": {
     "@erickwendel/meme-maker": "^3.0.0",
     "@google/generative-ai": "^0.24.1",
-    "@napi-rs/canvas": "^1.0.11",
-    "axios": "^1.20.0",
+    "@napi-rs/canvas": "^1.2.0",
+    "axios": "^1.21.1",
     "baileys": "7.0.0-rc14",
-    "body-parser": "^2.3.0",
+    "body-parser": "^2.4.0",
     "cheerio": "^1.2.0",
     "connect-mongo": "^6.0.0",
     "cors": "^2.8.6",
@@ -48,25 +48,25 @@
     "google-tts-api": "^0.0.6",
     "inshorts-api": "github:jacktheboss220/inshorts-api",
     "jsdom": "^26.1.0",
-    "mime": "^4.1.0",
-    "mongodb": "^6.21.0",
+    "mime": "^4.1.2",
+    "mongodb": "^6.22.0",
     "node-cache": "^5.1.2",
     "node-webpmux": "^3.2.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pino": "^10.4.0",
-    "redis": "^6.3.0",
+    "redis": "^6.4.0",
     "snapsave-downloader": "github:jacktheboss220/insta-downloader",
-    "twitter-api-v2": "^1.29.1",
+    "twitter-api-v2": "^1.31.0",
     "urban-dictionary": "github:jacktheboss220/urban-dictionary",
     "wa-sticker-formatter": "^3.6.0",
-    "ws": "^8.22.0",
-    "youtube-dl-exec": "^3.1.17",
+    "ws": "^8.23.0",
+    "youtube-dl-exec": "^3.1.19",
     "yt-search": "^2.13.1"
   },
   "devDependencies": {
     "oxfmt": "^0.72.0",
-    "oxlint": "^1.87.0"
+    "oxlint": "^1.95.0"
   },
   "overrides": {
     "axios": "^1.18.0"
@@ -78,6 +78,7 @@
   },
   "trustedDependencies": [
     "baileys",
-    "youtube-dl-exec"
+    "youtube-dl-exec",
+    "ffmpeg-static"
   ]
 }

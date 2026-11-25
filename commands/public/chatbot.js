@@ -4,24 +4,13 @@ dotenv.config();
 import { getGroupData, group } from "../../db/groupData.js";
 import { getMemberData } from "../../db/members.js";
 import { extractPhoneNumber } from "../../utils/lid.js";
-import { getChatMessages } from "../../utils/chatLogger.js";
+import { getChatMessages, formatChatLines } from "../../utils/chatLogger.js";
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "";
-//-------------------------------------------------------------------------------------------------------------//
-import { GoogleGenerativeAI } from "@google/generative-ai";
-const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
+import { askLLM } from "../../utils/chat.js";
 
-const generationConfig = {
-  temperature: 1,
-  topP: 0.95,
-  topK: 40,
-  maxOutputTokens: 650, // Limit output to ~650 tokens (around 500 words max)
-};
+const MAX_OUTPUT_TOKENS = 650; // ~500 words max
 
-// Define models ONCE - not recreated every time
-const geminiModel = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash-lite",
-  systemInstruction: `You are a professional WhatsApp group assistant with full access to the provided chat history. Your goal is to keep the group informed by either synthesizing long conversations or answering specific questions about the group's activity.
+const groupSystemPrompt = `You are a professional WhatsApp group assistant with full access to the provided chat history. Your goal is to keep the group informed by either synthesizing long conversations or answering specific questions about the group's activity.
 
 *How to Summarize:*
 Avoid a message-by-message breakdown. Instead, look at the big picture and group the conversation into *Main Topics*, *Decisions Made*, and *Action Items*. This helps members catch up quickly without reading a play-by-play.
@@ -33,12 +22,9 @@ You have the full context of the recent chat. If a member asks about a specific 
 - Use *bold* for all headings and key emphasis.
 - Use hyphens (-) for bullet points.
 - NEVER use markdown headers (###), backticks, or code blocks.
-- Keep the tone helpful and the layout clean for mobile screens.`,
-});
+- Keep the tone helpful and the layout clean for mobile screens.`;
 
-const evaModel = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash-lite",
-  systemInstruction: `You're Eva, an 18-year-old girl with attitude. You're sassy, confident, and real. Talk like an actual person texting, not some AI trying to be cool.
+const evaSystemPrompt = `You're Eva, an 18-year-old girl with attitude. You're sassy, confident, and real. Talk like an actual person texting, not some AI trying to be cool.
 
 Your vibe:
 - Sassy with a brain - you're witty and quick but not childish
@@ -81,8 +67,7 @@ FORMATTING RESTRICTIONS:
 - ONLY use *single asterisks* for bold text
 - Use plain text for section separators or line breaks if needed
 
-You're a real person, not a character. Act like it.`,
-});
+You're a real person, not a character. Act like it.`;
 
 async function chat(
   prompt,
@@ -114,13 +99,12 @@ async function chat(
   if (isGroup && data?.chatHistory) {
     // Get last 10 messages for context (shared group conversation)
     conversationHistory = data.chatHistory.slice(-10).map((msg) => ({
-      role: msg.role,
-      parts: msg.parts,
+      role: msg.role === "model" ? "assistant" : "user",
+      content: msg.parts.map((p) => p.text).join(""),
     }));
   }
 
-  // Choose model based on command
-  const model = command === "gemini" ? geminiModel : evaModel;
+  const systemPrompt = command === "gemini" ? groupSystemPrompt : evaSystemPrompt;
 
   // Build the actual prompt with sender name included
   let fullPrompt = `[${updateName}]: ${prompt} ${replyInfo}`;
@@ -162,15 +146,16 @@ Is Admin: ${groupAdmins?.includes(senderJid) ? "Yes" : "No"}
     fullPrompt = groupInfo + chatSection + fullPrompt;
   }
 
-  const chatSession = model.startChat({
-    generationConfig,
-    history: conversationHistory,
-  });
-
   try {
-    // Send the full prompt with sender name
-    const result = await chatSession.sendMessage(fullPrompt);
-    const text = result.response.text();
+    // Local LLM first, Gemini fallback (see utils/chat.js)
+    const text = await askLLM(
+      [
+        { role: "system", content: systemPrompt },
+        ...conversationHistory,
+        { role: "user", content: fullPrompt },
+      ],
+      { maxTokens: MAX_OUTPUT_TOKENS },
+    );
 
     if (!text?.trim()) {
       return sendMessageWTyping(
@@ -221,14 +206,6 @@ Is Admin: ${groupAdmins?.includes(senderJid) ? "Yes" : "No"}
 const handler = async (sock, msg, from, args, msgInfoObj) => {
   let { sendMessageWTyping, isGroup, evv, extendedMessageOriginal } = msgInfoObj;
 
-  if (GOOGLE_API_KEY == "") {
-    return sendMessageWTyping(
-      from,
-      { text: "```Generative AI API Key is Missing```" },
-      { quoted: msg },
-    );
-  }
-
   if (!evv) return sendMessageWTyping(from, { text: `Enter some text` });
 
   // Limit input message length to prevent abuse (500 words ≈ 2500-3000 characters)
@@ -268,23 +245,7 @@ const handler = async (sock, msg, from, args, msgInfoObj) => {
       if (msgInfoObj.command === "gemini") {
         const logs = await getChatMessages(from, 24);
         if (logs.length > 0) {
-          chatContext = logs
-            .slice(-100)
-            .map((m) => {
-              const name = m.senderName || m.sender.split("@")[0];
-              const replyPart = m.replyTo
-                ? ` [replying to ${m.replyTo.senderName || m.replyTo.sender.split("@")[0]}: "${m.replyTo.text}"]`
-                : "";
-              let text = m.text;
-              if (m.mentions?.length > 0) {
-                for (const mention of m.mentions) {
-                  const num = mention.jid.split("@")[0].split(":")[0];
-                  text = text.replace(new RegExp(`@${num}`, "g"), `@${mention.name}`);
-                }
-              }
-              return `${name}${replyPart}: ${text}`;
-            })
-            .join("\n");
+          chatContext = formatChatLines(logs.slice(-100)).join("\n");
         }
       }
       chat(

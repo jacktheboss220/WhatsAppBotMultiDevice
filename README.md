@@ -65,6 +65,7 @@ Copy `.env.example` to `.env`. Never commit it.
 | `MONGODB_KEY`                                                         | MongoDB connection string ([mongodb.com](https://www.mongodb.com/))   |
 | `GOOGLE_API_KEY`                                                      | Gemini key for Eva                                                    |
 | `GOOGLE_API_KEY_SEARCH`, `SEARCH_ENGINE_KEY`                          | Google Custom Search (`img`, `search`)                                |
+| `KEENABLE_API_KEY`, `KEENABLE_KEYLESS`, `SEARCH_PROVIDER`             | Optional [Keenable](https://docs.keenable.ai) web search for `search` |
 | `REMOVE_BG_KEY`                                                       | [remove.bg](https://www.remove.bg/api) (`removebg`)                   |
 | `GENIUS_ACCESS_SECRET`                                                | [Genius](https://docs.genius.com/) (`lyric`)                          |
 | `YTDLP_PATH`, `YTDLP_COOKIES`                                         | yt-dlp binary and optional cookies.txt for sign-in / age checks       |

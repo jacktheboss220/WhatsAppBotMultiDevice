@@ -42,6 +42,10 @@
       "description": "Google Custom Search Engine Key",
       "required": false
     },
+    "KEENABLE_API_KEY": {
+      "description": "Optional Keenable API key for the search command (used when the Google search keys are unset, or with SEARCH_PROVIDER=keenable)",
+      "required": false
+    },
     "OPENAI_API_KEY": {
       "description": "OpenAI API Key for AI image generation",
       "required": false
